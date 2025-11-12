@@ -117,7 +117,7 @@ impl RequestBundle {
     pub fn is_expired_from_bytes(bytes: &[u8], slot: u64) -> Option<bool> {
         let requests_len = Self::read_requests_len_from_bytes(bytes)?;
         let expiry_slot = Self::read_expiry_slot_from_bytes(bytes)?;
-        Some(requests_len < REQUESTS_PER_BUNDLE as u64 && expiry_slot <= slot)
+        Some(requests_len < 1 && expiry_slot <= slot)
     }
 }
 impl Default for RequestBundle {
