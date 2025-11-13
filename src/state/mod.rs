@@ -2,6 +2,7 @@ pub mod auction;
 pub mod bid;
 pub mod bundle;
 pub mod bundle_registry;
+pub mod config;
 pub mod job_request;
 pub mod metadata;
 pub mod request_tier;
