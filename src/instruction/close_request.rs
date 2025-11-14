@@ -19,6 +19,7 @@ pub struct CloseRequestAccounts<'a, T> {
     pub job_request: &'a T,
     pub bundle_payer: &'a T,
     pub bundle: &'a T,
+    pub registry: &'a T,
 }
 
 impl<'a, T> InstructionAccounts<'a, T> for CloseRequestAccounts<'a, T> {
@@ -27,6 +28,7 @@ impl<'a, T> InstructionAccounts<'a, T> for CloseRequestAccounts<'a, T> {
             .chain(std::iter::once(self.job_request))
             .chain(std::iter::once(self.bundle_payer))
             .chain(std::iter::once(self.bundle))
+            .chain(std::iter::once(self.registry))
     }
     fn iter_owned(&self) -> impl Iterator<Item = T>
     where

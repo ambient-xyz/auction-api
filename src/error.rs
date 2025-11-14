@@ -68,6 +68,8 @@ pub enum AuctionError {
     InvalidRegistry = 30,
     /// The data account metadata is invalid
     InvalidMetadata = 31,
+    /// The current latest Bundle can not get closed
+    LatestBundleCanceled = 32,
 }
 
 impl Display for AuctionError {
