@@ -20,6 +20,11 @@ pub struct CloseRequestAccounts<'a, T> {
     pub bundle_payer: &'a T,
     pub bundle: &'a T,
     pub registry: &'a T,
+    pub auction: &'a T,
+    pub auction_payer: &'a T,
+    pub child_bundle: &'a T,
+    pub child_auction: &'a T,
+    pub child_bundle_payer: &'a T,
 }
 
 impl<'a, T> InstructionAccounts<'a, T> for CloseRequestAccounts<'a, T> {
@@ -29,6 +34,11 @@ impl<'a, T> InstructionAccounts<'a, T> for CloseRequestAccounts<'a, T> {
             .chain(std::iter::once(self.bundle_payer))
             .chain(std::iter::once(self.bundle))
             .chain(std::iter::once(self.registry))
+            .chain(std::iter::once(self.auction))
+            .chain(std::iter::once(self.auction_payer))
+            .chain(std::iter::once(self.child_bundle))
+            .chain(std::iter::once(self.child_auction))
+            .chain(std::iter::once(self.child_bundle_payer))
     }
     fn iter_owned(&self) -> impl Iterator<Item = T>
     where
@@ -39,4 +49,8 @@ impl<'a, T> InstructionAccounts<'a, T> for CloseRequestAccounts<'a, T> {
 }
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
 #[repr(C)]
-pub struct CloseRequestArgs {}
+pub struct CloseRequestArgs {
+    pub new_bundle_lamports: u64,
+    pub new_auction_lamports: u64,
+    pub new_bundle_bump: u64,
+}
