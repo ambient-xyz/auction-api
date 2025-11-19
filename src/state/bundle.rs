@@ -1,7 +1,7 @@
 use super::{read_field, write_field, Pubkey};
 use crate::constant::PUBKEY_BYTES;
 use crate::state::request_tier::RequestTier;
-use crate::{MaybePubkey, BUNDLE_DURATION, REQUESTS_PER_BUNDLE, VERIFIERS_PER_AUCTION};
+use crate::{MaybePubkey, VERIFIERS_PER_AUCTION};
 use bytemuck::{offset_of, Pod, Zeroable};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 #[cfg(feature = "serde")]
@@ -81,7 +81,7 @@ impl RequestBundle {
             payer: payer.into(),
             parent_bundle_key: parent_bundle_key.into(),
             bump,
-            expiry_slot: current_slot.saturating_add(BUNDLE_DURATION),
+            expiry_slot: current_slot.saturating_add(expiry_duration_tier.get_bundle_duration()),
             context_length_tier,
             expiry_duration_tier,
             max_context_length,
@@ -110,6 +110,10 @@ impl RequestBundle {
         let offset = offset_of!(RequestBundle, requests_len);
         read_field(bytes, offset)
     }
+    fn read_context_len_tier_from_bytes(bytes: &[u8]) -> Option<RequestTier> {
+        let offset = offset_of!(RequestBundle, context_length_tier);
+        read_field(bytes, offset)
+    }
     pub fn cancel_bundle_from_bytes(bytes: &mut [u8]) -> bool {
         let offset = offset_of!(RequestBundle, status);
         write_field(bytes, offset, BundleStatus::Canceled)
@@ -117,7 +121,8 @@ impl RequestBundle {
     pub fn is_expired_from_bytes(bytes: &[u8], slot: u64) -> Option<bool> {
         let requests_len = Self::read_requests_len_from_bytes(bytes)?;
         let expiry_slot = Self::read_expiry_slot_from_bytes(bytes)?;
-        Some(requests_len < REQUESTS_PER_BUNDLE as u64 && expiry_slot <= slot)
+        let context_len_tier = Self::read_context_len_tier_from_bytes(bytes)?;
+        Some(requests_len < context_len_tier.get_request_per_bundle() && expiry_slot <= slot)
     }
 }
 impl Default for RequestBundle {
