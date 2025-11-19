@@ -1,3 +1,4 @@
+use crate::error::AuctionError;
 use crate::instruction::IpAddr;
 use crate::{InstructionAccounts, PUBKEY_BYTES};
 use bytemuck::{Pod, Zeroable};
@@ -20,6 +21,22 @@ pub struct PlaceBidAccounts<'a, T> {
     pub auction: &'a T,
     pub system_program: &'a T,
 }
+
+impl<'a, T> TryFrom<&'a [T]> for PlaceBidAccounts<'a, T> {
+    type Error = AuctionError;
+    fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
+        let [payer, bid, auction, system_program] = accounts.as_ref() else {
+            return Err(Self::Error::NotEnoughAccounts);
+        };
+        Ok(Self {
+            payer,
+            bid,
+            auction,
+            system_program,
+        })
+    }
+}
+
 impl<'a, T> InstructionAccounts<'a, T> for PlaceBidAccounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.payer)

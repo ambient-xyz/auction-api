@@ -1,3 +1,4 @@
+use crate::error::AuctionError;
 use crate::{InstructionAccounts, RequestTier};
 use bytemuck::{Pod, Zeroable};
 
@@ -19,6 +20,23 @@ pub struct InitBundleAccounts<'a, T> {
     pub registry: &'a T,
     pub system_program: &'a T,
 }
+
+impl<'a, T> TryFrom<&'a [T]> for InitBundleAccounts<'a, T> {
+    type Error = AuctionError;
+    fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
+        let [payer, bundle, registry, system_program] = accounts else {
+            return Err(Self::Error::NotEnoughAccounts);
+        };
+
+        Ok(Self {
+            payer,
+            bundle,
+            registry,
+            system_program,
+        })
+    }
+}
+
 impl<'a, T> InstructionAccounts<'a, T> for InitBundleAccounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.payer)
