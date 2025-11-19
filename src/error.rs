@@ -70,6 +70,8 @@ pub enum AuctionError {
     InvalidMetadata = 31,
     /// The current latest Bundle can not get closed
     LatestBundleCanceled = 32,
+    /// Invalid Config Account data was found
+    InvalidConfigData = 33,
 }
 
 impl Display for AuctionError {

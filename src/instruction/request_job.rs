@@ -30,6 +30,7 @@ pub struct RequestJobAccounts<'a, T, U> {
     pub registry: &'a T,
     pub input_data: &'a T,
     pub system_program: &'a T,
+    pub config: &'a T,
     pub bundle_auction_account_pairs: U,
     pub last_bundle: &'a T,
 }
@@ -44,6 +45,7 @@ where
             .chain(std::iter::once(self.registry))
             .chain(std::iter::once(self.input_data))
             .chain(std::iter::once(self.system_program))
+            .chain(std::iter::once(self.config))
             .chain(self.bundle_auction_account_pairs.as_ref())
             .chain(std::iter::once(self.last_bundle))
     }
