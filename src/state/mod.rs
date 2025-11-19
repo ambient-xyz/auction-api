@@ -2,20 +2,22 @@ pub mod auction;
 pub mod bid;
 pub mod bundle;
 pub mod bundle_registry;
+pub mod config;
+pub use auction::*;
+pub use bid::*;
 pub mod job_request;
 pub mod metadata;
 pub mod request_tier;
-
-pub use auction::*;
-pub use bid::*;
-#[cfg(feature = "serde")]
-use borsh::{BorshDeserialize, BorshSerialize};
 pub use bundle::*;
 pub use bundle_registry::*;
-use bytemuck::{Pod, Zeroable};
+pub use config::*;
 pub use job_request::*;
 pub use metadata::*;
-pub use request_tier::RequestTier;
+pub use request_tier::*;
+
+#[cfg(feature = "serde")]
+use borsh::{BorshDeserialize, BorshSerialize};
+use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::{mem, ptr};

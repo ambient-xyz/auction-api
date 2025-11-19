@@ -10,6 +10,7 @@ mod close_bid;
 mod close_request;
 mod end_auction;
 mod init_bundle;
+mod init_config;
 mod place_bid;
 mod request_job;
 mod reveal_bid;
@@ -23,6 +24,7 @@ pub use close_bid::*;
 pub use close_request::*;
 pub use end_auction::*;
 pub use init_bundle::*;
+pub use init_config::*;
 pub use place_bid::*;
 pub use request_job::*;
 pub use reveal_bid::*;
@@ -43,6 +45,7 @@ pub enum AuctionInstruction {
     RevealBid = 8,
     CloseRequest = 9,
     AppendData = 10,
+    InitConfig = 11,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -113,4 +116,5 @@ impl_instruction_data!(
     RevealBidArgs => RevealBid,
     CloseRequestArgs => CloseRequest,
     AppendDataArgs => AppendData,
+    InitConfigArgs => InitConfig,
 );
