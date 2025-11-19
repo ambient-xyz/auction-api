@@ -1,3 +1,4 @@
+use crate::error::AuctionError;
 use crate::InstructionAccounts;
 use bytemuck::{Pod, Zeroable};
 
@@ -27,6 +28,29 @@ pub struct CloseRequestAccounts<'a, T> {
     pub child_bundle_payer: &'a T,
 }
 
+impl<'a, T> TryFrom<&'a [T]> for CloseRequestAccounts<'a, T> {
+    type Error = AuctionError;
+    fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
+        let [request_authority, job_request, bundle_payer, bundle, registry, auction, auction_payer, child_bundle, child_auction, child_bundle_payer] =
+            accounts
+        else {
+            return Err(Self::Error::NotEnoughAccounts);
+        };
+
+        Ok(Self {
+            request_authority,
+            job_request,
+            bundle_payer,
+            bundle,
+            registry,
+            child_auction,
+            child_bundle,
+            auction,
+            auction_payer,
+            child_bundle_payer,
+        })
+    }
+}
 impl<'a, T> InstructionAccounts<'a, T> for CloseRequestAccounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.request_authority)

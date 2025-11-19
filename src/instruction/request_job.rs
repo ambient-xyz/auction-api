@@ -1,3 +1,4 @@
+use crate::error::AuctionError;
 use crate::{InstructionAccounts, MaybePubkey, PUBKEY_BYTES};
 use bytemuck::{Pod, Zeroable};
 
@@ -33,6 +34,34 @@ pub struct RequestJobAccounts<'a, T, U> {
     pub config: &'a T,
     pub bundle_auction_account_pairs: U,
     pub last_bundle: &'a T,
+}
+
+impl<'a, T> TryFrom<&'a [T]> for RequestJobAccounts<'a, T, &'a [T]> {
+    type Error = AuctionError;
+    fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
+        let [payer, job_request, registry, input_data, system_program, config, bundle_auction_account_pairs @ ..] =
+            accounts
+        else {
+            return Err(Self::Error::NotEnoughAccounts);
+        };
+
+        let Some((last_bundle, bundle_auction_account_pairs)) =
+            bundle_auction_account_pairs.split_last()
+        else {
+            return Err(Self::Error::NotEnoughBundleAuctionAccounts);
+        };
+
+        Ok(Self {
+            payer,
+            job_request,
+            registry,
+            input_data,
+            system_program,
+            bundle_auction_account_pairs,
+            last_bundle,
+            config,
+        })
+    }
 }
 
 impl<'a, T, U> InstructionAccounts<'a, T> for RequestJobAccounts<'a, T, U>

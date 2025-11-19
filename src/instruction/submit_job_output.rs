@@ -1,3 +1,4 @@
+use crate::error::AuctionError;
 use crate::InstructionAccounts;
 use bytemuck::{Pod, Zeroable};
 
@@ -22,6 +23,26 @@ pub struct SubmitJobOutputAccounts<'a, T> {
     pub auction: &'a T,
     pub output_data_account: &'a T,
 }
+
+impl<'a, T> TryFrom<&'a [T]> for SubmitJobOutputAccounts<'a, T> {
+    type Error = AuctionError;
+    fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
+        let [bid_authority, bundle, job_request, bid, auction, output_data_account] = accounts
+        else {
+            return Err(Self::Error::NotEnoughAccounts);
+        };
+
+        Ok(Self {
+            bid_authority,
+            bundle,
+            job_request,
+            bid,
+            auction,
+            output_data_account,
+        })
+    }
+}
+
 impl<'a, T> InstructionAccounts<'a, T> for SubmitJobOutputAccounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.bid_authority)

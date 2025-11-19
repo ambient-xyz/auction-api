@@ -1,3 +1,4 @@
+use crate::error::AuctionError;
 use crate::InstructionAccounts;
 use bytemuck::{Pod, Zeroable};
 
@@ -18,6 +19,22 @@ pub struct EndAuctionAccounts<'a, T> {
     pub bundle: &'a T,
     pub vote_account: &'a T,
     pub payer: &'a T,
+}
+
+impl<'a, T> TryFrom<&'a [T]> for EndAuctionAccounts<'a, T> {
+    type Error = AuctionError;
+    fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
+        let [auction, bundle, vote_account, payer] = accounts else {
+            return Err(Self::Error::NotEnoughAccounts);
+        };
+
+        Ok(Self {
+            auction,
+            bundle,
+            vote_account,
+            payer,
+        })
+    }
 }
 
 impl<'a, T> InstructionAccounts<'a, T> for EndAuctionAccounts<'a, T> {

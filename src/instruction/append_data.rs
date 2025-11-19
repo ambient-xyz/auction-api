@@ -1,4 +1,5 @@
 use crate::constant::PUBKEY_BYTES;
+use crate::error::AuctionError;
 use crate::InstructionAccounts;
 use bytemuck::Pod;
 use bytemuck::Zeroable;
@@ -11,6 +12,22 @@ pub struct AppendDataAccounts<'a, T> {
     pub data_account: &'a T,
     pub system_program: &'a T,
 }
+
+impl<'a, T> TryFrom<&'a [T]> for AppendDataAccounts<'a, T> {
+    type Error = AuctionError;
+    fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
+        let [data_authority, data_account, system_program] = accounts else {
+            return Err(Self::Error::NotEnoughAccounts);
+        };
+
+        Ok(Self {
+            data_authority,
+            data_account,
+            system_program,
+        })
+    }
+}
+
 impl<'a, T> InstructionAccounts<'a, T> for AppendDataAccounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.data_authority)
