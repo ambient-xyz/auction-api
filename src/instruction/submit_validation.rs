@@ -26,7 +26,7 @@ pub struct SubmitValidationAccounts<'a, T> {
 impl<'a, T> TryFrom<&'a [T]> for SubmitValidationAccounts<'a, T> {
     type Error = AuctionError;
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [bundle, vote_account, vote_program, vote_authority, job_request] = accounts else {
+        let [bundle, vote_account, vote_program, vote_authority, job_request, ..] = accounts else {
             return Err(Self::Error::NotEnoughAccounts);
         };
 

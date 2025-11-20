@@ -23,7 +23,7 @@ pub struct CancelBundleAccounts<'a, T> {
 impl<'a, T> TryFrom<&'a [T]> for CancelBundleAccounts<'a, T> {
     type Error = AuctionError;
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [payer, bundle, child_bundle, registry, system_program] = accounts else {
+        let [payer, bundle, child_bundle, registry, system_program, ..] = accounts else {
             return Err(Self::Error::NotEnoughAccounts);
         };
 

@@ -34,7 +34,7 @@ pub struct CloseBidAccounts<'a, T> {
 impl<'a, T> TryFrom<&'a [T]> for CloseBidAccounts<'a, T> {
     type Error = AuctionError;
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [bid_authority, bid, auction_payer, auction, bundle, vote_account, vote_authority, vote_program] =
+        let [bid_authority, bid, auction_payer, auction, bundle, vote_account, vote_authority, vote_program, ..] =
             accounts
         else {
             return Err(Self::Error::NotEnoughAccounts);

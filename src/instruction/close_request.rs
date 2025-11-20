@@ -31,7 +31,7 @@ pub struct CloseRequestAccounts<'a, T> {
 impl<'a, T> TryFrom<&'a [T]> for CloseRequestAccounts<'a, T> {
     type Error = AuctionError;
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [request_authority, job_request, bundle_payer, bundle, registry, auction, auction_payer, child_bundle, child_auction, child_bundle_payer] =
+        let [request_authority, job_request, bundle_payer, bundle, registry, auction, auction_payer, child_bundle, child_auction, child_bundle_payer, ..] =
             accounts
         else {
             return Err(Self::Error::NotEnoughAccounts);

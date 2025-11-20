@@ -1,10 +1,12 @@
-use crate::{MaybePubkey, PUBKEY_BYTES};
+use crate::{MaybePubkey, Pubkey, PUBKEY_BYTES};
 use bytemuck::{Pod, Zeroable};
 use std::num::NonZeroU64;
 
 #[derive(Clone, Copy, Zeroable, Debug, PartialEq, Pod)]
 #[repr(C)]
 pub struct Metadata {
+    /// authority to update this data account
+    pub authority: Pubkey,
     /// None if no compression is used
     pub decompressed_len: Option<NonZeroU64>,
     pub job_request_key: MaybePubkey,
