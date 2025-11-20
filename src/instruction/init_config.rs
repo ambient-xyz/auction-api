@@ -19,7 +19,7 @@ pub struct InitConfigAccounts<'a, T> {
 impl<'a, T> TryFrom<&'a [T]> for InitConfigAccounts<'a, T> {
     type Error = AuctionError;
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [payer, config, system_program] = accounts else {
+        let [payer, config, system_program, ..] = accounts else {
             return Err(Self::Error::NotEnoughAccounts);
         };
         Ok(Self {

@@ -16,7 +16,7 @@ pub struct AppendDataAccounts<'a, T> {
 impl<'a, T> TryFrom<&'a [T]> for AppendDataAccounts<'a, T> {
     type Error = AuctionError;
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [data_authority, data_account, system_program] = accounts else {
+        let [data_authority, data_account, system_program, ..] = accounts else {
             return Err(Self::Error::NotEnoughAccounts);
         };
 

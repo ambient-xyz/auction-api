@@ -27,7 +27,7 @@ pub struct SubmitJobOutputAccounts<'a, T> {
 impl<'a, T> TryFrom<&'a [T]> for SubmitJobOutputAccounts<'a, T> {
     type Error = AuctionError;
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [bid_authority, bundle, job_request, bid, auction, output_data_account] = accounts
+        let [bid_authority, bundle, job_request, bid, auction, output_data_account, ..] = accounts
         else {
             return Err(Self::Error::NotEnoughAccounts);
         };

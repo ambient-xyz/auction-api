@@ -24,7 +24,7 @@ pub struct EndAuctionAccounts<'a, T> {
 impl<'a, T> TryFrom<&'a [T]> for EndAuctionAccounts<'a, T> {
     type Error = AuctionError;
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [auction, bundle, vote_account, payer] = accounts else {
+        let [auction, bundle, vote_account, payer, ..] = accounts else {
             return Err(Self::Error::NotEnoughAccounts);
         };
 

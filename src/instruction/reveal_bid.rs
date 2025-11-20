@@ -28,7 +28,8 @@ pub struct RevealBidAccounts<'a, T> {
 impl<'a, T> TryFrom<&'a [T]> for RevealBidAccounts<'a, T> {
     type Error = AuctionError;
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [bid_authority, bid, auction, bundle, vote_account, vote_authority] = accounts else {
+        let [bid_authority, bid, auction, bundle, vote_account, vote_authority, ..] = accounts
+        else {
             return Err(Self::Error::NotEnoughAccounts);
         };
 
