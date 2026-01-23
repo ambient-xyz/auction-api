@@ -9,7 +9,7 @@ pub const PDA_MARKER: &[u8; 21] = b"ProgramDerivedAddress";
 
 /// The maximum number of requests per bundle
 pub const REQUESTS_PER_BUNDLE: usize = 20;
-pub const BUNDLE_DURATION: u64 = 150;
+pub const BUNDLE_DURATION: u64 = u64::MAX;
 pub const ACTIVE_AUCTION_DURATION: u64 = 3;
 pub const BID_REVEAL_DURATION: u64 = 3;
 
