@@ -21,7 +21,7 @@ impl RequestTier {
         match self {
             RequestTier::Eco => 43_000,
             RequestTier::Standard => 86_000,
-            RequestTier::Pro => 131_072,
+            RequestTier::Pro => 200_000,
         }
     }
     /// TODO: this should be enforced
