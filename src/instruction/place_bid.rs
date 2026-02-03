@@ -25,7 +25,7 @@ pub struct PlaceBidAccounts<'a, T> {
 impl<'a, T> TryFrom<&'a [T]> for PlaceBidAccounts<'a, T> {
     type Error = AuctionError;
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [payer, bid, auction, system_program, ..] = accounts.as_ref() else {
+        let [payer, bid, auction, system_program, ..] = accounts else {
             return Err(Self::Error::NotEnoughAccounts);
         };
         Ok(Self {
