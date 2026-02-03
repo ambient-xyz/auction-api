@@ -31,9 +31,9 @@ fn display_job_request(buffer: Vec<u8>) -> Result<(), String> {
         output_hash,
         ..
     } = verification;
-    let input_hash_b64 = base64::prelude::BASE64_STANDARD.encode(&input_hash);
-    let output_hash_b64 = base64::prelude::BASE64_STANDARD.encode(&output_hash);
-    let merkle_root_b64 = base64::prelude::BASE64_STANDARD.encode(&merkle_root);
+    let input_hash_b64 = base64::prelude::BASE64_STANDARD.encode(input_hash);
+    let output_hash_b64 = base64::prelude::BASE64_STANDARD.encode(output_hash);
+    let merkle_root_b64 = base64::prelude::BASE64_STANDARD.encode(merkle_root);
     let bundle_b58 = bs58::encode(bundle).into_string();
     let assigned_verifiers_s = assigned_verifiers
         .map(|v| bs58::encode(v).into_string())
@@ -69,8 +69,8 @@ fn display_submit_job_output(buffer: Vec<u8>) -> Result<(), String> {
     } = bytemuck::try_pod_read_unaligned(&buffer).map_err(|e| {
         format!("To decode SubmitJobOutput from transaction bytes. Is it the right data type? {e}")
     })?;
-    let output_hash_b64 = base64::prelude::BASE64_STANDARD.encode(&output_hash);
-    let merkle_root_b64 = base64::prelude::BASE64_STANDARD.encode(&merkle_root);
+    let output_hash_b64 = base64::prelude::BASE64_STANDARD.encode(output_hash);
+    let merkle_root_b64 = base64::prelude::BASE64_STANDARD.encode(merkle_root);
     eprintln!(
         "input token count: {input_token_count}
 output token count: {output_token_count}
