@@ -31,11 +31,13 @@ pub struct RequestJobAccounts<'a, T, U> {
     pub registry: &'a T,
     pub input_data: &'a T,
     pub system_program: &'a T,
+    #[cfg(feature = "global-config")]
     pub config: &'a T,
     pub bundle_auction_account_pairs: U,
     pub last_bundle: &'a T,
 }
 
+#[cfg(feature = "global-config")]
 impl<'a, T> TryFrom<&'a [T]> for RequestJobAccounts<'a, T, &'a [T]> {
     type Error = AuctionError;
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
@@ -64,6 +66,57 @@ impl<'a, T> TryFrom<&'a [T]> for RequestJobAccounts<'a, T, &'a [T]> {
     }
 }
 
+#[cfg(not(feature = "global-config"))]
+impl<'a, T> TryFrom<&'a [T]> for RequestJobAccounts<'a, T, &'a [T]> {
+    type Error = AuctionError;
+    fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
+        let [payer, job_request, registry, input_data, system_program, bundle_auction_account_pairs @ ..] =
+            accounts
+        else {
+            return Err(Self::Error::NotEnoughAccounts);
+        };
+
+        let Some((last_bundle, bundle_auction_account_pairs)) =
+            bundle_auction_account_pairs.split_last()
+        else {
+            return Err(Self::Error::NotEnoughBundleAuctionAccounts);
+        };
+
+        Ok(Self {
+            payer,
+            job_request,
+            registry,
+            input_data,
+            system_program,
+            bundle_auction_account_pairs,
+            last_bundle,
+        })
+    }
+}
+
+#[cfg(not(feature = "global-config"))]
+impl<'a, T, U> InstructionAccounts<'a, T> for RequestJobAccounts<'a, T, U>
+where
+    U: AsRef<[T]>,
+{
+    fn iter(&'a self) -> impl Iterator<Item = &'a T> {
+        std::iter::once(self.payer)
+            .chain(std::iter::once(self.job_request))
+            .chain(std::iter::once(self.registry))
+            .chain(std::iter::once(self.input_data))
+            .chain(std::iter::once(self.system_program))
+            .chain(self.bundle_auction_account_pairs.as_ref())
+            .chain(std::iter::once(self.last_bundle))
+    }
+    fn iter_owned(&self) -> impl Iterator<Item = T>
+    where
+        T: Clone,
+    {
+        self.iter().cloned()
+    }
+}
+
+#[cfg(feature = "global-config")]
 impl<'a, T, U> InstructionAccounts<'a, T> for RequestJobAccounts<'a, T, U>
 where
     U: AsRef<[T]>,
