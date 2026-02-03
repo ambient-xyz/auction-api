@@ -23,6 +23,7 @@ use bytemuck::{Pod, Zeroable};
 ///
 ///       `[WRITE]` Additional bundle-auction account pair(s)
 /// 9. `[WRITE]` Last bundle account
+#[cfg(not(feature = "global-config"))]
 #[derive(Clone, Debug)]
 #[repr(C)]
 pub struct RequestJobAccounts<'a, T, U> {
@@ -31,12 +32,45 @@ pub struct RequestJobAccounts<'a, T, U> {
     pub registry: &'a T,
     pub input_data: &'a T,
     pub system_program: &'a T,
-    #[cfg(feature = "global-config")]
-    pub config: &'a T,
     pub bundle_auction_account_pairs: U,
     pub last_bundle: &'a T,
 }
 
+/// RequestJob instruction
+///
+/// creates a [`JobRequest`] account after placing it in a bundle.
+/// Additionally, creates an associated [`Auction`] and a child [`RequestBundle`] account if the bundle is filled.
+///
+/// # Account References:
+///
+/// 0. `[WRITE, SIGNER]` Funding account
+/// 1. `[WRITE]` New job request account
+/// 2. `[WRITE]` Bundle registry account
+/// 3. `[READ]` System program
+/// 4. `[READ]` Global Config account
+/// 5. `[WRITE]` Input data account
+/// 6. `[WRITE]` Parent bundle account
+/// 7. `[WRITE]` Parent auction account
+/// 8. `[WRITE]` Child bundle account
+/// 9. `[WRITE]` Child auction account
+///
+///     Repeating (0 or more):
+///
+///       `[WRITE]` Additional bundle-auction account pair(s)
+/// 10. `[WRITE]` Last bundle account
+#[cfg(feature = "global-config")]
+#[derive(Clone, Debug)]
+#[repr(C)]
+pub struct RequestJobAccounts<'a, T, U> {
+    pub payer: &'a T,
+    pub job_request: &'a T,
+    pub registry: &'a T,
+    pub input_data: &'a T,
+    pub system_program: &'a T,
+    pub config: &'a T,
+    pub bundle_auction_account_pairs: U,
+    pub last_bundle: &'a T,
+}
 #[cfg(feature = "global-config")]
 impl<'a, T> TryFrom<&'a [T]> for RequestJobAccounts<'a, T, &'a [T]> {
     type Error = AuctionError;
