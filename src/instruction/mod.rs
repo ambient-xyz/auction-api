@@ -45,6 +45,7 @@ pub enum AuctionInstruction {
     RevealBid = 8,
     CloseRequest = 9,
     AppendData = 10,
+    #[cfg(feature = "global-config")]
     InitConfig = 11,
 }
 
@@ -104,6 +105,7 @@ pub trait InstructionAccounts<'a, T> {
         T: Clone;
 }
 
+#[cfg(feature = "global-config")]
 impl_instruction_data!(
     RequestJobArgs => RequestJob,
     PlaceBidArgs => PlaceBid,
@@ -117,4 +119,18 @@ impl_instruction_data!(
     CloseRequestArgs => CloseRequest,
     AppendDataArgs => AppendData,
     InitConfigArgs => InitConfig,
+);
+#[cfg(not(feature = "global-config"))]
+impl_instruction_data!(
+    RequestJobArgs => RequestJob,
+    PlaceBidArgs => PlaceBid,
+    EndAuctionArgs => EndAuction,
+    CloseBidArgs => CloseBid,
+    SubmitJobOutputArgs => SubmitJobOutput,
+    CancelBundleArgs => CancelBundle,
+    InitBundleArgs => InitBundle,
+    SubmitValidationArgs => SubmitValidation,
+    RevealBidArgs => RevealBid,
+    CloseRequestArgs => CloseRequest,
+    AppendDataArgs => AppendData,
 );
