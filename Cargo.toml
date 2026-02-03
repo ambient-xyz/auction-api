@@ -25,4 +25,5 @@ memoffset = "0.9.1"
 [features]
 decoder = ["dep:base64", "dep:clap", "dep:hex", "dep:serde_json", "serde"]
 serde = ["dep:bs58", "dep:serde", "dep:borsh"]
+global-config = []
 default = []
