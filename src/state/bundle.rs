@@ -75,7 +75,6 @@ impl RequestBundle {
         current_slot: u64,
         context_length_tier: RequestTier,
         expiry_duration_tier: RequestTier,
-        max_context_length: u64,
     ) -> Self {
         RequestBundle {
             payer: payer.into(),
@@ -84,7 +83,7 @@ impl RequestBundle {
             expiry_slot: current_slot.saturating_add(BUNDLE_DURATION),
             context_length_tier,
             expiry_duration_tier,
-            max_context_length,
+            max_context_length: context_length_tier.get_max_context_length_tokens(),
             ..Default::default()
         }
     }
