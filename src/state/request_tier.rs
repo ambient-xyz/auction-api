@@ -42,9 +42,9 @@ impl RequestTier {
 
     pub fn get_bundle_duration(&self) -> u64 {
         match self {
-            RequestTier::Eco => 150,
-            RequestTier::Standard => 150,
-            RequestTier::Pro => 150,
+            RequestTier::Eco => u64::MAX,
+            RequestTier::Standard => u64::MAX,
+            RequestTier::Pro => u64::MAX,
         }
     }
 
