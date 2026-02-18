@@ -19,12 +19,13 @@ pub struct InitBundleAccounts<'a, T> {
     pub bundle: &'a T,
     pub registry: &'a T,
     pub system_program: &'a T,
+    pub auction: &'a T,
 }
 
 impl<'a, T> TryFrom<&'a [T]> for InitBundleAccounts<'a, T> {
     type Error = AuctionError;
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [payer, bundle, registry, system_program, ..] = accounts else {
+        let [payer, bundle, registry, system_program, auction] = accounts else {
             return Err(Self::Error::NotEnoughAccounts);
         };
 
@@ -33,6 +34,7 @@ impl<'a, T> TryFrom<&'a [T]> for InitBundleAccounts<'a, T> {
             bundle,
             registry,
             system_program,
+            auction
         })
     }
 }
@@ -43,6 +45,7 @@ impl<'a, T> InstructionAccounts<'a, T> for InitBundleAccounts<'a, T> {
             .chain(std::iter::once(self.bundle))
             .chain(std::iter::once(self.registry))
             .chain(std::iter::once(self.system_program))
+            .chain(std::iter::once(self.auction))
     }
     fn iter_owned(&self) -> impl Iterator<Item = T>
     where
