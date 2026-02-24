@@ -230,9 +230,9 @@ pub enum TEEOnly {
     True = 1,
 }
 
-impl TryFrom<RawTEEOnly> for TEEOnly {
-    type Error = AuctionError;
-    fn try_from(value: RawTEEOnly) -> Result<Self, Self::Error> {
-        TEEOnly::try_from(value.0).map_err(|_| Self::Error::InvalidTEEOption)
+impl From<RawTEEOnly> for TEEOnly {
+    fn from(value: RawTEEOnly) -> Self {
+        // unwrap is safe because `RawTEEOnly` is guaranteed to be 0 or 1
+        TEEOnly::try_from(value.0).unwrap()
     }
 }
