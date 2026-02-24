@@ -1,7 +1,6 @@
 use crate::error::AuctionError;
 use crate::{InstructionAccounts, MaybePubkey, PUBKEY_BYTES};
 use bytemuck::{Pod, Zeroable};
-use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 /// RequestJob instruction
 ///
@@ -198,41 +197,4 @@ pub struct RequestJobArgs {
     /// lamports to initialize the new auction with
     pub new_auction_lamports: u64,
     pub input_data_account: MaybePubkey,
-    pub tee_only: RawTEEOnly,
-}
-
-#[derive(Zeroable, Clone, Copy, Eq, PartialEq, Debug, Pod)]
-#[repr(transparent)]
-pub struct RawTEEOnly(u64);
-
-impl RawTEEOnly {
-    pub fn new(tee_only: bool) -> Self {
-        Self::from(tee_only)
-    }
-}
-
-impl From<TEEOnly> for RawTEEOnly {
-    fn from(value: TEEOnly) -> Self {
-        Self(u64::from(value))
-    }
-}
-
-impl From<bool> for RawTEEOnly {
-    fn from(value: bool) -> Self {
-        Self(value as u64)
-    }
-}
-
-#[derive(Zeroable, Clone, Copy, Eq, PartialEq, Debug, IntoPrimitive, TryFromPrimitive)]
-#[repr(u64)]
-pub enum TEEOnly {
-    False = 0,
-    True = 1,
-}
-
-impl From<RawTEEOnly> for TEEOnly {
-    fn from(value: RawTEEOnly) -> Self {
-        // unwrap is safe because `RawTEEOnly` is guaranteed to be 0 or 1
-        TEEOnly::try_from(value.0).unwrap()
-    }
 }
