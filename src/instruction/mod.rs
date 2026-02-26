@@ -16,6 +16,7 @@ mod request_job;
 mod reveal_bid;
 mod submit_job_output;
 mod submit_validation;
+mod update_verifier;
 
 use crate::macros::impl_instruction_data;
 pub use append_data::*;
@@ -30,6 +31,7 @@ pub use request_job::*;
 pub use reveal_bid::*;
 pub use submit_job_output::*;
 pub use submit_validation::*;
+pub use update_verifier::*;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive, IntoPrimitive)]
 #[repr(u8)]
@@ -47,6 +49,7 @@ pub enum AuctionInstruction {
     AppendData = 10,
     #[cfg(feature = "global-config")]
     InitConfig = 11,
+    UpdateVerifier = 12,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -133,4 +136,5 @@ impl_instruction_data!(
     RevealBidArgs => RevealBid,
     CloseRequestArgs => CloseRequest,
     AppendDataArgs => AppendData,
+    UpdateVerifierArgs => UpdateVerifier
 );

@@ -76,8 +76,8 @@ pub enum AuctionError {
     InvalidConfigData = 34,
     /// Illegal config account found
     IllegalConfigOwner = 35,
-    /// Invalid TEE option
-    InvalidTEEOption = 36,
+    /// Invalid Bool option
+    InvalidBoolOption = 36,
 }
 
 impl Display for AuctionError {
