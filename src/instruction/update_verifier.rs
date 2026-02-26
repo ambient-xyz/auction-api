@@ -39,7 +39,7 @@ impl<'a, T> InstructionAccounts<'a, T> for UpdateVerifierAccounts<'a, T> {
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct UpdateVerifierArgs {
-    tee_enabled: BoolPOD,
+    tee_enabled: RawBoolPOD,
 }
 
 #[derive(Zeroable, Clone, Copy, Eq, PartialEq, Debug, Pod)]
