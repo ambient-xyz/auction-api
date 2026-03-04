@@ -11,13 +11,14 @@ pub const JOB_REQUEST_SEED: &[u8] = b"job_request";
 pub const BUNDLE_REGISTRY_SEED: &[u8] = b"bundle_registry";
 pub const BID_SEED: &[u8] = b"bid";
 pub const AUCTION_SEED: &[u8] = b"auction";
+pub const AUCTION_VERIFIERS_SEED: &[u8] = b"auction_verifiers";
 pub const CONFIG_SEED: &[u8] = b"global_config";
 /// The minimum number of bundle-auction pairs
 /// Eg. if set to 2 means two bundle-auction pairs have to be submitted ie 4 accounts
 #[cfg(not(feature = "global-config"))]
 pub const MINIMUM_BUNDLE_AUCTION_PAIRS: usize = 2;
 /// Auction Program ID
-pub const ID: [u8; PUBKEY_BYTES] =
-    five8_const::decode_32_const("Auction111111111111111111111111111111111111");
+pub const ID: [u8; PUBKEY_BYTES] = five8_const::decode_32_const(PROGRAM_ID);
+pub const PROGRAM_ID: &str = "Auction111111111111111111111111111111111111";
 
 pub const VERIFIERS_PER_AUCTION: usize = 3;

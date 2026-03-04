@@ -9,6 +9,7 @@ mod cancel_bundle;
 mod close_bid;
 mod close_request;
 mod end_auction;
+mod init_auction_verifiers;
 mod init_bundle;
 mod init_config;
 mod place_bid;
@@ -24,6 +25,7 @@ pub use cancel_bundle::*;
 pub use close_bid::*;
 pub use close_request::*;
 pub use end_auction::*;
+pub use init_auction_verifiers::*;
 pub use init_bundle::*;
 pub use init_config::*;
 pub use place_bid::*;
@@ -50,6 +52,7 @@ pub enum AuctionInstruction {
     #[cfg(feature = "global-config")]
     InitConfig = 11,
     UpdateVerifier = 12,
+    InitAuctionVerifiers = 13,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -136,5 +139,6 @@ impl_instruction_data!(
     RevealBidArgs => RevealBid,
     CloseRequestArgs => CloseRequest,
     AppendDataArgs => AppendData,
-    UpdateVerifierArgs => UpdateVerifier
+    UpdateVerifierArgs => UpdateVerifier,
+    InitAuctionVerifiersArgs => InitAuctionVerifiers
 );
