@@ -47,6 +47,7 @@ impl<'a, T> InstructionAccounts<'a, T> for InitConfigAccounts<'a, T> {
 #[repr(C)]
 pub struct InitConfigArgs {
     pub minimum_bundle_auction_pairs: u64,
+    pub minimum_tee_verifier_lstake: u64,
     pub update_authority: MaybePubkey,
     pub config_lamports: u64,
 }

@@ -78,6 +78,8 @@ pub enum AuctionError {
     IllegalConfigOwner = 35,
     /// Invalid Bool option
     InvalidBoolOption = 36,
+    /// Insufficient Lstake balance for operation
+    NotEnoughLstake = 37,
 }
 
 impl Display for AuctionError {

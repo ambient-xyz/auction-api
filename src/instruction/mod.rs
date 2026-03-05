@@ -125,6 +125,8 @@ impl_instruction_data!(
     CloseRequestArgs => CloseRequest,
     AppendDataArgs => AppendData,
     InitConfigArgs => InitConfig,
+    UpdateVerifierArgs => UpdateVerifier,
+    InitAuctionVerifiersArgs => InitAuctionVerifiers
 );
 #[cfg(not(feature = "global-config"))]
 impl_instruction_data!(
