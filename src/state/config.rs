@@ -12,6 +12,8 @@ pub struct Config {
     /// The minimum number of bundle-auction pairs
     /// Eg. if set to 2 means two bundle-auction pairs have to be submitted ie 4 accounts
     pub minimum_bundle_auction_pairs: u64,
+    /// The minimum lstake needed to enlist as a TEE Verifier
+    pub minimum_tee_verifier_lstake: u64,
     pub bump: u64,
 }
 

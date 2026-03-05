@@ -10,6 +10,7 @@ pub enum RequestTier {
     Eco = 0,
     Standard = 1,
     Pro = 2,
+    TEE = 3,
 }
 unsafe impl Pod for RequestTier {}
 
@@ -21,6 +22,7 @@ impl RequestTier {
             RequestTier::Eco => 3,
             RequestTier::Standard => 3,
             RequestTier::Pro => 3,
+            RequestTier::TEE => 3,
         }
     }
 
@@ -29,6 +31,7 @@ impl RequestTier {
             RequestTier::Eco => 3,
             RequestTier::Standard => 3,
             RequestTier::Pro => 3,
+            RequestTier::TEE => 3,
         }
     }
 
@@ -37,6 +40,7 @@ impl RequestTier {
             RequestTier::Eco => 3,
             RequestTier::Standard => 3,
             RequestTier::Pro => 3,
+            RequestTier::TEE => 3,
         }
     }
 
@@ -45,6 +49,7 @@ impl RequestTier {
             RequestTier::Eco => 150,
             RequestTier::Standard => 150,
             RequestTier::Pro => 150,
+            RequestTier::TEE => 150,
         }
     }
 
@@ -54,6 +59,7 @@ impl RequestTier {
             RequestTier::Eco => 30,
             RequestTier::Standard => 30,
             RequestTier::Pro => 30,
+            RequestTier::TEE => 30,
         }
     }
 
@@ -63,6 +69,7 @@ impl RequestTier {
             RequestTier::Eco => 43_000,
             RequestTier::Standard => 86_000,
             RequestTier::Pro => 200_000,
+            RequestTier::TEE => 200_000,
         }
     }
     /// TODO: this should be enforced
@@ -71,6 +78,7 @@ impl RequestTier {
             RequestTier::Eco => 155,
             RequestTier::Standard => 145,
             RequestTier::Pro => 135,
+            RequestTier::TEE => 135,
         }
     }
     pub fn get_bid_commitment_amount_multiplier(&self) -> u64 {
@@ -78,6 +86,7 @@ impl RequestTier {
             RequestTier::Eco => 1,
             RequestTier::Standard => 2,
             RequestTier::Pro => 3,
+            RequestTier::TEE => 3,
         }
     }
     pub fn get_auction_credits_multiplier(&self) -> u64 {
@@ -85,6 +94,7 @@ impl RequestTier {
             RequestTier::Eco => 1,
             RequestTier::Standard => 2,
             RequestTier::Pro => 3,
+            RequestTier::TEE => 3,
         }
     }
 

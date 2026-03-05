@@ -9,6 +9,7 @@ mod cancel_bundle;
 mod close_bid;
 mod close_request;
 mod end_auction;
+mod init_auction_verifiers;
 mod init_bundle;
 mod init_config;
 mod place_bid;
@@ -16,6 +17,7 @@ mod request_job;
 mod reveal_bid;
 mod submit_job_output;
 mod submit_validation;
+mod update_verifier;
 
 use crate::macros::impl_instruction_data;
 pub use append_data::*;
@@ -23,6 +25,7 @@ pub use cancel_bundle::*;
 pub use close_bid::*;
 pub use close_request::*;
 pub use end_auction::*;
+pub use init_auction_verifiers::*;
 pub use init_bundle::*;
 pub use init_config::*;
 pub use place_bid::*;
@@ -30,6 +33,7 @@ pub use request_job::*;
 pub use reveal_bid::*;
 pub use submit_job_output::*;
 pub use submit_validation::*;
+pub use update_verifier::*;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive, IntoPrimitive)]
 #[repr(u8)]
@@ -47,6 +51,8 @@ pub enum AuctionInstruction {
     AppendData = 10,
     #[cfg(feature = "global-config")]
     InitConfig = 11,
+    UpdateVerifier = 12,
+    InitAuctionVerifiers = 13,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -119,6 +125,8 @@ impl_instruction_data!(
     CloseRequestArgs => CloseRequest,
     AppendDataArgs => AppendData,
     InitConfigArgs => InitConfig,
+    UpdateVerifierArgs => UpdateVerifier,
+    InitAuctionVerifiersArgs => InitAuctionVerifiers
 );
 #[cfg(not(feature = "global-config"))]
 impl_instruction_data!(
@@ -133,4 +141,6 @@ impl_instruction_data!(
     RevealBidArgs => RevealBid,
     CloseRequestArgs => CloseRequest,
     AppendDataArgs => AppendData,
+    UpdateVerifierArgs => UpdateVerifier,
+    InitAuctionVerifiersArgs => InitAuctionVerifiers
 );
