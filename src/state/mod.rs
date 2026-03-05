@@ -8,12 +8,14 @@ pub use bid::*;
 pub mod job_request;
 pub mod metadata;
 pub mod request_tier;
+pub mod tee_verifier_list;
 pub use bundle::*;
 pub use bundle_registry::*;
 pub use config::*;
 pub use job_request::*;
 pub use metadata::*;
 pub use request_tier::*;
+pub use tee_verifier_list::*;
 
 #[cfg(feature = "serde")]
 use borsh::{BorshDeserialize, BorshSerialize};
