@@ -2,7 +2,8 @@
 use std::io::{self, Read as _};
 
 use ambient_auction_api::{
-    instruction::SubmitJobOutputArgs, Auction, Bid, JobRequest, RequestBundle, VerificationState,
+    instruction::SubmitJobOutputArgs, Auction, Bid, JobRequest, JobVerificationState,
+    RequestBundle, VerificationState,
 };
 use base64::Engine as _;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -38,7 +39,13 @@ fn display_job_request(buffer: Vec<u8>) -> Result<(), String> {
     let assigned_verifiers_s = assigned_verifiers
         .map(|v| bs58::encode(v).into_string())
         .join(", ");
-    let verification_states_s = verifier_states.map(|v| v.to_string()).join(", ");
+    let verification_states_s = verifier_states
+        .map(|v| {
+            JobVerificationState::try_from(v)
+                .map(|state| state.to_string())
+                .unwrap_or_else(|_| "Invalid".to_string())
+        })
+        .join(", ");
     eprintln!(
         "bundle: {bundle_b58}
 input hash: {input_hash_b64}

@@ -1,6 +1,7 @@
 use super::Pubkey;
 use crate::state::request_tier::RequestTier;
-use crate::{constant::PUBKEY_BYTES, MaybePubkey, VERIFIERS_PER_AUCTION};
+use crate::state::verification::VerificationState;
+use crate::{constant::PUBKEY_BYTES, MaybePubkey};
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -43,34 +44,6 @@ pub struct JobRequest {
     pub output_data_account: MaybePubkey,
 }
 
-#[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Default)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[repr(C)]
-/// Holds all data required to manage and track verification of a job request.
-///
-/// Includes:
-/// - Merkle root of the job’s output data.
-/// - Assigned verifiers and their corresponding token ranges.
-/// - Individual verifier states and verified token counts.
-/// - Output hash for integrity checks (optionally encrypted).
-/// - Initialization vectors (IVs) for optional encryption of the output hash
-///   and Merkle root, using a shared secret between client and ambient.
-pub struct VerificationState {
-    pub merkle_root: [u8; 32],
-    pub assigned_verifiers: [Pubkey; VERIFIERS_PER_AUCTION],
-    pub assigned_verifiers_token_ranges: [u64; VERIFIERS_PER_AUCTION * 2],
-    pub verifier_states: [JobVerificationState; VERIFIERS_PER_AUCTION],
-    pub verified_tokens: [u64; VERIFIERS_PER_AUCTION],
-    pub output_hash: [u8; 32],
-    /// output hash and merkle root may be encrypted with a shared secret + iv,
-    /// where shared_secret = ambient private key x client public key
-    /// and IV is a random byte array (a nonce in crypto terms)
-    ///
-    /// encryption is used iff `encryption_iv` != [0; 16]
-    pub output_hash_iv: [u8; 16],
-    pub merkle_root_iv: [u8; 16],
-}
-
 impl JobRequest {
     pub const LEN: usize = std::mem::size_of::<JobRequest>();
 }
@@ -97,29 +70,6 @@ impl std::fmt::Display for JobRequestStatus {
             JobRequestStatus::WaitingForOutput => "WaitingForOutput",
             JobRequestStatus::OutputReceived => "OutputReceived",
             JobRequestStatus::OutputVerified => "OutputVerified",
-        };
-        write!(f, "{t}")
-    }
-}
-
-#[derive(Clone, Copy, Zeroable, Debug, PartialEq, Default)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[repr(u64)]
-pub enum JobVerificationState {
-    #[default]
-    NotStarted = 0,
-    InProgress = 1,
-    Completed = 2,
-}
-
-unsafe impl Pod for JobVerificationState {}
-
-impl std::fmt::Display for JobVerificationState {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let t = match self {
-            JobVerificationState::NotStarted => "NotStarted",
-            JobVerificationState::InProgress => "InProgress",
-            JobVerificationState::Completed => "Completed",
         };
         write!(f, "{t}")
     }
