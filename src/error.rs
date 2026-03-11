@@ -76,6 +76,10 @@ pub enum AuctionError {
     InvalidConfigData = 34,
     /// Illegal config account found
     IllegalConfigOwner = 35,
+    /// Found an Invalid value for JobVerificationState
+    InvalidJobVerificationState = 36,
+    /// The token range is already verified
+    AlreadyVerified = 37,
 }
 
 impl Display for AuctionError {
