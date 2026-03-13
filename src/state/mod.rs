@@ -1,6 +1,7 @@
 pub mod auction;
 pub mod bid;
 pub mod bundle;
+pub mod bundle_escrow_v2;
 pub mod bundle_registry;
 pub mod config;
 pub use auction::*;
@@ -11,6 +12,7 @@ pub mod request_tier;
 mod verification;
 
 pub use bundle::*;
+pub use bundle_escrow_v2::*;
 pub use bundle_registry::*;
 pub use config::*;
 pub use job_request::*;
