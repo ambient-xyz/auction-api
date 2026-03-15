@@ -51,18 +51,18 @@ impl RequestTier {
     /// The maximum number of requests per bundle
     pub fn get_request_per_bundle(&self) -> u64 {
         match self {
-            RequestTier::Eco => 30,
-            RequestTier::Standard => 30,
-            RequestTier::Pro => 30,
+            RequestTier::Eco => 24,
+            RequestTier::Standard => 6,
+            RequestTier::Pro => 2,
         }
     }
 
     /// Maximum allowed context length (in tokens) per tier
     pub fn get_max_context_length_tokens(&self) -> u64 {
         match self {
-            RequestTier::Eco => 43_000,
-            RequestTier::Standard => 86_000,
-            RequestTier::Pro => 200_000,
+            RequestTier::Eco => 12_000,
+            RequestTier::Standard => 32_000,
+            RequestTier::Pro => 202_752,
         }
     }
     /// TODO: this should be enforced
@@ -93,5 +93,27 @@ impl RequestTier {
             .iter()
             .find(|tier| tokens <= tier.get_max_context_length_tokens())
             .copied()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::RequestTier;
+
+    #[test]
+    fn request_bundle_capacities_match_expected_shape() {
+        assert_eq!(RequestTier::Eco.get_request_per_bundle(), 24);
+        assert_eq!(RequestTier::Standard.get_request_per_bundle(), 6);
+        assert_eq!(RequestTier::Pro.get_request_per_bundle(), 2);
+    }
+
+    #[test]
+    fn context_length_boundaries_match_expected_shape() {
+        assert_eq!(RequestTier::context_tier_for_tokens(12_000), Some(RequestTier::Eco));
+        assert_eq!(RequestTier::context_tier_for_tokens(12_001), Some(RequestTier::Standard));
+        assert_eq!(RequestTier::context_tier_for_tokens(32_000), Some(RequestTier::Standard));
+        assert_eq!(RequestTier::context_tier_for_tokens(32_001), Some(RequestTier::Pro));
+        assert_eq!(RequestTier::context_tier_for_tokens(202_752), Some(RequestTier::Pro));
+        assert_eq!(RequestTier::context_tier_for_tokens(202_753), None);
     }
 }
