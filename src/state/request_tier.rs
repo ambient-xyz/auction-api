@@ -16,7 +16,7 @@ pub enum RequestTier {
 unsafe impl Pod for RequestTier {}
 
 impl RequestTier {
-    const ALL: [RequestTier; 5] = [
+    pub const ALL: [RequestTier; 5] = [
         RequestTier::Eco,
         RequestTier::Small,
         RequestTier::Standard,
