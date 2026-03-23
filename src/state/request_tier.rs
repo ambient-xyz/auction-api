@@ -1,9 +1,21 @@
-use bytemuck::{Pod, Zeroable};
+use bytemuck::{CheckedBitPattern, NoUninit, Zeroable};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive, IntoPrimitive, Zeroable, Hash)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    TryFromPrimitive,
+    IntoPrimitive,
+    Zeroable,
+    NoUninit,
+    CheckedBitPattern,
+    Hash,
+)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(u64)]
 pub enum RequestTier {
@@ -11,7 +23,6 @@ pub enum RequestTier {
     Standard = 1,
     Pro = 2,
 }
-unsafe impl Pod for RequestTier {}
 
 impl RequestTier {
     const ALL: [RequestTier; 3] = [RequestTier::Eco, RequestTier::Standard, RequestTier::Pro];
@@ -93,5 +104,24 @@ impl RequestTier {
             .iter()
             .find(|tier| tokens <= tier.get_max_context_length_tokens())
             .copied()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::RequestTier;
+
+    #[test]
+    fn request_tier_rejects_invalid_discriminants() {
+        let bytes = 99u64.to_le_bytes();
+        assert!(bytemuck::checked::try_from_bytes::<RequestTier>(&bytes).is_err());
+    }
+
+    #[test]
+    fn request_tier_has_stable_u64_layout() {
+        let expected = 2u64.to_le_bytes();
+        assert_eq!(std::mem::size_of::<RequestTier>(), std::mem::size_of::<u64>());
+        assert_eq!(std::mem::align_of::<RequestTier>(), std::mem::align_of::<u64>());
+        assert_eq!(bytemuck::bytes_of(&RequestTier::Pro), expected.as_slice());
     }
 }

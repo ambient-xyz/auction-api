@@ -1,6 +1,6 @@
 use crate::error::AuctionError;
 use crate::{InstructionAccounts, RequestTier};
-use bytemuck::{Pod, Zeroable};
+use bytemuck::{CheckedBitPattern, NoUninit, Zeroable};
 
 /// InitBundle instruction
 ///
@@ -51,7 +51,7 @@ impl<'a, T> InstructionAccounts<'a, T> for InitBundleAccounts<'a, T> {
         self.iter().cloned()
     }
 }
-#[derive(Pod, Clone, Copy, Zeroable, PartialEq, Debug)]
+#[derive(Clone, Copy, Zeroable, NoUninit, CheckedBitPattern, PartialEq, Debug)]
 #[repr(C)]
 pub struct InitBundleArgs {
     /// Context length tier type

@@ -80,4 +80,6 @@ pub enum BidStatus {
     Revealed = 1,
 }
 
+// `BidStatus` stays on the legacy `Pod` path until `IpAddr` can be redesigned
+// without changing the bid/account wire format.
 unsafe impl Pod for BidStatus {}

@@ -1,8 +1,8 @@
-use super::RequestTier;
+use super::{AccountData, RequestTier};
 use crate::Pubkey;
-use bytemuck::{Pod, Zeroable};
+use bytemuck::{CheckedBitPattern, NoUninit, Zeroable};
 
-#[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq)]
+#[derive(Clone, Copy, Zeroable, NoUninit, CheckedBitPattern, Debug, PartialEq)]
 #[repr(C)]
 pub struct BundleRegistry {
     /// Context length tier type
@@ -20,6 +20,6 @@ impl BundleRegistry {
     pub const LEN: usize = std::mem::size_of::<BundleRegistry>();
 
     pub fn from_bytes<A: AsRef<[u8]>>(bytes: &A) -> Option<&Self> {
-        bytemuck::try_from_bytes(bytes.as_ref()).ok()
+        Self::try_from_bytes(bytes.as_ref()).ok()
     }
 }

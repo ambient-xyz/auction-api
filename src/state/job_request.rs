@@ -2,11 +2,11 @@ use super::Pubkey;
 use crate::state::request_tier::RequestTier;
 use crate::state::verification::VerificationState;
 use crate::{constant::PUBKEY_BYTES, MaybePubkey};
-use bytemuck::{Pod, Zeroable};
+use bytemuck::{CheckedBitPattern, NoUninit, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Zeroable, Debug, PartialEq, Pod)]
+#[derive(Clone, Copy, Zeroable, NoUninit, CheckedBitPattern, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
 /// Account created and owned by the auction program to keep state related to a user inference request.
@@ -48,7 +48,7 @@ impl JobRequest {
     pub const LEN: usize = std::mem::size_of::<JobRequest>();
 }
 
-#[derive(Clone, Copy, Zeroable, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Zeroable, NoUninit, CheckedBitPattern, Debug, PartialEq, Default)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(u64)]
 /// Represents the lifecycle status of a job request.
@@ -61,8 +61,6 @@ pub enum JobRequestStatus {
     /// The output has been verified and the request is completed.
     OutputVerified = 2,
 }
-
-unsafe impl Pod for JobRequestStatus {}
 
 impl std::fmt::Display for JobRequestStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -95,5 +93,33 @@ impl Default for JobRequest {
             input_data_account: None.into(),
             output_data_account: None.into(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::JobRequestStatus;
+
+    #[test]
+    fn job_request_status_rejects_invalid_discriminants() {
+        let bytes = 99u64.to_le_bytes();
+        assert!(bytemuck::checked::try_from_bytes::<JobRequestStatus>(&bytes).is_err());
+    }
+
+    #[test]
+    fn job_request_status_has_stable_u64_layout() {
+        let expected = 1u64.to_le_bytes();
+        assert_eq!(
+            std::mem::size_of::<JobRequestStatus>(),
+            std::mem::size_of::<u64>()
+        );
+        assert_eq!(
+            std::mem::align_of::<JobRequestStatus>(),
+            std::mem::align_of::<u64>()
+        );
+        assert_eq!(
+            bytemuck::bytes_of(&JobRequestStatus::OutputReceived),
+            expected.as_slice()
+        );
     }
 }

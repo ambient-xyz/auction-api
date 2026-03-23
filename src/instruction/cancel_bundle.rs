@@ -1,6 +1,6 @@
 use crate::error::AuctionError;
 use crate::{InstructionAccounts, Pubkey, RequestTier};
-use bytemuck::{Pod, Zeroable};
+use bytemuck::{CheckedBitPattern, NoUninit, Zeroable};
 
 /// CancelBundle instruction
 ///
@@ -51,7 +51,7 @@ impl<'a, T> InstructionAccounts<'a, T> for CancelBundleAccounts<'a, T> {
         self.iter().cloned()
     }
 }
-#[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, Zeroable, NoUninit, CheckedBitPattern, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct CancelBundleArgs {
     pub parent_bundle_key: Pubkey,

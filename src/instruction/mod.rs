@@ -1,4 +1,4 @@
-use bytemuck::{Pod, Zeroable};
+use bytemuck::{NoUninit, Pod, Zeroable};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -17,7 +17,7 @@ mod reveal_bid;
 mod submit_job_output;
 mod submit_validation;
 
-use crate::macros::impl_instruction_data;
+use crate::macros::{impl_checked_instruction_data, impl_instruction_data};
 pub use append_data::*;
 pub use cancel_bundle::*;
 pub use close_bid::*;
@@ -57,6 +57,8 @@ pub enum IpAddr {
     V4([u8; 4]),
     V6([u16; 8]),
 }
+// `IpAddr` keeps a legacy `Pod` impl because replacing this enum with a safe
+// bytemuck shape would require changing the instruction/account wire format.
 unsafe impl Pod for IpAddr {}
 
 impl Default for IpAddr {
@@ -85,7 +87,7 @@ impl From<net::IpAddr> for IpAddr {
     }
 }
 
-pub trait InstructionBytes: Pod {
+pub trait InstructionBytes: NoUninit {
     const INSTRUCTION: AuctionInstruction;
     fn to_bytes(&self) -> Vec<u8> {
         [
@@ -112,8 +114,6 @@ impl_instruction_data!(
     EndAuctionArgs => EndAuction,
     CloseBidArgs => CloseBid,
     SubmitJobOutputArgs => SubmitJobOutput,
-    CancelBundleArgs => CancelBundle,
-    InitBundleArgs => InitBundle,
     SubmitValidationArgs => SubmitValidation,
     RevealBidArgs => RevealBid,
     CloseRequestArgs => CloseRequest,
@@ -127,10 +127,13 @@ impl_instruction_data!(
     EndAuctionArgs => EndAuction,
     CloseBidArgs => CloseBid,
     SubmitJobOutputArgs => SubmitJobOutput,
-    CancelBundleArgs => CancelBundle,
-    InitBundleArgs => InitBundle,
     SubmitValidationArgs => SubmitValidation,
     RevealBidArgs => RevealBid,
     CloseRequestArgs => CloseRequest,
     AppendDataArgs => AppendData,
+);
+
+impl_checked_instruction_data!(
+    CancelBundleArgs => CancelBundle,
+    InitBundleArgs => InitBundle,
 );
