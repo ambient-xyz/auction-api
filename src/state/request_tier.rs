@@ -67,10 +67,10 @@ impl RequestTier {
     /// The maximum number of requests per bundle
     pub fn get_request_per_bundle(&self) -> u64 {
         match self {
-            RequestTier::Eco => 36,
-            RequestTier::Small => 19,
-            RequestTier::Standard => 6,
-            RequestTier::Pro => 3,
+            RequestTier::Eco => 96,
+            RequestTier::Small => 12,
+            RequestTier::Standard => 5,
+            RequestTier::Pro => 2,
             RequestTier::Large => 1,
         }
     }
@@ -78,11 +78,11 @@ impl RequestTier {
     /// Maximum allowed context length (in tokens) per tier
     pub fn get_max_context_length_tokens(&self) -> u64 {
         match self {
-            RequestTier::Eco => 10_000,
-            RequestTier::Small => 18_000,
-            RequestTier::Standard => 35_000,
-            RequestTier::Pro => 80_000,
-            RequestTier::Large => 200_000,
+            RequestTier::Eco => 2_000,
+            RequestTier::Small => 16_000,
+            RequestTier::Standard => 32_000,
+            RequestTier::Pro => 64_000,
+            RequestTier::Large => 202_752,
         }
     }
     /// TODO: this should be enforced
