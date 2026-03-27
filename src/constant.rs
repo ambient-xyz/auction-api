@@ -17,9 +17,9 @@ pub const BUNDLE_ESCROW_V2_SEED: &[u8] = b"bundle_escrow_v2";
 /// Eg. if set to 2 means two bundle-auction pairs have to be submitted ie 4 accounts
 #[cfg(not(feature = "global-config"))]
 pub const MINIMUM_BUNDLE_AUCTION_PAIRS: usize = 2;
-/// Auction Program ID
-pub const ID: [u8; PUBKEY_BYTES] =
-    five8_const::decode_32_const("Auction111111111111111111111111111111111111");
+/// Default auction program ID. Override at build time with `AMBIENT_AUCTION_PROGRAM_ID`.
+pub const DEFAULT_PROGRAM_ID_B58: &str = "Auction111111111111111111111111111111111111";
+include!(concat!(env!("OUT_DIR"), "/program_id.rs"));
 
 pub const VERIFIERS_PER_AUCTION: usize = 3;
 pub const V2_VERIFIER_QUORUM: usize = 2;
