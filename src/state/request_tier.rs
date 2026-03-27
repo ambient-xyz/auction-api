@@ -67,7 +67,7 @@ impl RequestTier {
     /// The maximum number of requests per bundle
     pub fn get_request_per_bundle(&self) -> u64 {
         match self {
-            RequestTier::Eco => 96,
+            RequestTier::Eco => 30,
             RequestTier::Small => 12,
             RequestTier::Standard => 5,
             RequestTier::Pro => 2,
