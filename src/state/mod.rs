@@ -20,10 +20,10 @@ pub use verification::*;
 
 #[cfg(feature = "serde")]
 use borsh::{BorshDeserialize, BorshSerialize};
-use bytemuck::{Pod, Zeroable};
+use bytemuck::{CheckedBitPattern, NoUninit, Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::{mem, ptr};
+use std::mem;
 #[derive(Pod, PartialEq, Eq, Debug, Clone, Copy, Zeroable, Default)]
 #[cfg_attr(
     feature = "serde",
@@ -125,19 +125,34 @@ impl Serialize for MaybePubkey {
     }
 }
 
-/// Safely reads a `Pod` value from bytes at a given offset.
-fn read_field<T: Pod>(bytes: &[u8], offset: usize) -> Option<T> {
-    let end = offset + mem::size_of::<T>();
-    if end > bytes.len() {
-        return None;
+/// Shared account decoding helpers for both checked and legacy bytemuck-backed wire types.
+pub trait AccountData: Sized + Copy + NoUninit + CheckedBitPattern {
+    fn try_from_bytes(bytes: &[u8]) -> Result<&Self, bytemuck::checked::CheckedCastError> {
+        bytemuck::checked::try_from_bytes(bytes)
     }
-    let ptr = unsafe { bytes.as_ptr().add(offset) as *const T };
-    Some(unsafe { ptr::read_unaligned(ptr) }) // safe, even if not aligned
+
+    fn try_from_bytes_mut(
+        bytes: &mut [u8],
+    ) -> Result<&mut Self, bytemuck::checked::CheckedCastError> {
+        bytemuck::checked::try_from_bytes_mut(bytes)
+    }
+
+    fn try_read_unaligned(bytes: &[u8]) -> Result<Self, bytemuck::checked::CheckedCastError> {
+        bytemuck::checked::try_pod_read_unaligned(bytes)
+    }
+}
+
+impl<T> AccountData for T where T: Sized + Copy + NoUninit + CheckedBitPattern {}
+
+/// Safely reads a `Pod` value from bytes at a given offset.
+fn read_field<T: AccountData>(bytes: &[u8], offset: usize) -> Option<T> {
+    let end = offset + mem::size_of::<T>();
+    T::try_read_unaligned(bytes.get(offset..end)?).ok()
 }
 /// Safely writes a `Pod` value into a mutable byte slice at a given offset.
 ///
 /// Returns `true` if the writing succeeds, or `false` if the slice is too small.
-fn write_field<T: Pod>(bytes: &mut [u8], offset: usize, value: T) -> bool {
+fn write_field<T: NoUninit>(bytes: &mut [u8], offset: usize, value: T) -> bool {
     let size = std::mem::size_of::<T>();
     if bytes.len() < offset + size {
         return false; // slice too small

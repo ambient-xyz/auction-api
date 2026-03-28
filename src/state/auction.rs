@@ -1,13 +1,13 @@
-use super::Pubkey;
+use super::{AccountData, Pubkey};
 use crate::{constant::PUBKEY_BYTES, RequestTier};
-use bytemuck::{Pod, Zeroable};
+use bytemuck::{CheckedBitPattern, NoUninit, Zeroable};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::num::NonZeroU64;
 
 /// Reverse auction on a bundle of requests
-#[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq)]
+#[derive(Clone, Copy, Zeroable, NoUninit, CheckedBitPattern, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct Auction {
@@ -53,7 +53,7 @@ impl Auction {
     pub const LEN: usize = std::mem::size_of::<Auction>();
 
     pub fn from_bytes<A: AsRef<[u8]>>(bytes: &A) -> Option<&Self> {
-        bytemuck::try_from_bytes(bytes.as_ref()).ok()
+        Self::try_from_bytes(bytes.as_ref()).ok()
     }
     #[allow(clippy::too_many_arguments)]
     pub fn init_from_auction(
@@ -109,7 +109,18 @@ impl Default for Auction {
 ///
 /// unsafe impl Pod for AuctionStatus {}
 /// The default state is Active.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive, IntoPrimitive, Zeroable)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    TryFromPrimitive,
+    IntoPrimitive,
+    Zeroable,
+    NoUninit,
+    CheckedBitPattern,
+)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(u64)]
 pub enum AuctionStatus {
@@ -126,4 +137,21 @@ pub enum AuctionStatus {
     Canceled = 3,
 }
 
-unsafe impl Pod for AuctionStatus {}
+#[cfg(test)]
+mod tests {
+    use super::AuctionStatus;
+
+    #[test]
+    fn auction_status_rejects_invalid_discriminants() {
+        let bytes = 99u64.to_le_bytes();
+        assert!(bytemuck::checked::try_from_bytes::<AuctionStatus>(&bytes).is_err());
+    }
+
+    #[test]
+    fn auction_status_has_stable_u64_layout() {
+        let expected = 2u64.to_le_bytes();
+        assert_eq!(std::mem::size_of::<AuctionStatus>(), std::mem::size_of::<u64>());
+        assert_eq!(std::mem::align_of::<AuctionStatus>(), std::mem::align_of::<u64>());
+        assert_eq!(bytemuck::bytes_of(&AuctionStatus::Ended), expected.as_slice());
+    }
+}

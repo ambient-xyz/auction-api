@@ -2,7 +2,7 @@ use super::{read_field, write_field, Pubkey};
 use crate::constant::PUBKEY_BYTES;
 use crate::state::request_tier::RequestTier;
 use crate::{MaybePubkey, VERIFIERS_PER_AUCTION};
-use bytemuck::{offset_of, Pod, Zeroable};
+use bytemuck::{offset_of, CheckedBitPattern, NoUninit, Pod, Zeroable};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -16,7 +16,7 @@ pub struct Verifiers {
 }
 
 /// A bundle is a block of economically similar requests
-#[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq)]
+#[derive(Clone, Copy, Zeroable, NoUninit, CheckedBitPattern, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
 pub struct RequestBundle {
@@ -152,7 +152,18 @@ impl Default for RequestBundle {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive, IntoPrimitive, Zeroable)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    TryFromPrimitive,
+    IntoPrimitive,
+    Zeroable,
+    NoUninit,
+    CheckedBitPattern,
+)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(u64)]
 pub enum BundleStatus {
@@ -169,7 +180,6 @@ pub enum BundleStatus {
     /// The bundle has failed to conclude
     Canceled = 6,
 }
-unsafe impl Pod for BundleStatus {}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -191,6 +201,8 @@ mod tests {
     fn layout_sizes() {
         assert_eq!(size_of::<RequestTier>(), 8);
         assert_eq!(size_of::<BundleStatus>(), 8);
+        assert_eq!(align_of::<RequestTier>(), align_of::<u64>());
+        assert_eq!(align_of::<BundleStatus>(), align_of::<u64>());
 
         let request = RequestBundle::default();
         let _: BundleStatus = request.status;
@@ -198,5 +210,17 @@ mod tests {
         let _: RequestTier = request.expiry_duration_tier;
         let _: u64 = request.expiry_slot;
         let _: u64 = request.requests_len;
+    }
+
+    #[test]
+    fn bundle_status_rejects_invalid_discriminants() {
+        let bytes = 99u64.to_le_bytes();
+        assert!(bytemuck::checked::try_from_bytes::<BundleStatus>(&bytes).is_err());
+    }
+
+    #[test]
+    fn bundle_status_has_stable_u64_layout() {
+        let expected = 6u64.to_le_bytes();
+        assert_eq!(bytemuck::bytes_of(&BundleStatus::Canceled), expected.as_slice());
     }
 }
