@@ -3,6 +3,7 @@ pub mod bid;
 pub mod bundle;
 pub mod bundle_registry;
 pub mod config;
+pub mod layout;
 pub use auction::*;
 pub use bid::*;
 pub mod job_request;
@@ -14,6 +15,7 @@ pub use bundle::*;
 pub use bundle_registry::*;
 pub use config::*;
 pub use job_request::*;
+pub use layout::*;
 pub use metadata::*;
 pub use request_tier::*;
 pub use verification::*;
@@ -23,7 +25,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::{mem, ptr};
+
 #[derive(Pod, PartialEq, Eq, Debug, Clone, Copy, Zeroable, Default)]
 #[cfg_attr(
     feature = "serde",
@@ -123,27 +125,4 @@ impl Serialize for MaybePubkey {
     {
         serializer.serialize_str(&bs58::encode(&self.0).into_string())
     }
-}
-
-/// Safely reads a `Pod` value from bytes at a given offset.
-fn read_field<T: Pod>(bytes: &[u8], offset: usize) -> Option<T> {
-    let end = offset + mem::size_of::<T>();
-    if end > bytes.len() {
-        return None;
-    }
-    let ptr = unsafe { bytes.as_ptr().add(offset) as *const T };
-    Some(unsafe { ptr::read_unaligned(ptr) }) // safe, even if not aligned
-}
-/// Safely writes a `Pod` value into a mutable byte slice at a given offset.
-///
-/// Returns `true` if the writing succeeds, or `false` if the slice is too small.
-fn write_field<T: Pod>(bytes: &mut [u8], offset: usize, value: T) -> bool {
-    let size = std::mem::size_of::<T>();
-    if bytes.len() < offset + size {
-        return false; // slice too small
-    }
-
-    let slice = &mut bytes[offset..offset + size];
-    slice.copy_from_slice(bytemuck::bytes_of(&value));
-    true
 }
