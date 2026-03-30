@@ -563,6 +563,18 @@ mod tests {
     }
 
     #[test]
+    fn request_bundle_remains_legacy_pod() {
+        let raw = RawBundleData {
+            expiry_slot: 5,
+            requests_len: 2,
+            ..Default::default()
+        };
+
+        let decoded = bytemuck::try_from_bytes::<RequestBundle>(bytemuck::bytes_of(&raw)).unwrap();
+        assert_eq!(decoded, &raw);
+    }
+
+    #[test]
     fn current_bundle_bytes_classify_as_legacy_v0() {
         let raw = RawBundleData::default();
         let layout = parse_bundle_layout(bytemuck::bytes_of(&raw)).unwrap();
@@ -684,14 +696,45 @@ mod tests {
     }
 
     #[test]
-    fn legacy_helpers_support_extended_bundle_bytes() {
+    fn write_legacy_bytes_preserves_v1_trailer() {
+        let raw = RawBundleData {
+            expiry_slot: 5,
+            requests_len: 2,
+            ..Default::default()
+        };
+        let trailer = BundleLayoutTrailerV1::new();
+        let mut bytes = vec![0_u8; bundle_account_len(AccountLayoutVersion::V1)];
+        bytes[RawBundleData::LEGACY_LEN..].copy_from_slice(bytemuck::bytes_of(&trailer));
+
+        assert!(raw.write_legacy_bytes(&mut bytes));
+        assert_eq!(
+            &bytes[..RawBundleData::LEGACY_LEN],
+            bytemuck::bytes_of(&raw)
+        );
+        assert_eq!(
+            &bytes[RawBundleData::LEGACY_LEN..],
+            bytemuck::bytes_of(&trailer)
+        );
+        assert_eq!(
+            parse_bundle_layout(&bytes),
+            Some(ParsedAccountLayout::new(
+                AccountDiscriminator::Bundle,
+                AccountLayoutVersion::V1
+            ))
+        );
+    }
+
+    #[test]
+    fn legacy_helpers_support_v1_bundle_bytes() {
         let raw = RawBundleData {
             expiry_slot: 5,
             requests_len: 0,
             ..Default::default()
         };
-        let mut bytes = vec![0_u8; RawBundleData::LEGACY_LEN + 10];
+        let mut bytes = vec![0_u8; bundle_account_len(AccountLayoutVersion::V1)];
         bytes[..RawBundleData::LEGACY_LEN].copy_from_slice(bytemuck::bytes_of(&raw));
+        bytes[RawBundleData::LEGACY_LEN..]
+            .copy_from_slice(bytemuck::bytes_of(&BundleLayoutTrailerV1::new()));
 
         assert_eq!(RawBundleData::is_expired_from_bytes(&bytes, 5), Some(true));
         assert!(RawBundleData::cancel_bundle_from_bytes(&mut bytes));
