@@ -9,8 +9,8 @@ called `decode-account` that allows for decoding raw or base64/base58/hex encode
 accounts and displaying their most relevant information as text.
 
 All builds require `AMBIENT_AUCTION_PROGRAM_ID` to be set to the auction program's
-base58 pubkey. There is no fallback default in the crate, so missing or malformed
-values fail at compile time.
+base58 pubkey. The crate decodes it with `five8_const` at compile time, and there is
+no fallback default, so missing or malformed values fail during compilation.
 
 To build the library:
 
