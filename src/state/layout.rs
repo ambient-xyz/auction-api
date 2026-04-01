@@ -6,7 +6,7 @@
 //! - layout classifier: `parse_x_layout`
 //! - legacy size constant: `LEGACY_LEN`
 
-use bytemuck::Zeroable;
+use bytemuck::{Pod, Zeroable};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive, IntoPrimitive, Zeroable)]
@@ -20,6 +20,7 @@ pub enum AccountDiscriminator {
     BundleRegistry = 5,
     Config = 6,
     Metadata = 7,
+    BundleEscrowV2 = 8,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive, IntoPrimitive, Zeroable)]
@@ -49,5 +50,31 @@ impl ParsedAccountLayout {
 
     pub const fn is_legacy(self) -> bool {
         matches!(self.version, AccountLayoutVersion::LegacyV0)
+    }
+}
+
+#[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq, Default)]
+#[repr(C)]
+pub struct AccountHeaderV1 {
+    pub discriminator: u8,
+    pub version: u8,
+    pub reserved: [u8; 6],
+}
+
+impl AccountHeaderV1 {
+    pub const LEN: usize = std::mem::size_of::<Self>();
+
+    pub const fn new(discriminator: AccountDiscriminator) -> Self {
+        Self {
+            discriminator: discriminator as u8,
+            version: AccountLayoutVersion::V1 as u8,
+            reserved: [0; 6],
+        }
+    }
+
+    pub fn layout(&self) -> Option<ParsedAccountLayout> {
+        let discriminator = AccountDiscriminator::try_from(self.discriminator).ok()?;
+        let version = AccountLayoutVersion::try_from(self.version).ok()?;
+        Some(ParsedAccountLayout::new(discriminator, version))
     }
 }

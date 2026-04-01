@@ -1,13 +1,17 @@
-use super::{Pubkey, RequestTier};
+use super::{
+    AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, ParsedAccountLayout, Pubkey,
+    RequestTier,
+};
 use crate::VERIFIERS_PER_AUCTION;
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+use std::ops::{Deref, DerefMut};
 
 #[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
-pub struct BundleEscrowV2 {
+pub struct RawBundleEscrowV2Data {
     pub status: BundleEscrowV2Status,
     pub reward_tier: RequestTier,
     pub coordinator: Pubkey,
@@ -36,8 +40,142 @@ pub struct BundleEscrowV2 {
     pub _reserved1: [u8; 5],
 }
 
-impl BundleEscrowV2 {
-    pub const LEN: usize = std::mem::size_of::<BundleEscrowV2>();
+pub type BundleEscrowV2 = RawBundleEscrowV2Data;
+
+#[derive(Debug)]
+pub struct BundleEscrowV2Ref<'a> {
+    header: &'a AccountHeaderV1,
+    raw: &'a RawBundleEscrowV2Data,
+}
+
+#[derive(Debug)]
+pub struct BundleEscrowV2Mut<'a> {
+    header: &'a mut AccountHeaderV1,
+    raw: &'a mut RawBundleEscrowV2Data,
+}
+
+impl<'a> BundleEscrowV2Ref<'a> {
+    pub fn header(&self) -> &AccountHeaderV1 {
+        self.header
+    }
+
+    pub fn layout(&self) -> ParsedAccountLayout {
+        self.header.layout().unwrap()
+    }
+
+    pub fn as_raw(&self) -> &RawBundleEscrowV2Data {
+        self.raw
+    }
+
+    pub fn into_raw(self) -> &'a RawBundleEscrowV2Data {
+        self.raw
+    }
+}
+
+impl Deref for BundleEscrowV2Ref<'_> {
+    type Target = RawBundleEscrowV2Data;
+
+    fn deref(&self) -> &Self::Target {
+        self.raw
+    }
+}
+
+impl<'a> BundleEscrowV2Mut<'a> {
+    pub fn header(&self) -> &AccountHeaderV1 {
+        self.header
+    }
+
+    pub fn layout(&self) -> ParsedAccountLayout {
+        self.header.layout().unwrap()
+    }
+
+    pub fn as_raw(&self) -> &RawBundleEscrowV2Data {
+        self.raw
+    }
+
+    pub fn as_raw_mut(&mut self) -> &mut RawBundleEscrowV2Data {
+        self.raw
+    }
+
+    pub fn into_raw(self) -> &'a mut RawBundleEscrowV2Data {
+        self.raw
+    }
+}
+
+impl Deref for BundleEscrowV2Mut<'_> {
+    type Target = RawBundleEscrowV2Data;
+
+    fn deref(&self) -> &Self::Target {
+        self.raw
+    }
+}
+
+impl DerefMut for BundleEscrowV2Mut<'_> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.raw
+    }
+}
+
+impl RawBundleEscrowV2Data {
+    pub const PAYLOAD_LEN: usize = std::mem::size_of::<RawBundleEscrowV2Data>();
+    pub const LEN: usize = AccountHeaderV1::LEN + Self::PAYLOAD_LEN;
+
+    pub fn from_bytes(bytes: &[u8]) -> Option<BundleEscrowV2Ref<'_>> {
+        if bytes.len() != Self::LEN {
+            return None;
+        }
+
+        let (header_bytes, raw_bytes) = bytes.split_at(AccountHeaderV1::LEN);
+        let header = bytemuck::try_from_bytes::<AccountHeaderV1>(header_bytes).ok()?;
+        if header.layout()
+            != Some(ParsedAccountLayout::new(
+                AccountDiscriminator::BundleEscrowV2,
+                AccountLayoutVersion::V1,
+            ))
+        {
+            return None;
+        }
+
+        let raw = bytemuck::try_from_bytes::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
+        Some(BundleEscrowV2Ref { header, raw })
+    }
+
+    pub fn from_bytes_mut(bytes: &mut [u8]) -> Option<BundleEscrowV2Mut<'_>> {
+        if bytes.len() != Self::LEN {
+            return None;
+        }
+
+        let (header_bytes, raw_bytes) = bytes.split_at_mut(AccountHeaderV1::LEN);
+        let header = bytemuck::try_from_bytes_mut::<AccountHeaderV1>(header_bytes).ok()?;
+        if header.layout()
+            != Some(ParsedAccountLayout::new(
+                AccountDiscriminator::BundleEscrowV2,
+                AccountLayoutVersion::V1,
+            ))
+        {
+            return None;
+        }
+
+        let raw = bytemuck::try_from_bytes_mut::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
+        Some(BundleEscrowV2Mut { header, raw })
+    }
+
+    pub fn read(bytes: &[u8]) -> Option<Self> {
+        Self::from_bytes(bytes).map(|account| *account.as_raw())
+    }
+
+    pub fn write_v1_bytes(&self, bytes: &mut [u8]) -> bool {
+        if bytes.len() != Self::LEN {
+            return false;
+        }
+
+        let (header_bytes, raw_bytes) = bytes.split_at_mut(AccountHeaderV1::LEN);
+        header_bytes.copy_from_slice(bytemuck::bytes_of(&AccountHeaderV1::new(
+            AccountDiscriminator::BundleEscrowV2,
+        )));
+        raw_bytes.copy_from_slice(bytemuck::bytes_of(self));
+        true
+    }
 
     pub fn all_quorum_verifier_rewards_claimed(&self) -> bool {
         self.verifier_reward_claimed_bitmap & self.quorum_verifier_bitmap
@@ -51,7 +189,7 @@ impl BundleEscrowV2 {
     }
 }
 
-impl Default for BundleEscrowV2 {
+impl Default for RawBundleEscrowV2Data {
     fn default() -> Self {
         Self {
             status: BundleEscrowV2Status::Open,
@@ -133,7 +271,11 @@ impl TryFrom<u64> for BundleEscrowV2Status {
 
 #[cfg(test)]
 mod tests {
-    use super::BundleEscrowV2Status;
+    use super::{BundleEscrowV2, BundleEscrowV2Status};
+    use crate::{
+        state::{AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion},
+        RequestTier,
+    };
 
     #[test]
     fn bundle_escrow_v2_status_round_trips_through_raw_values() {
@@ -156,5 +298,70 @@ mod tests {
         };
 
         assert_eq!(label, "result-posted");
+    }
+
+    #[test]
+    fn bundle_escrow_v2_v1_bytes_round_trip() {
+        let bundle = BundleEscrowV2 {
+            status: BundleEscrowV2Status::Awarded,
+            reward_tier: RequestTier::Standard,
+            bundle_version: 7,
+            total_input_tokens: 11,
+            ..Default::default()
+        };
+        let mut bytes = vec![0u8; BundleEscrowV2::LEN];
+
+        assert!(bundle.write_v1_bytes(&mut bytes));
+        assert_eq!(
+            &bytes[..AccountHeaderV1::LEN],
+            bytemuck::bytes_of(&AccountHeaderV1::new(AccountDiscriminator::BundleEscrowV2))
+        );
+
+        let parsed = BundleEscrowV2::from_bytes(&bytes).unwrap();
+        assert_eq!(parsed.status, BundleEscrowV2Status::Awarded);
+        assert_eq!(parsed.bundle_version, 7);
+
+        let copied = BundleEscrowV2::read(&bytes).unwrap();
+        assert_eq!(copied, bundle);
+    }
+
+    #[test]
+    fn bundle_escrow_v2_rejects_wrong_discriminator() {
+        let bundle = BundleEscrowV2::default();
+        let mut bytes = vec![0u8; BundleEscrowV2::LEN];
+        assert!(bundle.write_v1_bytes(&mut bytes));
+        bytes[0] = AccountDiscriminator::Bundle as u8;
+
+        assert!(BundleEscrowV2::from_bytes(&bytes).is_none());
+    }
+
+    #[test]
+    fn bundle_escrow_v2_rejects_wrong_version() {
+        let bundle = BundleEscrowV2::default();
+        let mut bytes = vec![0u8; BundleEscrowV2::LEN];
+        assert!(bundle.write_v1_bytes(&mut bytes));
+        bytes[1] = AccountLayoutVersion::LegacyV0 as u8;
+
+        assert!(BundleEscrowV2::from_bytes(&bytes).is_none());
+    }
+
+    #[test]
+    fn bundle_escrow_v2_rejects_wrong_length() {
+        let bytes = vec![0u8; BundleEscrowV2::LEN - 1];
+        assert!(BundleEscrowV2::from_bytes(&bytes).is_none());
+    }
+
+    #[test]
+    fn bundle_version_is_not_layout_version() {
+        let bundle = BundleEscrowV2 {
+            bundle_version: 99,
+            ..Default::default()
+        };
+        let mut bytes = vec![0u8; BundleEscrowV2::LEN];
+        assert!(bundle.write_v1_bytes(&mut bytes));
+
+        let parsed = BundleEscrowV2::from_bytes(&bytes).unwrap();
+        assert_eq!(parsed.bundle_version, 99);
+        assert_eq!(parsed.header().version, AccountLayoutVersion::V1 as u8);
     }
 }
