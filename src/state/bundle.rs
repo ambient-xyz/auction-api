@@ -154,23 +154,24 @@ pub const fn bundle_account_len(version: AccountLayoutVersion) -> usize {
 }
 
 pub fn parse_bundle_layout(bytes: &[u8]) -> Option<ParsedAccountLayout> {
-    if bytes.len() == RawBundleData::LEGACY_LEN {
-        return Some(ParsedAccountLayout::legacy_v0(AccountDiscriminator::Bundle));
-    }
-
-    if bytes.len() != bundle_account_len(AccountLayoutVersion::V1) {
+    if bytes.len() < RawBundleData::LEGACY_LEN {
         return None;
     }
 
-    let trailer =
-        bytemuck::try_from_bytes::<BundleLayoutTrailerV1>(&bytes[RawBundleData::LEGACY_LEN..])
-            .ok()?;
-    let layout = trailer.layout()?;
-    if layout != ParsedAccountLayout::new(AccountDiscriminator::Bundle, AccountLayoutVersion::V1) {
-        return None;
+    if let Some(trailer_bytes) =
+        bytes.get(RawBundleData::LEGACY_LEN..RawBundleData::LEGACY_LEN + BundleLayoutTrailerV1::LEN)
+    {
+        let trailer = bytemuck::try_from_bytes::<BundleLayoutTrailerV1>(trailer_bytes).ok()?;
+        let layout = trailer.layout();
+        if layout == Some(ParsedAccountLayout::new(
+            AccountDiscriminator::Bundle,
+            AccountLayoutVersion::V1,
+        )) {
+            return layout;
+        }
     }
 
-    Some(layout)
+    Some(ParsedAccountLayout::legacy_v0(AccountDiscriminator::Bundle))
 }
 
 impl RawBundleData {
@@ -588,6 +589,20 @@ mod tests {
     }
 
     #[test]
+    fn oversized_legacy_bundle_bytes_classify_as_legacy_v0() {
+        let raw = RawBundleData::default();
+        let mut bytes = vec![0xAA; RawBundleData::LEGACY_LEN + 10];
+        bytes[..RawBundleData::LEGACY_LEN].copy_from_slice(bytemuck::bytes_of(&raw));
+
+        let layout = parse_bundle_layout(&bytes).unwrap();
+        assert_eq!(
+            layout,
+            ParsedAccountLayout::legacy_v0(AccountDiscriminator::Bundle)
+        );
+        assert!(layout.is_legacy());
+    }
+
+    #[test]
     fn state_view_matches_bundle_status() {
         let mut active = RawBundleData::default();
         assert!(matches!(
@@ -679,6 +694,36 @@ mod tests {
         parsed.requests_len = 9;
 
         let reparsed = RawBundleData::from_bytes(&mutable_bytes).unwrap();
+        assert_eq!(reparsed.requests_len, 9);
+    }
+
+    #[test]
+    fn raw_bundle_views_accept_oversized_legacy_bytes() {
+        let raw = RawBundleData {
+            requests_len: 3,
+            max_context_length: 42,
+            ..Default::default()
+        };
+        let mut bytes = vec![0xAA; RawBundleData::LEGACY_LEN + 10];
+        bytes[..RawBundleData::LEGACY_LEN].copy_from_slice(bytemuck::bytes_of(&raw));
+        let trailing = bytes[RawBundleData::LEGACY_LEN..].to_vec();
+
+        let parsed = RawBundleRef::from_bytes(&bytes).unwrap();
+        assert_eq!(
+            parsed.layout(),
+            ParsedAccountLayout::legacy_v0(AccountDiscriminator::Bundle)
+        );
+        assert_eq!(parsed.requests_len, 3);
+        assert_eq!(parsed.max_context_length, 42);
+
+        {
+            let mut parsed = RawBundleMut::from_bytes(&mut bytes).unwrap();
+            parsed.requests_len = 9;
+        }
+
+        assert_eq!(&bytes[RawBundleData::LEGACY_LEN..], trailing.as_slice());
+
+        let reparsed = RawBundleData::from_bytes(&bytes).unwrap();
         assert_eq!(reparsed.requests_len, 9);
     }
 
