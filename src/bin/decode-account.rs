@@ -241,6 +241,24 @@ mod tests {
     }
 
     #[test]
+    fn decode_bundle_accepts_oversized_legacy_layout() {
+        let bundle = RequestBundle {
+            requests_len: 2,
+            expiry_slot: 5,
+            ..Default::default()
+        };
+        let mut bytes = vec![0xAA; RequestBundle::LEN + 10];
+        bytes[..RequestBundle::LEN].copy_from_slice(bytemuck::bytes_of(&bundle));
+
+        let (layout, decoded) = decode_bundle(&bytes).unwrap();
+        assert_eq!(
+            layout,
+            ParsedAccountLayout::legacy_v0(AccountDiscriminator::Bundle)
+        );
+        assert_eq!(decoded, bundle);
+    }
+
+    #[test]
     fn decode_bundle_rejects_invalid_layout() {
         let err = decode_bundle(&[0_u8; 3]).unwrap_err();
         assert!(err.contains("classify RequestBundle layout"));
