@@ -6,12 +6,19 @@ use std::net;
 
 mod append_data;
 mod cancel_bundle;
+mod claim_verifier_lstake_v2;
+mod claim_winner_lstake_v2;
 mod close_bid;
 mod close_request;
+mod commit_auction_settlement_v2;
 mod end_auction;
+mod expire_bundle_escrow_v2;
+mod finalize_bundle_verification_v2;
 mod init_bundle;
 mod init_config;
+mod open_bundle_escrow_v2;
 mod place_bid;
+mod post_bundle_result_v2;
 mod request_job;
 mod reveal_bid;
 mod submit_job_output;
@@ -20,12 +27,19 @@ mod submit_validation;
 use crate::macros::impl_instruction_data;
 pub use append_data::*;
 pub use cancel_bundle::*;
+pub use claim_verifier_lstake_v2::*;
+pub use claim_winner_lstake_v2::*;
 pub use close_bid::*;
 pub use close_request::*;
+pub use commit_auction_settlement_v2::*;
 pub use end_auction::*;
+pub use expire_bundle_escrow_v2::*;
+pub use finalize_bundle_verification_v2::*;
 pub use init_bundle::*;
 pub use init_config::*;
+pub use open_bundle_escrow_v2::*;
 pub use place_bid::*;
+pub use post_bundle_result_v2::*;
 pub use request_job::*;
 pub use reveal_bid::*;
 pub use submit_job_output::*;
@@ -47,6 +61,13 @@ pub enum AuctionInstruction {
     AppendData = 10,
     #[cfg(feature = "global-config")]
     InitConfig = 11,
+    OpenBundleEscrowV2 = 12,
+    CommitAuctionSettlementV2 = 13,
+    PostBundleResultV2 = 14,
+    FinalizeBundleVerificationV2 = 15,
+    ClaimWinnerLstakeV2 = 16,
+    ClaimVerifierLstakeV2 = 17,
+    ExpireBundleEscrowV2 = 18,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -119,6 +140,13 @@ impl_instruction_data!(
     CloseRequestArgs => CloseRequest,
     AppendDataArgs => AppendData,
     InitConfigArgs => InitConfig,
+    OpenBundleEscrowV2Args => OpenBundleEscrowV2,
+    CommitAuctionSettlementV2Args => CommitAuctionSettlementV2,
+    PostBundleResultV2Args => PostBundleResultV2,
+    FinalizeBundleVerificationV2Args => FinalizeBundleVerificationV2,
+    ClaimWinnerLstakeV2Args => ClaimWinnerLstakeV2,
+    ClaimVerifierLstakeV2Args => ClaimVerifierLstakeV2,
+    ExpireBundleEscrowV2Args => ExpireBundleEscrowV2,
 );
 #[cfg(not(feature = "global-config"))]
 impl_instruction_data!(
@@ -133,4 +161,11 @@ impl_instruction_data!(
     RevealBidArgs => RevealBid,
     CloseRequestArgs => CloseRequest,
     AppendDataArgs => AppendData,
+    OpenBundleEscrowV2Args => OpenBundleEscrowV2,
+    CommitAuctionSettlementV2Args => CommitAuctionSettlementV2,
+    PostBundleResultV2Args => PostBundleResultV2,
+    FinalizeBundleVerificationV2Args => FinalizeBundleVerificationV2,
+    ClaimWinnerLstakeV2Args => ClaimWinnerLstakeV2,
+    ClaimVerifierLstakeV2Args => ClaimVerifierLstakeV2,
+    ExpireBundleEscrowV2Args => ExpireBundleEscrowV2,
 );

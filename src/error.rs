@@ -80,6 +80,38 @@ pub enum AuctionError {
     InvalidJobVerificationState = 36,
     /// The token range is already verified
     AlreadyVerified = 37,
+    /// The bundle escrow v2 account had an invalid state
+    InvalidBundleEscrowV2State = 38,
+    /// Invalid bundle escrow v2 status found for the instruction
+    InvalidBundleEscrowV2Status = 39,
+    /// The provided coordinator does not match the stored coordinator
+    InvalidCoordinator = 40,
+    /// The provided vote account does not match the expected node identity
+    InvalidVoteAccount = 41,
+    /// The winner can not be selected as a verifier
+    WinnerCannotBeVerifier = 42,
+    /// Invalid verifier quorum provided for the bundle escrow v2 flow
+    InvalidVerifierQuorum = 43,
+    /// Missing or malformed Ed25519 verification instruction
+    InvalidEd25519Instruction = 44,
+    /// The requested reward has already been claimed
+    RewardAlreadyClaimed = 45,
+    /// The bundle escrow v2 result has not been posted yet
+    ResultNotPosted = 46,
+    /// The bundle escrow v2 settlement has not been posted yet
+    SettlementNotCommitted = 47,
+    /// The bundle escrow v2 has not reached the required deadline
+    DeadlineNotReached = 48,
+    /// The bundle escrow v2 claim window is still open
+    ClaimWindowStillOpen = 49,
+    /// The accepted output token count exceeds the posted output token count
+    AcceptedOutputExceedsPosted = 50,
+    /// The posted output token count exceeds the allowed maximum
+    PostedOutputExceedsMax = 51,
+    /// The authority is not allowed to post this result
+    UnauthorizedResultPoster = 52,
+    /// The bundle escrow v2 payout exceeds the escrow balance
+    InsufficientEscrowBalance = 53,
 }
 
 impl Display for AuctionError {

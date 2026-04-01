@@ -2,8 +2,8 @@
 use std::io::{self, Read as _};
 
 use ambient_auction_api::{
-    instruction::SubmitJobOutputArgs, Auction, Bid, JobRequest, JobVerificationState,
-    RequestBundle, VerificationState,
+    instruction::SubmitJobOutputArgs, Auction, Bid, BundleEscrowV2, JobRequest,
+    JobVerificationState, RequestBundle, VerificationState,
 };
 use base64::Engine as _;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -90,6 +90,16 @@ encryption node public key: {encryption_node_publickey:?}"
     Ok(())
 }
 
+fn display_bundle_escrow_v2(buffer: Vec<u8>) -> Result<(), String> {
+    eprintln!("Expected len: {}", BundleEscrowV2::LEN);
+    let data = BundleEscrowV2::read(&buffer).ok_or_else(|| {
+        "To decode BundleEscrowV2 from account bytes. Is it the right versioned account type?"
+            .to_string()
+    })?;
+    println!("{}", serde_json::to_string_pretty(&data).unwrap());
+    Ok(())
+}
+
 fn display_generic<T: bytemuck::Pod + Serialize>(buffer: Vec<u8>) -> Result<(), String> {
     let data = bytemuck::try_pod_read_unaligned::<T>(&buffer)
         .map_err(|e| format!("To decode from transaction bytes. Is it the right data type? {e}"))?;
@@ -125,6 +135,7 @@ enum Commands {
     SubmitJobOutput,
     Bid,
     Bundle,
+    BundleEscrowV2,
 }
 
 fn parse_string(buf: Vec<u8>) -> Result<String, String> {
@@ -172,5 +183,6 @@ fn main() -> Result<(), String> {
         Commands::SubmitJobOutput => display_submit_job_output(buffer[1..].to_vec()),
         Commands::Bid => display_generic::<Bid>(buffer),
         Commands::Bundle => display_generic::<RequestBundle>(buffer),
+        Commands::BundleEscrowV2 => display_bundle_escrow_v2(buffer),
     }
 }
