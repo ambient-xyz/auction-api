@@ -79,8 +79,8 @@ pub type RequestBundle = RawBundleData;
 #[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct BundleLayoutTrailerV1 {
-    pub discriminator: AccountDiscriminator,
-    pub version: AccountLayoutVersion,
+    pub discriminator: u8,
+    pub version: u8,
     pub reserved: [u8; 6],
 }
 
@@ -89,10 +89,16 @@ impl BundleLayoutTrailerV1 {
 
     pub const fn new() -> Self {
         Self {
-            discriminator: AccountDiscriminator::Bundle,
-            version: AccountLayoutVersion::V1,
+            discriminator: AccountDiscriminator::Bundle as u8,
+            version: AccountLayoutVersion::V1 as u8,
             reserved: [0; 6],
         }
+    }
+
+    pub fn layout(&self) -> Option<ParsedAccountLayout> {
+        let discriminator = AccountDiscriminator::try_from(self.discriminator).ok()?;
+        let version = AccountLayoutVersion::try_from(self.version).ok()?;
+        Some(ParsedAccountLayout::new(discriminator, version))
     }
 }
 
@@ -159,16 +165,12 @@ pub fn parse_bundle_layout(bytes: &[u8]) -> Option<ParsedAccountLayout> {
     let trailer =
         bytemuck::try_from_bytes::<BundleLayoutTrailerV1>(&bytes[RawBundleData::LEGACY_LEN..])
             .ok()?;
-    if trailer.discriminator != AccountDiscriminator::Bundle
-        || trailer.version != AccountLayoutVersion::V1
-    {
+    let layout = trailer.layout()?;
+    if layout != ParsedAccountLayout::new(AccountDiscriminator::Bundle, AccountLayoutVersion::V1) {
         return None;
     }
 
-    Some(ParsedAccountLayout::new(
-        AccountDiscriminator::Bundle,
-        AccountLayoutVersion::V1,
-    ))
+    Some(layout)
 }
 
 impl RawBundleData {

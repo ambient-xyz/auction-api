@@ -6,7 +6,7 @@
 //! - layout classifier: `parse_x_layout`
 //! - legacy size constant: `LEGACY_LEN`
 
-use bytemuck::{Pod, Zeroable};
+use bytemuck::Zeroable;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive, IntoPrimitive, Zeroable)]
@@ -22,16 +22,12 @@ pub enum AccountDiscriminator {
     Metadata = 7,
 }
 
-unsafe impl Pod for AccountDiscriminator {}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive, IntoPrimitive, Zeroable)]
 #[repr(u8)]
 pub enum AccountLayoutVersion {
     LegacyV0 = 0,
     V1 = 1,
 }
-
-unsafe impl Pod for AccountLayoutVersion {}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ParsedAccountLayout {
