@@ -2,7 +2,7 @@
 use std::io::{self, Read as _};
 
 use ambient_auction_api::{
-    instruction::SubmitJobOutputArgs, Auction, Bid, JobRequest, JobVerificationState,
+    instruction::SubmitJobOutputArgs, AccountData, Auction, Bid, JobRequest, JobVerificationState,
     RequestBundle, VerificationState,
 };
 use base64::Engine as _;
@@ -20,7 +20,7 @@ fn display_job_request(buffer: Vec<u8>) -> Result<(), String> {
         status,
         verification,
         ..
-    } = bytemuck::try_pod_read_unaligned::<JobRequest>(&buffer).map_err(|e| {
+    } = JobRequest::try_read_unaligned(&buffer).map_err(|e| {
         format!("To decode JobRequest from account bytes. Is it the right account type? {e}")
     })?;
 
@@ -90,8 +90,8 @@ encryption node public key: {encryption_node_publickey:?}"
     Ok(())
 }
 
-fn display_generic<T: bytemuck::Pod + Serialize>(buffer: Vec<u8>) -> Result<(), String> {
-    let data = bytemuck::try_pod_read_unaligned::<T>(&buffer)
+fn display_generic<T: AccountData + Serialize>(buffer: Vec<u8>) -> Result<(), String> {
+    let data = T::try_read_unaligned(&buffer)
         .map_err(|e| format!("To decode from transaction bytes. Is it the right data type? {e}"))?;
     println!("{}", serde_json::to_string_pretty(&data).unwrap());
     Ok(())
