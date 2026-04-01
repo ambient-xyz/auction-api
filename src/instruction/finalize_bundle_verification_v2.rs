@@ -1,7 +1,6 @@
 use crate::error::AuctionError;
 use crate::{InstructionAccounts, PUBKEY_BYTES};
 use bytemuck::{Pod, Zeroable};
-use num_enum::{IntoPrimitive, TryFromPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -55,16 +54,72 @@ impl<'a, T> InstructionAccounts<'a, T> for FinalizeBundleVerificationV2Accounts<
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive, IntoPrimitive, Zeroable)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[repr(u8)]
-pub enum VerificationVerdictV2 {
-    Unset = 0,
-    Verified = 1,
-    Rejected = 2,
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Zeroable, Pod)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize), serde(into = "u8", try_from = "u8"))]
+#[repr(transparent)]
+pub struct VerificationVerdictV2(u8);
+
+#[allow(non_upper_case_globals)]
+impl VerificationVerdictV2 {
+    pub const Unset: Self = Self(0);
+    pub const Verified: Self = Self(1);
+    pub const Rejected: Self = Self(2);
+
+    pub const fn into_u8(self) -> u8 {
+        self.0
+    }
 }
 
-unsafe impl Pod for VerificationVerdictV2 {}
+impl Default for VerificationVerdictV2 {
+    fn default() -> Self {
+        Self::Unset
+    }
+}
+
+impl From<VerificationVerdictV2> for u8 {
+    fn from(value: VerificationVerdictV2) -> Self {
+        value.0
+    }
+}
+
+impl TryFrom<u8> for VerificationVerdictV2 {
+    type Error = u8;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Unset),
+            1 => Ok(Self::Verified),
+            2 => Ok(Self::Rejected),
+            _ => Err(value),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::VerificationVerdictV2;
+
+    #[test]
+    fn verification_verdict_v2_round_trips_through_raw_values() {
+        assert_eq!(VerificationVerdictV2::try_from(0), Ok(VerificationVerdictV2::Unset));
+        assert_eq!(VerificationVerdictV2::try_from(2), Ok(VerificationVerdictV2::Rejected));
+        assert_eq!(u8::from(VerificationVerdictV2::Verified), 1);
+        assert_eq!(VerificationVerdictV2::try_from(9), Err(9));
+    }
+
+    #[test]
+    fn verification_verdict_v2_matches_on_associated_constants() {
+        let label = match VerificationVerdictV2::Verified {
+            VerificationVerdictV2::Unset => "unset",
+            VerificationVerdictV2::Verified => "verified",
+            VerificationVerdictV2::Rejected => "rejected",
+            _ => "invalid",
+        };
+
+        assert_eq!(label, "verified");
+    }
+}
+
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug, Pod)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]

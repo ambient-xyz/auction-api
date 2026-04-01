@@ -1,7 +1,6 @@
 use super::{Pubkey, RequestTier};
 use crate::VERIFIERS_PER_AUCTION;
 use bytemuck::{Pod, Zeroable};
-use num_enum::{IntoPrimitive, TryFromPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -85,16 +84,77 @@ impl Default for BundleEscrowV2 {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive, IntoPrimitive, Zeroable)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[repr(u64)]
-pub enum BundleEscrowV2Status {
-    Open = 0,
-    Awarded = 1,
-    ResultPosted = 2,
-    FinalizedVerified = 3,
-    FinalizedRejected = 4,
-    Expired = 5,
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Zeroable, Pod)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize), serde(into = "u64", try_from = "u64"))]
+#[repr(transparent)]
+pub struct BundleEscrowV2Status(u64);
+
+#[allow(non_upper_case_globals)]
+impl BundleEscrowV2Status {
+    pub const Open: Self = Self(0);
+    pub const Awarded: Self = Self(1);
+    pub const ResultPosted: Self = Self(2);
+    pub const FinalizedVerified: Self = Self(3);
+    pub const FinalizedRejected: Self = Self(4);
+    pub const Expired: Self = Self(5);
+
+    pub const fn into_u64(self) -> u64 {
+        self.0
+    }
 }
 
-unsafe impl Pod for BundleEscrowV2Status {}
+impl Default for BundleEscrowV2Status {
+    fn default() -> Self {
+        Self::Open
+    }
+}
+
+impl From<BundleEscrowV2Status> for u64 {
+    fn from(value: BundleEscrowV2Status) -> Self {
+        value.0
+    }
+}
+
+impl TryFrom<u64> for BundleEscrowV2Status {
+    type Error = u64;
+
+    fn try_from(value: u64) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Open),
+            1 => Ok(Self::Awarded),
+            2 => Ok(Self::ResultPosted),
+            3 => Ok(Self::FinalizedVerified),
+            4 => Ok(Self::FinalizedRejected),
+            5 => Ok(Self::Expired),
+            _ => Err(value),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::BundleEscrowV2Status;
+
+    #[test]
+    fn bundle_escrow_v2_status_round_trips_through_raw_values() {
+        assert_eq!(BundleEscrowV2Status::try_from(0), Ok(BundleEscrowV2Status::Open));
+        assert_eq!(BundleEscrowV2Status::try_from(5), Ok(BundleEscrowV2Status::Expired));
+        assert_eq!(u64::from(BundleEscrowV2Status::Awarded), 1);
+        assert_eq!(BundleEscrowV2Status::try_from(99), Err(99));
+    }
+
+    #[test]
+    fn bundle_escrow_v2_status_matches_on_associated_constants() {
+        let label = match BundleEscrowV2Status::ResultPosted {
+            BundleEscrowV2Status::Open => "open",
+            BundleEscrowV2Status::Awarded => "awarded",
+            BundleEscrowV2Status::ResultPosted => "result-posted",
+            BundleEscrowV2Status::FinalizedVerified => "finalized-verified",
+            BundleEscrowV2Status::FinalizedRejected => "finalized-rejected",
+            BundleEscrowV2Status::Expired => "expired",
+            _ => "invalid",
+        };
+
+        assert_eq!(label, "result-posted");
+    }
+}
