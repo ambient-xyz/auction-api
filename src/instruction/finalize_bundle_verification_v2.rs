@@ -4,8 +4,20 @@ use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+const FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN_TEXT: &[u8] = b"ambient.bundle.verify.v2";
+
+const fn pad_domain_to_32_bytes(domain: &[u8]) -> [u8; 32] {
+    let mut padded = [0u8; 32];
+    let mut index = 0;
+    while index < domain.len() {
+        padded[index] = domain[index];
+        index += 1;
+    }
+    padded
+}
+
 pub const FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN: [u8; 32] =
-    *b"ambient.bundle.verify.v2\0\0\0\0\0\0\0\0";
+    pad_domain_to_32_bytes(FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN_TEXT);
 
 #[derive(Clone, Debug)]
 #[repr(C)]
@@ -97,7 +109,10 @@ impl TryFrom<u8> for VerificationVerdictV2 {
 
 #[cfg(test)]
 mod tests {
-    use super::VerificationVerdictV2;
+    use super::{
+        FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN, FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN_TEXT,
+        VerificationVerdictV2,
+    };
 
     #[test]
     fn verification_verdict_v2_round_trips_through_raw_values() {
@@ -117,6 +132,18 @@ mod tests {
         };
 
         assert_eq!(label, "verified");
+    }
+
+    #[test]
+    fn finalize_bundle_verification_v2_domain_is_zero_padded() {
+        assert_eq!(
+            &FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN[..FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN_TEXT.len()],
+            FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN_TEXT,
+        );
+        assert!(FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN
+            [FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN_TEXT.len()..]
+            .iter()
+            .all(|byte| *byte == 0));
     }
 }
 
