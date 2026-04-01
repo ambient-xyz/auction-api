@@ -2,8 +2,10 @@
 use std::io::{self, Read as _};
 
 use ambient_auction_api::{
-    instruction::SubmitJobOutputArgs, Auction, Bid, JobRequest, JobVerificationState,
-    RequestBundle, VerificationState,
+    bundle::{parse_bundle_layout, RawBundleRef},
+    instruction::SubmitJobOutputArgs,
+    Auction, Bid, JobRequest, JobVerificationState, ParsedAccountLayout, RequestBundle,
+    VerificationState,
 };
 use base64::Engine as _;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -97,6 +99,26 @@ fn display_generic<T: bytemuck::Pod + Serialize>(buffer: Vec<u8>) -> Result<(), 
     Ok(())
 }
 
+fn decode_bundle(buffer: &[u8]) -> Result<(ParsedAccountLayout, RequestBundle), String> {
+    let layout = parse_bundle_layout(buffer)
+        .ok_or_else(|| "To classify RequestBundle layout from account bytes. Is it the right account type or layout?".to_string())?;
+    let bundle = RawBundleRef::from_bytes(buffer).ok_or_else(|| {
+        "To decode RequestBundle from account bytes. Is it the right account type or layout?"
+            .to_string()
+    })?;
+    Ok((layout, *bundle.as_raw()))
+}
+
+fn display_bundle(buffer: Vec<u8>) -> Result<(), String> {
+    let (layout, bundle) = decode_bundle(&buffer)?;
+    eprintln!(
+        "Detected bundle layout: {:?} {:?}",
+        layout.discriminator, layout.version
+    );
+    println!("{}", serde_json::to_string_pretty(&bundle).unwrap());
+    Ok(())
+}
+
 #[derive(Parser)]
 struct Cli {
     ///Whether to treat input as base64 encoded text before passing it to the struct decoder
@@ -171,6 +193,56 @@ fn main() -> Result<(), String> {
         Commands::Auction => display_generic::<Auction>(buffer),
         Commands::SubmitJobOutput => display_submit_job_output(buffer[1..].to_vec()),
         Commands::Bid => display_generic::<Bid>(buffer),
-        Commands::Bundle => display_generic::<RequestBundle>(buffer),
+        Commands::Bundle => display_bundle(buffer),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ambient_auction_api::{
+        bundle_account_len, AccountDiscriminator, AccountLayoutVersion, BundleLayoutTrailerV1,
+    };
+
+    #[test]
+    fn decode_bundle_accepts_legacy_layout() {
+        let bundle = RequestBundle {
+            requests_len: 2,
+            expiry_slot: 5,
+            ..Default::default()
+        };
+
+        let (layout, decoded) = decode_bundle(bytemuck::bytes_of(&bundle)).unwrap();
+        assert_eq!(
+            layout,
+            ParsedAccountLayout::legacy_v0(AccountDiscriminator::Bundle)
+        );
+        assert_eq!(decoded, bundle);
+    }
+
+    #[test]
+    fn decode_bundle_accepts_v1_layout() {
+        let bundle = RequestBundle {
+            requests_len: 2,
+            expiry_slot: 5,
+            ..Default::default()
+        };
+        let mut bytes = vec![0_u8; bundle_account_len(AccountLayoutVersion::V1)];
+        bytes[..RequestBundle::LEN].copy_from_slice(bytemuck::bytes_of(&bundle));
+        bytes[RequestBundle::LEN..]
+            .copy_from_slice(bytemuck::bytes_of(&BundleLayoutTrailerV1::new()));
+
+        let (layout, decoded) = decode_bundle(&bytes).unwrap();
+        assert_eq!(
+            layout,
+            ParsedAccountLayout::new(AccountDiscriminator::Bundle, AccountLayoutVersion::V1)
+        );
+        assert_eq!(decoded, bundle);
+    }
+
+    #[test]
+    fn decode_bundle_rejects_invalid_layout() {
+        let err = decode_bundle(&[0_u8; 3]).unwrap_err();
+        assert!(err.contains("classify RequestBundle layout"));
     }
 }

@@ -6,7 +6,8 @@ This repo contains the datastructures that make up the Ambient auction program.
 
 This crate is largely intended to be a library. However, there is a debugging utiltity
 called `decode-account` that allows for decoding raw or base64/base58/hex encoded
-accounts and displaying their most relevant information as text.
+accounts and displaying their most relevant information as text. The `Bundle`
+decoder auto-detects both legacy and V1 bundle account layouts.
 
 The binary is `cfg`-ed out by default and requires the `decoder` feature to be enabled
 in order to build.
