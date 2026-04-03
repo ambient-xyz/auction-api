@@ -8,7 +8,7 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 bytemuck = { version = "1", features = ["derive", "const_zeroed"] }
-num_enum = "0.7.5"
+num_enum = "=0.5.11"
 five8_const = "1.0.0"
 base64 = { version = "0.22", optional = true }
 bs58 = { version = "0.5.1", optional = true }
