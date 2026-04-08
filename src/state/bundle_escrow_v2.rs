@@ -386,11 +386,16 @@ impl TryFrom<u64> for BundleEscrowV2Status {
 
 #[cfg(test)]
 mod tests {
-    use super::{BundleEscrowV2, BundleEscrowV2Status};
+    use super::{BundleEscrowV2, BundleEscrowV2Status, InvalidBundleEscrowV2Transition};
     use crate::{
+        state::Pubkey,
         state::{AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion},
         RequestTier,
     };
+
+    fn test_pubkey(byte: u8) -> Pubkey {
+        [byte; 32].into()
+    }
 
     #[test]
     fn bundle_escrow_v2_status_round_trips_through_raw_values() {
@@ -404,6 +409,15 @@ mod tests {
         );
         assert_eq!(u64::from(BundleEscrowV2Status::Awarded), 1);
         assert_eq!(BundleEscrowV2Status::try_from(99), Err(99));
+    }
+
+    #[test]
+    fn bundle_escrow_v2_status_identifies_terminal_states() {
+        assert!(!BundleEscrowV2Status::Open.is_terminal());
+        assert!(!BundleEscrowV2Status::Awarded.is_terminal());
+        assert!(BundleEscrowV2Status::FinalizedVerified.is_terminal());
+        assert!(BundleEscrowV2Status::FinalizedRejected.is_terminal());
+        assert!(BundleEscrowV2Status::Expired.is_terminal());
     }
 
     #[test]
@@ -484,5 +498,165 @@ mod tests {
         let parsed = BundleEscrowV2::from_bytes(&bytes).unwrap();
         assert_eq!(parsed.bundle_version, 99);
         assert_eq!(parsed.header().version, AccountLayoutVersion::V1 as u8);
+    }
+
+    #[test]
+    fn bundle_escrow_v2_award_updates_coupled_fields() {
+        let mut bundle = BundleEscrowV2::default();
+        let selected_verifiers = [test_pubkey(4), test_pubkey(5), test_pubkey(6)];
+
+        bundle
+            .award(
+                [7; 32],
+                test_pubkey(1),
+                test_pubkey(2),
+                42,
+                selected_verifiers,
+            )
+            .unwrap();
+
+        assert_eq!(bundle.status, BundleEscrowV2Status::Awarded);
+        assert_eq!(bundle.auction_hash, [7; 32]);
+        assert_eq!(bundle.winner_node_pubkey, test_pubkey(1));
+        assert_eq!(bundle.winner_vote_account, test_pubkey(2));
+        assert_eq!(bundle.clearing_price_per_output_token, 42);
+        assert_eq!(bundle.selected_verifiers, selected_verifiers);
+    }
+
+    #[test]
+    fn bundle_escrow_v2_post_result_updates_coupled_fields() {
+        let mut bundle = BundleEscrowV2 {
+            status: BundleEscrowV2Status::Awarded,
+            ..Default::default()
+        };
+
+        bundle.post_result([8; 32], 55).unwrap();
+
+        assert_eq!(bundle.status, BundleEscrowV2Status::ResultPosted);
+        assert_eq!(bundle.result_hash, [8; 32]);
+        assert_eq!(bundle.posted_output_tokens, 55);
+    }
+
+    #[test]
+    fn bundle_escrow_v2_finalize_verified_updates_coupled_fields() {
+        let mut bundle = BundleEscrowV2 {
+            status: BundleEscrowV2Status::ResultPosted,
+            ..Default::default()
+        };
+
+        bundle
+            .finalize(BundleEscrowV2Status::FinalizedVerified, [9; 32], 21, 0b011)
+            .unwrap();
+
+        assert_eq!(bundle.status, BundleEscrowV2Status::FinalizedVerified);
+        assert_eq!(bundle.verification_hash, [9; 32]);
+        assert_eq!(bundle.accepted_output_tokens, 21);
+        assert_eq!(bundle.quorum_verifier_bitmap, 0b011);
+    }
+
+    #[test]
+    fn bundle_escrow_v2_finalize_rejected_updates_coupled_fields() {
+        let mut bundle = BundleEscrowV2 {
+            status: BundleEscrowV2Status::ResultPosted,
+            ..Default::default()
+        };
+
+        bundle
+            .finalize(BundleEscrowV2Status::FinalizedRejected, [10; 32], 0, 0b101)
+            .unwrap();
+
+        assert_eq!(bundle.status, BundleEscrowV2Status::FinalizedRejected);
+        assert_eq!(bundle.verification_hash, [10; 32]);
+        assert_eq!(bundle.accepted_output_tokens, 0);
+        assert_eq!(bundle.quorum_verifier_bitmap, 0b101);
+    }
+
+    #[test]
+    fn bundle_escrow_v2_expire_accepts_each_preterminal_state() {
+        for status in [
+            BundleEscrowV2Status::Open,
+            BundleEscrowV2Status::Awarded,
+            BundleEscrowV2Status::ResultPosted,
+        ] {
+            let mut bundle = BundleEscrowV2 {
+                status,
+                ..Default::default()
+            };
+            bundle.expire().unwrap();
+            assert_eq!(bundle.status, BundleEscrowV2Status::Expired);
+        }
+    }
+
+    #[test]
+    fn bundle_escrow_v2_rejects_invalid_transitions() {
+        let mut awarded = BundleEscrowV2 {
+            status: BundleEscrowV2Status::Awarded,
+            ..Default::default()
+        };
+        assert_eq!(
+            awarded
+                .award(
+                    [1; 32],
+                    test_pubkey(1),
+                    test_pubkey(2),
+                    1,
+                    [test_pubkey(3); 3]
+                )
+                .unwrap_err(),
+            InvalidBundleEscrowV2Transition {
+                from: BundleEscrowV2Status::Awarded,
+                to: BundleEscrowV2Status::Awarded,
+            }
+        );
+
+        let mut open = BundleEscrowV2::default();
+        assert_eq!(
+            open.post_result([2; 32], 5).unwrap_err(),
+            InvalidBundleEscrowV2Transition {
+                from: BundleEscrowV2Status::Open,
+                to: BundleEscrowV2Status::ResultPosted,
+            }
+        );
+
+        let mut result_posted = BundleEscrowV2 {
+            status: BundleEscrowV2Status::ResultPosted,
+            ..Default::default()
+        };
+        assert_eq!(
+            result_posted
+                .award(
+                    [3; 32],
+                    test_pubkey(1),
+                    test_pubkey(2),
+                    1,
+                    [test_pubkey(3); 3]
+                )
+                .unwrap_err(),
+            InvalidBundleEscrowV2Transition {
+                from: BundleEscrowV2Status::ResultPosted,
+                to: BundleEscrowV2Status::Awarded,
+            }
+        );
+
+        let mut finalized = BundleEscrowV2 {
+            status: BundleEscrowV2Status::FinalizedVerified,
+            ..Default::default()
+        };
+        assert_eq!(
+            finalized.expire().unwrap_err(),
+            InvalidBundleEscrowV2Transition {
+                from: BundleEscrowV2Status::FinalizedVerified,
+                to: BundleEscrowV2Status::Expired,
+            }
+        );
+        assert_eq!(
+            finalized
+                .finalize(BundleEscrowV2Status::FinalizedRejected, [4; 32], 0, 0)
+                .unwrap_err(),
+            InvalidBundleEscrowV2Transition {
+                from: BundleEscrowV2Status::FinalizedVerified,
+                to: BundleEscrowV2Status::FinalizedRejected,
+            }
+        );
     }
 }
