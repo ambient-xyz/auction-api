@@ -42,6 +42,18 @@ pub struct RawBundleEscrowV2Data {
 
 pub type BundleEscrowV2 = RawBundleEscrowV2Data;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct InvalidBundleEscrowV2Transition {
+    pub from: BundleEscrowV2Status,
+    pub to: BundleEscrowV2Status,
+}
+
+impl InvalidBundleEscrowV2Transition {
+    const fn new(from: BundleEscrowV2Status, to: BundleEscrowV2Status) -> Self {
+        Self { from, to }
+    }
+}
+
 #[derive(Debug)]
 pub struct BundleEscrowV2Ref<'a> {
     header: &'a AccountHeaderV1,
@@ -177,6 +189,98 @@ impl RawBundleEscrowV2Data {
         true
     }
 
+    #[allow(clippy::too_many_arguments)]
+    pub fn award(
+        &mut self,
+        auction_hash: [u8; 32],
+        winner_node_pubkey: Pubkey,
+        winner_vote_account: Pubkey,
+        clearing_price_per_output_token: u64,
+        selected_verifiers: [Pubkey; VERIFIERS_PER_AUCTION],
+    ) -> Result<(), InvalidBundleEscrowV2Transition> {
+        if self.status != BundleEscrowV2Status::Open {
+            return Err(InvalidBundleEscrowV2Transition::new(
+                self.status,
+                BundleEscrowV2Status::Awarded,
+            ));
+        }
+
+        self.auction_hash = auction_hash;
+        self.winner_node_pubkey = winner_node_pubkey;
+        self.winner_vote_account = winner_vote_account;
+        self.clearing_price_per_output_token = clearing_price_per_output_token;
+        self.selected_verifiers = selected_verifiers;
+        self.status = BundleEscrowV2Status::Awarded;
+
+        Ok(())
+    }
+
+    pub fn post_result(
+        &mut self,
+        result_hash: [u8; 32],
+        posted_output_tokens: u64,
+    ) -> Result<(), InvalidBundleEscrowV2Transition> {
+        if self.status != BundleEscrowV2Status::Awarded {
+            return Err(InvalidBundleEscrowV2Transition::new(
+                self.status,
+                BundleEscrowV2Status::ResultPosted,
+            ));
+        }
+
+        self.result_hash = result_hash;
+        self.posted_output_tokens = posted_output_tokens;
+        self.status = BundleEscrowV2Status::ResultPosted;
+
+        Ok(())
+    }
+
+    pub fn finalize(
+        &mut self,
+        final_status: BundleEscrowV2Status,
+        verification_hash: [u8; 32],
+        accepted_output_tokens: u64,
+        quorum_verifier_bitmap: u8,
+    ) -> Result<(), InvalidBundleEscrowV2Transition> {
+        if self.status != BundleEscrowV2Status::ResultPosted {
+            return Err(InvalidBundleEscrowV2Transition::new(
+                self.status,
+                final_status,
+            ));
+        }
+
+        match final_status {
+            BundleEscrowV2Status::FinalizedVerified | BundleEscrowV2Status::FinalizedRejected => {}
+            _ => {
+                return Err(InvalidBundleEscrowV2Transition::new(
+                    self.status,
+                    final_status,
+                ));
+            }
+        }
+
+        self.verification_hash = verification_hash;
+        self.accepted_output_tokens = accepted_output_tokens;
+        self.quorum_verifier_bitmap = quorum_verifier_bitmap;
+        self.status = final_status;
+
+        Ok(())
+    }
+
+    pub fn expire(&mut self) -> Result<(), InvalidBundleEscrowV2Transition> {
+        match self.status {
+            BundleEscrowV2Status::Open
+            | BundleEscrowV2Status::Awarded
+            | BundleEscrowV2Status::ResultPosted => {
+                self.status = BundleEscrowV2Status::Expired;
+                Ok(())
+            }
+            status => Err(InvalidBundleEscrowV2Transition::new(
+                status,
+                BundleEscrowV2Status::Expired,
+            )),
+        }
+    }
+
     pub fn all_quorum_verifier_rewards_claimed(&self) -> bool {
         self.verifier_reward_claimed_bitmap & self.quorum_verifier_bitmap
             == self.quorum_verifier_bitmap
@@ -223,7 +327,11 @@ impl Default for RawBundleEscrowV2Data {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Zeroable, Pod)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize), serde(into = "u64", try_from = "u64"))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Deserialize, Serialize),
+    serde(into = "u64", try_from = "u64")
+)]
 #[repr(transparent)]
 pub struct BundleEscrowV2Status(u64);
 
@@ -238,6 +346,13 @@ impl BundleEscrowV2Status {
 
     pub const fn into_u64(self) -> u64 {
         self.0
+    }
+
+    pub const fn is_terminal(self) -> bool {
+        matches!(
+            self,
+            Self::FinalizedVerified | Self::FinalizedRejected | Self::Expired
+        )
     }
 }
 
@@ -279,8 +394,14 @@ mod tests {
 
     #[test]
     fn bundle_escrow_v2_status_round_trips_through_raw_values() {
-        assert_eq!(BundleEscrowV2Status::try_from(0), Ok(BundleEscrowV2Status::Open));
-        assert_eq!(BundleEscrowV2Status::try_from(5), Ok(BundleEscrowV2Status::Expired));
+        assert_eq!(
+            BundleEscrowV2Status::try_from(0),
+            Ok(BundleEscrowV2Status::Open)
+        );
+        assert_eq!(
+            BundleEscrowV2Status::try_from(5),
+            Ok(BundleEscrowV2Status::Expired)
+        );
         assert_eq!(u64::from(BundleEscrowV2Status::Awarded), 1);
         assert_eq!(BundleEscrowV2Status::try_from(99), Err(99));
     }
