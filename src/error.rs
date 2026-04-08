@@ -112,6 +112,8 @@ pub enum AuctionError {
     UnauthorizedResultPoster = 52,
     /// The bundle escrow v2 payout exceeds the escrow balance
     InsufficientEscrowBalance = 53,
+    /// The bundle verifier page v2 account had an invalid state
+    InvalidBundleVerifierPageV2State = 54,
 }
 
 impl Display for AuctionError {

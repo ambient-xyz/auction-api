@@ -37,7 +37,9 @@ pub struct RawBundleEscrowV2Data {
     pub winner_reward_claimed: u8,
     pub verifier_reward_claimed_bitmap: u8,
     pub quorum_verifier_bitmap: u8,
-    pub _reserved1: [u8; 5],
+    pub verifier_page_count: u8,
+    pub _reserved1: [u8; 4],
+    pub verifier_reward_remaining: [u64; VERIFIERS_PER_AUCTION],
 }
 
 pub type BundleEscrowV2 = RawBundleEscrowV2Data;
@@ -240,6 +242,8 @@ impl RawBundleEscrowV2Data {
         verification_hash: [u8; 32],
         accepted_output_tokens: u64,
         quorum_verifier_bitmap: u8,
+        verifier_page_count: u8,
+        verifier_reward_remaining: [u64; VERIFIERS_PER_AUCTION],
     ) -> Result<(), InvalidBundleEscrowV2Transition> {
         if self.status != BundleEscrowV2Status::ResultPosted {
             return Err(InvalidBundleEscrowV2Transition::new(
@@ -261,9 +265,23 @@ impl RawBundleEscrowV2Data {
         self.verification_hash = verification_hash;
         self.accepted_output_tokens = accepted_output_tokens;
         self.quorum_verifier_bitmap = quorum_verifier_bitmap;
+        self.verifier_page_count = verifier_page_count;
+        self.verifier_reward_remaining = verifier_reward_remaining;
         self.status = final_status;
 
         Ok(())
+    }
+
+    pub fn claim_verifier_reward(&mut self, verifier_index: usize, claimed_amount: u64) -> bool {
+        let remaining = self.verifier_reward_remaining[verifier_index]
+            .checked_sub(claimed_amount)
+            .expect("verifier reward underflow");
+        self.verifier_reward_remaining[verifier_index] = remaining;
+        debug_assert!(verifier_index < 8);
+        if remaining == 0 {
+            self.verifier_reward_claimed_bitmap |= 1u8 << verifier_index;
+        }
+        remaining == 0
     }
 
     pub fn expire(&mut self) -> Result<(), InvalidBundleEscrowV2Transition> {
@@ -321,7 +339,9 @@ impl Default for RawBundleEscrowV2Data {
             winner_reward_claimed: 0,
             verifier_reward_claimed_bitmap: 0,
             quorum_verifier_bitmap: 0,
-            _reserved1: [0; 5],
+            verifier_page_count: 0,
+            _reserved1: [0; 4],
+            verifier_reward_remaining: [0; VERIFIERS_PER_AUCTION],
         }
     }
 }
@@ -390,7 +410,7 @@ mod tests {
     use crate::{
         state::Pubkey,
         state::{AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion},
-        RequestTier,
+        RequestTier, VERIFIERS_PER_AUCTION,
     };
 
     fn test_pubkey(byte: u8) -> Pubkey {
@@ -545,12 +565,21 @@ mod tests {
         };
 
         bundle
-            .finalize(BundleEscrowV2Status::FinalizedVerified, [9; 32], 21, 0b011)
+            .finalize(
+                BundleEscrowV2Status::FinalizedVerified,
+                [9; 32],
+                21,
+                0b011,
+                2,
+                [5, 8, 0],
+            )
             .unwrap();
 
         assert_eq!(bundle.status, BundleEscrowV2Status::FinalizedVerified);
         assert_eq!(bundle.verification_hash, [9; 32]);
         assert_eq!(bundle.accepted_output_tokens, 21);
+        assert_eq!(bundle.verifier_page_count, 2);
+        assert_eq!(bundle.verifier_reward_remaining, [5, 8, 0]);
         assert_eq!(bundle.quorum_verifier_bitmap, 0b011);
     }
 
@@ -562,7 +591,14 @@ mod tests {
         };
 
         bundle
-            .finalize(BundleEscrowV2Status::FinalizedRejected, [10; 32], 0, 0b101)
+            .finalize(
+                BundleEscrowV2Status::FinalizedRejected,
+                [10; 32],
+                0,
+                0b101,
+                0,
+                [0; VERIFIERS_PER_AUCTION],
+            )
             .unwrap();
 
         assert_eq!(bundle.status, BundleEscrowV2Status::FinalizedRejected);
@@ -651,7 +687,14 @@ mod tests {
         );
         assert_eq!(
             finalized
-                .finalize(BundleEscrowV2Status::FinalizedRejected, [4; 32], 0, 0)
+                .finalize(
+                    BundleEscrowV2Status::FinalizedRejected,
+                    [4; 32],
+                    0,
+                    0,
+                    0,
+                    [0; VERIFIERS_PER_AUCTION],
+                )
                 .unwrap_err(),
             InvalidBundleEscrowV2Transition {
                 from: BundleEscrowV2Status::FinalizedVerified,
