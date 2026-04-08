@@ -9,13 +9,15 @@ pub struct ClaimVerifierLstakeV2Accounts<'a, T> {
     pub verifier_vote_account: &'a T,
     pub vote_program: &'a T,
     pub vote_authority: &'a T,
+    pub bundle_verifier_pages: &'a [T],
 }
 
 impl<'a, T> TryFrom<&'a [T]> for ClaimVerifierLstakeV2Accounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [bundle_escrow, verifier_vote_account, vote_program, vote_authority, ..] = accounts
+        let [bundle_escrow, verifier_vote_account, vote_program, vote_authority, bundle_verifier_pages @ ..] =
+            accounts
         else {
             return Err(AuctionError::NotEnoughAccounts);
         };
@@ -25,6 +27,7 @@ impl<'a, T> TryFrom<&'a [T]> for ClaimVerifierLstakeV2Accounts<'a, T> {
             verifier_vote_account,
             vote_program,
             vote_authority,
+            bundle_verifier_pages,
         })
     }
 }
@@ -35,6 +38,7 @@ impl<'a, T> InstructionAccounts<'a, T> for ClaimVerifierLstakeV2Accounts<'a, T> 
             .chain(std::iter::once(self.verifier_vote_account))
             .chain(std::iter::once(self.vote_program))
             .chain(std::iter::once(self.vote_authority))
+            .chain(self.bundle_verifier_pages.iter())
     }
 
     fn iter_owned(&self) -> impl Iterator<Item = T>

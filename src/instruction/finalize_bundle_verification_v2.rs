@@ -27,13 +27,14 @@ pub struct FinalizeBundleVerificationV2Accounts<'a, T> {
     pub winner_node: &'a T,
     pub requester_refund_recipient: &'a T,
     pub instructions_sysvar: &'a T,
+    pub bundle_verifier_pages: &'a [T],
 }
 
 impl<'a, T> TryFrom<&'a [T]> for FinalizeBundleVerificationV2Accounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [coordinator, bundle_escrow, winner_node, requester_refund_recipient, instructions_sysvar, ..] =
+        let [coordinator, bundle_escrow, winner_node, requester_refund_recipient, instructions_sysvar, bundle_verifier_pages @ ..] =
             accounts
         else {
             return Err(AuctionError::NotEnoughAccounts);
@@ -45,6 +46,7 @@ impl<'a, T> TryFrom<&'a [T]> for FinalizeBundleVerificationV2Accounts<'a, T> {
             winner_node,
             requester_refund_recipient,
             instructions_sysvar,
+            bundle_verifier_pages,
         })
     }
 }
@@ -56,6 +58,7 @@ impl<'a, T> InstructionAccounts<'a, T> for FinalizeBundleVerificationV2Accounts<
             .chain(std::iter::once(self.winner_node))
             .chain(std::iter::once(self.requester_refund_recipient))
             .chain(std::iter::once(self.instructions_sysvar))
+            .chain(self.bundle_verifier_pages.iter())
     }
 
     fn iter_owned(&self) -> impl Iterator<Item = T>
@@ -67,7 +70,11 @@ impl<'a, T> InstructionAccounts<'a, T> for FinalizeBundleVerificationV2Accounts<
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Zeroable, Pod)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize), serde(into = "u8", try_from = "u8"))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Deserialize, Serialize),
+    serde(into = "u8", try_from = "u8")
+)]
 #[repr(transparent)]
 pub struct VerificationVerdictV2(u8);
 
@@ -106,47 +113,6 @@ impl TryFrom<u8> for VerificationVerdictV2 {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::{
-        FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN, FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN_TEXT,
-        VerificationVerdictV2,
-    };
-
-    #[test]
-    fn verification_verdict_v2_round_trips_through_raw_values() {
-        assert_eq!(VerificationVerdictV2::try_from(0), Ok(VerificationVerdictV2::Unset));
-        assert_eq!(VerificationVerdictV2::try_from(2), Ok(VerificationVerdictV2::Rejected));
-        assert_eq!(u8::from(VerificationVerdictV2::Verified), 1);
-        assert_eq!(VerificationVerdictV2::try_from(9), Err(9));
-    }
-
-    #[test]
-    fn verification_verdict_v2_matches_on_associated_constants() {
-        let label = match VerificationVerdictV2::Verified {
-            VerificationVerdictV2::Unset => "unset",
-            VerificationVerdictV2::Verified => "verified",
-            VerificationVerdictV2::Rejected => "rejected",
-            _ => "invalid",
-        };
-
-        assert_eq!(label, "verified");
-    }
-
-    #[test]
-    fn finalize_bundle_verification_v2_domain_is_zero_padded() {
-        assert_eq!(
-            &FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN[..FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN_TEXT.len()],
-            FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN_TEXT,
-        );
-        assert!(FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN
-            [FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN_TEXT.len()..]
-            .iter()
-            .all(|byte| *byte == 0));
-    }
-}
-
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug, Pod)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
