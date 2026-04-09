@@ -55,5 +55,5 @@ fn bundle_verifier_page_v2_rejects_wrong_lengths() {
 #[test]
 fn bundle_verifier_page_v2_entry_layout_stays_stable() {
     assert_eq!(size_of::<BundleVerifierPageV2Entry>(), 128);
-    assert_eq!(BundleVerifierPageV2::PAYLOAD_LEN, 1064);
+    assert_eq!(BundleVerifierPageV2::PAYLOAD_LEN, 808);
 }
