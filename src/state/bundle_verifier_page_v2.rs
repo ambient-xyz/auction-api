@@ -7,7 +7,7 @@ use bytemuck::{Pod, Zeroable};
 use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 
-pub const BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES: usize = 8;
+pub const BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES: usize = 6;
 
 #[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
