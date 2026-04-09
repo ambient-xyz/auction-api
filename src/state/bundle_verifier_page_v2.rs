@@ -7,14 +7,16 @@ use bytemuck::{Pod, Zeroable};
 use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 
-pub const BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES: usize = 8;
+pub const BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES: usize = 6;
 
 #[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
 pub struct BundleVerifierPageV2Entry {
     pub job_id: Pubkey,
+    pub posted_output_tokens: u64,
     pub accepted_output_tokens: u64,
+    pub assigned_verifiers_token_ranges: [u64; VERIFIERS_PER_AUCTION * 2],
     pub verifier_reward_tokens: [u64; VERIFIERS_PER_AUCTION],
     pub verdict: VerificationVerdictV2,
     pub verifier_claimed_bitmap: u8,
