@@ -14,7 +14,9 @@ pub const BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES: usize = 8;
 #[repr(C)]
 pub struct BundleVerifierPageV2Entry {
     pub job_id: Pubkey,
+    pub posted_output_tokens: u64,
     pub accepted_output_tokens: u64,
+    pub assigned_verifiers_token_ranges: [u64; VERIFIERS_PER_AUCTION * 2],
     pub verifier_reward_tokens: [u64; VERIFIERS_PER_AUCTION],
     pub verdict: VerificationVerdictV2,
     pub verifier_claimed_bitmap: u8,
