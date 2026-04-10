@@ -16,11 +16,13 @@ mod expire_bundle_escrow_v2;
 mod finalize_bundle_verification_v2;
 mod init_bundle;
 mod init_config;
+mod init_config_policy_v2;
 mod open_bundle_escrow_v2;
 mod place_bid;
 mod post_bundle_result_v2;
 mod request_job;
 mod reveal_bid;
+mod set_config_policy_v2;
 mod submit_job_output;
 mod submit_validation;
 
@@ -37,11 +39,13 @@ pub use expire_bundle_escrow_v2::*;
 pub use finalize_bundle_verification_v2::*;
 pub use init_bundle::*;
 pub use init_config::*;
+pub use init_config_policy_v2::*;
 pub use open_bundle_escrow_v2::*;
 pub use place_bid::*;
 pub use post_bundle_result_v2::*;
 pub use request_job::*;
 pub use reveal_bid::*;
+pub use set_config_policy_v2::*;
 pub use submit_job_output::*;
 pub use submit_validation::*;
 
@@ -59,7 +63,6 @@ pub enum AuctionInstruction {
     RevealBid = 8,
     CloseRequest = 9,
     AppendData = 10,
-    #[cfg(feature = "global-config")]
     InitConfig = 11,
     OpenBundleEscrowV2 = 12,
     CommitAuctionSettlementV2 = 13,
@@ -68,6 +71,8 @@ pub enum AuctionInstruction {
     ClaimWinnerLstakeV2 = 16,
     ClaimVerifierLstakeV2 = 17,
     ExpireBundleEscrowV2 = 18,
+    InitConfigPolicyV2 = 19,
+    SetConfigPolicyV2 = 20,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -126,7 +131,6 @@ pub trait InstructionAccounts<'a, T> {
         T: Clone;
 }
 
-#[cfg(feature = "global-config")]
 impl_instruction_data!(
     RequestJobArgs => RequestJob,
     PlaceBidArgs => PlaceBid,
@@ -147,25 +151,6 @@ impl_instruction_data!(
     ClaimWinnerLstakeV2Args => ClaimWinnerLstakeV2,
     ClaimVerifierLstakeV2Args => ClaimVerifierLstakeV2,
     ExpireBundleEscrowV2Args => ExpireBundleEscrowV2,
-);
-#[cfg(not(feature = "global-config"))]
-impl_instruction_data!(
-    RequestJobArgs => RequestJob,
-    PlaceBidArgs => PlaceBid,
-    EndAuctionArgs => EndAuction,
-    CloseBidArgs => CloseBid,
-    SubmitJobOutputArgs => SubmitJobOutput,
-    CancelBundleArgs => CancelBundle,
-    InitBundleArgs => InitBundle,
-    SubmitValidationArgs => SubmitValidation,
-    RevealBidArgs => RevealBid,
-    CloseRequestArgs => CloseRequest,
-    AppendDataArgs => AppendData,
-    OpenBundleEscrowV2Args => OpenBundleEscrowV2,
-    CommitAuctionSettlementV2Args => CommitAuctionSettlementV2,
-    PostBundleResultV2Args => PostBundleResultV2,
-    FinalizeBundleVerificationV2Args => FinalizeBundleVerificationV2,
-    ClaimWinnerLstakeV2Args => ClaimWinnerLstakeV2,
-    ClaimVerifierLstakeV2Args => ClaimVerifierLstakeV2,
-    ExpireBundleEscrowV2Args => ExpireBundleEscrowV2,
+    InitConfigPolicyV2Args => InitConfigPolicyV2,
+    SetConfigPolicyV2Args => SetConfigPolicyV2,
 );

@@ -8,6 +8,7 @@ use bytemuck::{Pod, Zeroable};
 pub struct PostBundleResultV2Accounts<'a, T> {
     pub authority: &'a T,
     pub bundle_escrow: &'a T,
+    pub config_policy: &'a T,
     pub bundle_verifier_page: Option<&'a T>,
 }
 
@@ -15,13 +16,14 @@ impl<'a, T> TryFrom<&'a [T]> for PostBundleResultV2Accounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [authority, bundle_escrow, rest @ ..] = accounts else {
+        let [authority, bundle_escrow, config_policy, rest @ ..] = accounts else {
             return Err(AuctionError::NotEnoughAccounts);
         };
 
         Ok(Self {
             authority,
             bundle_escrow,
+            config_policy,
             bundle_verifier_page: rest.first(),
         })
     }
@@ -31,6 +33,7 @@ impl<'a, T> InstructionAccounts<'a, T> for PostBundleResultV2Accounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.authority)
             .chain(std::iter::once(self.bundle_escrow))
+            .chain(std::iter::once(self.config_policy))
             .chain(self.bundle_verifier_page.into_iter())
     }
 

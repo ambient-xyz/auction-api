@@ -29,6 +29,7 @@ pub enum AccountDiscriminator {
 pub enum AccountLayoutVersion {
     LegacyV0 = 0,
     V1 = 1,
+    V2 = 2,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

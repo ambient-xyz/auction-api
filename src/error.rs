@@ -114,6 +114,16 @@ pub enum AuctionError {
     InsufficientEscrowBalance = 53,
     /// The bundle verifier page v2 account had an invalid state
     InvalidBundleVerifierPageV2State = 54,
+    /// Invalid config policy v2 account data was found
+    InvalidConfigPolicyV2Data = 55,
+    /// Illegal config policy v2 account found
+    IllegalConfigPolicyV2Owner = 56,
+    /// The signer is not allowed to update config policy v2
+    UnauthorizedConfigPolicyAuthority = 57,
+    /// The configured account layout version is invalid or unsupported
+    InvalidAccountLayoutVersion = 58,
+    /// The configured account layout version is not allowed for this authority
+    UnauthorizedAccountLayoutVersion = 59,
 }
 
 impl Display for AuctionError {
