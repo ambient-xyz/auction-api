@@ -61,7 +61,12 @@ impl TryFrom<JobVerificationStateRaw> for JobVerificationState {
     type Error = error::AuctionError;
 
     fn try_from(value: JobVerificationStateRaw) -> Result<Self, Self::Error> {
-        Self::try_from(value.0).map_err(|_| error::AuctionError::InvalidJobVerificationState)
+        match value.0 {
+            0 => Ok(Self::NotStarted),
+            1 => Ok(Self::InProgress),
+            2 => Ok(Self::Completed),
+            _ => Err(error::AuctionError::InvalidJobVerificationState),
+        }
     }
 }
 
