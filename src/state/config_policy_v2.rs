@@ -1,14 +1,10 @@
-use super::{AccountDiscriminator, AccountLayoutVersion, Pubkey};
+use super::{AccountLayoutVersion, Pubkey};
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 pub const CONFIG_POLICY_V2_ADMIN_CAPACITY: usize = 8;
 pub const CONFIG_POLICY_V2_SERVICE_CAPACITY: usize = 16;
-pub const CONFIG_POLICY_V2_SERVICE_VERSION_OVERRIDE_CAPACITY: usize = 16;
-
-pub const CONFIG_POLICY_V2_VERSION_PERMISSION_READ: u16 = 1 << 0;
-pub const CONFIG_POLICY_V2_VERSION_PERMISSION_WRITE: u16 = 1 << 1;
 
 pub const CONFIG_POLICY_V2_FLAG_ALLOW_SERVICE_OPEN_ESCROW_ARGS_BYPASS: u64 = 1 << 0;
 pub const CONFIG_POLICY_V2_FLAG_ALLOW_SERVICE_COMMIT_OVERRIDE: u64 = 1 << 1;
@@ -18,27 +14,6 @@ pub const CONFIG_POLICY_V2_FLAG_ALLOW_SERVICE_PAGE_BACKED_FINALIZE_BYPASS: u64 =
 
 pub const CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES: usize = 64;
 pub const CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES: usize = 64;
-
-#[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq, Default)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[repr(C)]
-pub struct ServiceVersionOverrideV2 {
-    pub service_pubkey: Pubkey,
-    pub account_discriminator: u8,
-    pub allowed_version: u8,
-    pub permissions_bitmap: u16,
-    pub _reserved: [u8; 4],
-}
-
-impl ServiceVersionOverrideV2 {
-    pub fn discriminator(&self) -> Option<AccountDiscriminator> {
-        AccountDiscriminator::try_from(self.account_discriminator).ok()
-    }
-
-    pub fn version(&self) -> Option<AccountLayoutVersion> {
-        AccountLayoutVersion::try_from(self.allowed_version).ok()
-    }
-}
 
 #[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -52,9 +27,7 @@ pub struct ConfigPolicyV2 {
     pub _reserved0: [u8; 6],
     pub admin_authorities: [Pubkey; CONFIG_POLICY_V2_ADMIN_CAPACITY],
     pub service_authorities: [Pubkey; CONFIG_POLICY_V2_SERVICE_CAPACITY],
-    pub service_version_overrides:
-        [ServiceVersionOverrideV2; CONFIG_POLICY_V2_SERVICE_VERSION_OVERRIDE_CAPACITY],
-    pub reserved: [u8; 128],
+    pub reserved: [[u8; 32]; 24],
 }
 
 impl Default for ConfigPolicyV2 {
@@ -68,9 +41,7 @@ impl Default for ConfigPolicyV2 {
             _reserved0: [0; 6],
             admin_authorities: [Pubkey::default(); CONFIG_POLICY_V2_ADMIN_CAPACITY],
             service_authorities: [Pubkey::default(); CONFIG_POLICY_V2_SERVICE_CAPACITY],
-            service_version_overrides: [ServiceVersionOverrideV2::default();
-                CONFIG_POLICY_V2_SERVICE_VERSION_OVERRIDE_CAPACITY],
-            reserved: [0; 128],
+            reserved: [[0; 32]; 24],
         }
     }
 }
