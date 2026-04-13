@@ -1,6 +1,6 @@
 use super::{
     AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, ParsedAccountLayout, Pubkey,
-    RequestTier,
+    RequestTier, CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES,
 };
 use crate::VERIFIERS_PER_AUCTION;
 use bytemuck::{Pod, Zeroable};
@@ -132,44 +132,58 @@ impl DerefMut for BundleEscrowV2Mut<'_> {
 
 impl RawBundleEscrowV2Data {
     pub const PAYLOAD_LEN: usize = std::mem::size_of::<RawBundleEscrowV2Data>();
-    pub const LEN: usize = AccountHeaderV1::LEN + Self::PAYLOAD_LEN;
+    pub const LEN: usize = Self::LEN_V1;
+    pub const LEN_V1: usize = AccountHeaderV1::LEN + Self::PAYLOAD_LEN;
+    pub const LEN_V2: usize =
+        AccountHeaderV1::LEN + Self::PAYLOAD_LEN + CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES;
+
+    pub const fn account_len(version: AccountLayoutVersion) -> usize {
+        match version {
+            AccountLayoutVersion::V1 => Self::LEN_V1,
+            AccountLayoutVersion::V2 => Self::LEN_V2,
+            AccountLayoutVersion::LegacyV0 => 0,
+        }
+    }
 
     pub fn from_bytes(bytes: &[u8]) -> Option<BundleEscrowV2Ref<'_>> {
-        if bytes.len() != Self::LEN {
+        if bytes.len() < AccountHeaderV1::LEN + Self::PAYLOAD_LEN {
             return None;
         }
 
         let (header_bytes, raw_bytes) = bytes.split_at(AccountHeaderV1::LEN);
         let header = bytemuck::try_from_bytes::<AccountHeaderV1>(header_bytes).ok()?;
-        if header.layout()
-            != Some(ParsedAccountLayout::new(
-                AccountDiscriminator::BundleEscrowV2,
-                AccountLayoutVersion::V1,
-            ))
-        {
+        let layout = header.layout()?;
+        if layout.discriminator != AccountDiscriminator::BundleEscrowV2 {
+            return None;
+        }
+        let expected_len = Self::account_len(layout.version);
+        if expected_len == 0 || bytes.len() != expected_len {
             return None;
         }
 
+        let (raw_bytes, _reserved) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
         Some(BundleEscrowV2Ref { header, raw })
     }
 
     pub fn from_bytes_mut(bytes: &mut [u8]) -> Option<BundleEscrowV2Mut<'_>> {
-        if bytes.len() != Self::LEN {
+        let bytes_len = bytes.len();
+        if bytes_len < AccountHeaderV1::LEN + Self::PAYLOAD_LEN {
             return None;
         }
 
         let (header_bytes, raw_bytes) = bytes.split_at_mut(AccountHeaderV1::LEN);
         let header = bytemuck::try_from_bytes_mut::<AccountHeaderV1>(header_bytes).ok()?;
-        if header.layout()
-            != Some(ParsedAccountLayout::new(
-                AccountDiscriminator::BundleEscrowV2,
-                AccountLayoutVersion::V1,
-            ))
-        {
+        let layout = header.layout()?;
+        if layout.discriminator != AccountDiscriminator::BundleEscrowV2 {
+            return None;
+        }
+        let expected_len = Self::account_len(layout.version);
+        if expected_len == 0 || bytes_len != expected_len {
             return None;
         }
 
+        let (raw_bytes, _reserved) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes_mut::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
         Some(BundleEscrowV2Mut { header, raw })
     }
@@ -179,15 +193,28 @@ impl RawBundleEscrowV2Data {
     }
 
     pub fn write_v1_bytes(&self, bytes: &mut [u8]) -> bool {
-        if bytes.len() != Self::LEN {
+        self.write_bytes_with_layout(bytes, AccountLayoutVersion::V1)
+    }
+
+    pub fn write_v2_bytes(&self, bytes: &mut [u8]) -> bool {
+        self.write_bytes_with_layout(bytes, AccountLayoutVersion::V2)
+    }
+
+    pub fn write_bytes_with_layout(&self, bytes: &mut [u8], version: AccountLayoutVersion) -> bool {
+        let expected_len = Self::account_len(version);
+        if expected_len == 0 || bytes.len() != expected_len {
             return false;
         }
 
         let (header_bytes, raw_bytes) = bytes.split_at_mut(AccountHeaderV1::LEN);
-        header_bytes.copy_from_slice(bytemuck::bytes_of(&AccountHeaderV1::new(
-            AccountDiscriminator::BundleEscrowV2,
-        )));
+        header_bytes.copy_from_slice(bytemuck::bytes_of(&AccountHeaderV1 {
+            discriminator: AccountDiscriminator::BundleEscrowV2 as u8,
+            version: version as u8,
+            reserved: [0; 6],
+        }));
+        let (raw_bytes, reserved_bytes) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         raw_bytes.copy_from_slice(bytemuck::bytes_of(self));
+        reserved_bytes.fill(0);
         true
     }
 

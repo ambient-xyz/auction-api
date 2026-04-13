@@ -7,6 +7,7 @@ use bytemuck::{Pod, Zeroable};
 pub struct OpenBundleEscrowV2Accounts<'a, T> {
     pub payer: &'a T,
     pub bundle_escrow: &'a T,
+    pub config_policy: &'a T,
     pub system_program: &'a T,
 }
 
@@ -14,13 +15,14 @@ impl<'a, T> TryFrom<&'a [T]> for OpenBundleEscrowV2Accounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [payer, bundle_escrow, system_program, ..] = accounts else {
+        let [payer, bundle_escrow, config_policy, system_program, ..] = accounts else {
             return Err(AuctionError::NotEnoughAccounts);
         };
 
         Ok(Self {
             payer,
             bundle_escrow,
+            config_policy,
             system_program,
         })
     }
@@ -30,6 +32,7 @@ impl<'a, T> InstructionAccounts<'a, T> for OpenBundleEscrowV2Accounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.payer)
             .chain(std::iter::once(self.bundle_escrow))
+            .chain(std::iter::once(self.config_policy))
             .chain(std::iter::once(self.system_program))
     }
 

@@ -7,6 +7,7 @@ use bytemuck::{Pod, Zeroable};
 pub struct CommitAuctionSettlementV2Accounts<'a, T> {
     pub coordinator: &'a T,
     pub bundle_escrow: &'a T,
+    pub config_policy: &'a T,
     pub winner_vote_account: &'a T,
 }
 
@@ -14,13 +15,14 @@ impl<'a, T> TryFrom<&'a [T]> for CommitAuctionSettlementV2Accounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [coordinator, bundle_escrow, winner_vote_account, ..] = accounts else {
+        let [coordinator, bundle_escrow, config_policy, winner_vote_account, ..] = accounts else {
             return Err(AuctionError::NotEnoughAccounts);
         };
 
         Ok(Self {
             coordinator,
             bundle_escrow,
+            config_policy,
             winner_vote_account,
         })
     }
@@ -30,6 +32,7 @@ impl<'a, T> InstructionAccounts<'a, T> for CommitAuctionSettlementV2Accounts<'a,
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.coordinator)
             .chain(std::iter::once(self.bundle_escrow))
+            .chain(std::iter::once(self.config_policy))
             .chain(std::iter::once(self.winner_vote_account))
     }
 
