@@ -112,6 +112,10 @@ pub enum AuctionError {
     UnauthorizedResultPoster = 52,
     /// The bundle escrow v2 payout exceeds the escrow balance
     InsufficientEscrowBalance = 53,
+    /// Invalid Bool option
+    InvalidBoolOption = 54,
+    /// Insufficient Lstake balance for operation
+    NotEnoughLstake = 55,
 }
 
 impl Display for AuctionError {

@@ -14,6 +14,7 @@ mod commit_auction_settlement_v2;
 mod end_auction;
 mod expire_bundle_escrow_v2;
 mod finalize_bundle_verification_v2;
+mod init_auction_verifiers;
 mod init_bundle;
 mod init_config;
 mod open_bundle_escrow_v2;
@@ -23,6 +24,7 @@ mod request_job;
 mod reveal_bid;
 mod submit_job_output;
 mod submit_validation;
+mod update_verifier;
 
 use crate::macros::impl_instruction_data;
 pub use append_data::*;
@@ -35,6 +37,7 @@ pub use commit_auction_settlement_v2::*;
 pub use end_auction::*;
 pub use expire_bundle_escrow_v2::*;
 pub use finalize_bundle_verification_v2::*;
+pub use init_auction_verifiers::*;
 pub use init_bundle::*;
 pub use init_config::*;
 pub use open_bundle_escrow_v2::*;
@@ -44,6 +47,7 @@ pub use request_job::*;
 pub use reveal_bid::*;
 pub use submit_job_output::*;
 pub use submit_validation::*;
+pub use update_verifier::*;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive, IntoPrimitive)]
 #[repr(u8)]
@@ -68,6 +72,8 @@ pub enum AuctionInstruction {
     ClaimWinnerLstakeV2 = 16,
     ClaimVerifierLstakeV2 = 17,
     ExpireBundleEscrowV2 = 18,
+    UpdateVerifier = 19,
+    InitAuctionVerifiers = 20,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -147,6 +153,8 @@ impl_instruction_data!(
     ClaimWinnerLstakeV2Args => ClaimWinnerLstakeV2,
     ClaimVerifierLstakeV2Args => ClaimVerifierLstakeV2,
     ExpireBundleEscrowV2Args => ExpireBundleEscrowV2,
+    UpdateVerifierArgs => UpdateVerifier,
+    InitAuctionVerifiersArgs => InitAuctionVerifiers,
 );
 #[cfg(not(feature = "global-config"))]
 impl_instruction_data!(
@@ -168,4 +176,6 @@ impl_instruction_data!(
     ClaimWinnerLstakeV2Args => ClaimWinnerLstakeV2,
     ClaimVerifierLstakeV2Args => ClaimVerifierLstakeV2,
     ExpireBundleEscrowV2Args => ExpireBundleEscrowV2,
+    UpdateVerifierArgs => UpdateVerifier,
+    InitAuctionVerifiersArgs => InitAuctionVerifiers,
 );

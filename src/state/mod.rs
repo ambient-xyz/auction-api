@@ -5,6 +5,7 @@ pub mod bundle_escrow_v2;
 pub mod bundle_registry;
 pub mod config;
 pub mod layout;
+pub mod tee_verifier_list;
 pub use auction::*;
 pub use bid::*;
 pub mod job_request;
@@ -20,6 +21,7 @@ pub use job_request::*;
 pub use layout::*;
 pub use metadata::*;
 pub use request_tier::*;
+pub use tee_verifier_list::*;
 pub use verification::*;
 
 #[cfg(feature = "serde")]

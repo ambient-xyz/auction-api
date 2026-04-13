@@ -163,10 +163,12 @@ pub fn parse_bundle_layout(bytes: &[u8]) -> Option<ParsedAccountLayout> {
     {
         let trailer = bytemuck::try_from_bytes::<BundleLayoutTrailerV1>(trailer_bytes).ok()?;
         let layout = trailer.layout();
-        if layout == Some(ParsedAccountLayout::new(
-            AccountDiscriminator::Bundle,
-            AccountLayoutVersion::V1,
-        )) {
+        if layout
+            == Some(ParsedAccountLayout::new(
+                AccountDiscriminator::Bundle,
+                AccountLayoutVersion::V1,
+            ))
+        {
             return layout;
         }
     }

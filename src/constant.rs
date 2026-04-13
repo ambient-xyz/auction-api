@@ -12,6 +12,7 @@ pub const BUNDLE_REGISTRY_SEED: &[u8] = b"bundle_registry";
 pub const BID_SEED: &[u8] = b"bid";
 pub const AUCTION_SEED: &[u8] = b"auction";
 pub const CONFIG_SEED: &[u8] = b"global_config";
+pub const AUCTION_VERIFIERS_SEED: &[u8] = b"auction_verifiers";
 pub const BUNDLE_ESCROW_V2_SEED: &[u8] = b"bundle_escrow_v2";
 /// The minimum number of bundle-auction pairs
 /// Eg. if set to 2 means two bundle-auction pairs have to be submitted ie 4 accounts

@@ -12,6 +12,7 @@ pub enum RequestTier {
     Standard = 1,
     Pro = 2,
     Large = 4,
+    TEE = 5,
 }
 unsafe impl Pod for RequestTier {}
 
@@ -31,6 +32,7 @@ impl RequestTier {
             RequestTier::Pro => 3,
             RequestTier::Large => 3,
             RequestTier::Small => 3,
+            RequestTier::TEE => 3,
         }
     }
 
@@ -41,6 +43,7 @@ impl RequestTier {
             RequestTier::Pro => 3,
             RequestTier::Large => 3,
             RequestTier::Small => 3,
+            RequestTier::TEE => 3,
         }
     }
 
@@ -51,6 +54,7 @@ impl RequestTier {
             RequestTier::Pro => 3,
             RequestTier::Large => 3,
             RequestTier::Small => 3,
+            RequestTier::TEE => 3,
         }
     }
 
@@ -61,6 +65,7 @@ impl RequestTier {
             RequestTier::Pro => 25,
             RequestTier::Large => 25,
             RequestTier::Small => 25,
+            RequestTier::TEE => 150,
         }
     }
 
@@ -72,6 +77,7 @@ impl RequestTier {
             RequestTier::Standard => 5,
             RequestTier::Pro => 2,
             RequestTier::Large => 1,
+            RequestTier::TEE => 30,
         }
     }
 
@@ -83,6 +89,7 @@ impl RequestTier {
             RequestTier::Standard => 32_000,
             RequestTier::Pro => 64_000,
             RequestTier::Large => 202_752,
+            RequestTier::TEE => 200_000,
         }
     }
     /// TODO: this should be enforced
@@ -93,6 +100,7 @@ impl RequestTier {
             RequestTier::Small => 145,
             RequestTier::Pro => 135,
             RequestTier::Large => 125,
+            RequestTier::TEE => 135,
         }
     }
     pub fn get_bid_commitment_amount_multiplier(&self) -> u64 {
@@ -102,6 +110,7 @@ impl RequestTier {
             RequestTier::Small => 2,
             RequestTier::Pro => 3,
             RequestTier::Large => 3,
+            RequestTier::TEE => 3,
         }
     }
     pub fn get_auction_credits_multiplier(&self) -> u64 {
@@ -111,6 +120,7 @@ impl RequestTier {
             RequestTier::Small => 2,
             RequestTier::Pro => 3,
             RequestTier::Large => 3,
+            RequestTier::TEE => 3,
         }
     }
 

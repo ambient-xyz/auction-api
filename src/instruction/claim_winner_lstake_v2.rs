@@ -15,7 +15,8 @@ impl<'a, T> TryFrom<&'a [T]> for ClaimWinnerLstakeV2Accounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [bundle_escrow, winner_vote_account, vote_program, vote_authority, ..] = accounts else {
+        let [bundle_escrow, winner_vote_account, vote_program, vote_authority, ..] = accounts
+        else {
             return Err(AuctionError::NotEnoughAccounts);
         };
 
