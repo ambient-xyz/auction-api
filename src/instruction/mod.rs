@@ -15,6 +15,7 @@ mod end_auction;
 mod expire_bundle_escrow_v2;
 mod finalize_bundle_verification_v2;
 mod init_bundle;
+#[cfg(feature = "global-config")]
 mod init_config;
 mod init_config_policy_v2;
 mod open_bundle_escrow_v2;
@@ -38,6 +39,7 @@ pub use end_auction::*;
 pub use expire_bundle_escrow_v2::*;
 pub use finalize_bundle_verification_v2::*;
 pub use init_bundle::*;
+#[cfg(feature = "global-config")]
 pub use init_config::*;
 pub use init_config_policy_v2::*;
 pub use open_bundle_escrow_v2::*;
@@ -63,6 +65,7 @@ pub enum AuctionInstruction {
     RevealBid = 8,
     CloseRequest = 9,
     AppendData = 10,
+    #[cfg(feature = "global-config")]
     InitConfig = 11,
     OpenBundleEscrowV2 = 12,
     CommitAuctionSettlementV2 = 13,
@@ -143,7 +146,6 @@ impl_instruction_data!(
     RevealBidArgs => RevealBid,
     CloseRequestArgs => CloseRequest,
     AppendDataArgs => AppendData,
-    InitConfigArgs => InitConfig,
     OpenBundleEscrowV2Args => OpenBundleEscrowV2,
     CommitAuctionSettlementV2Args => CommitAuctionSettlementV2,
     PostBundleResultV2Args => PostBundleResultV2,
@@ -154,3 +156,6 @@ impl_instruction_data!(
     InitConfigPolicyV2Args => InitConfigPolicyV2,
     SetConfigPolicyV2Args => SetConfigPolicyV2,
 );
+
+#[cfg(feature = "global-config")]
+impl_instruction_data!(InitConfigArgs => InitConfig);
