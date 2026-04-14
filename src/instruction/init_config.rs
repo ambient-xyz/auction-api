@@ -30,17 +30,52 @@ impl<'a, T> TryFrom<&'a [T]> for InitConfigAccounts<'a, T> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InitConfigAccountKeys<T> {
+    pub payer: T,
+    pub config: T,
+    pub system_program: T,
+}
+
+impl<T> InitConfigAccountKeys<T> {
+    pub fn as_accounts(&self) -> InitConfigAccounts<'_, T> {
+        InitConfigAccounts {
+            payer: &self.payer,
+            config: &self.config,
+            system_program: &self.system_program,
+        }
+    }
+}
+
+impl<'a, T> InstructionAccounts<'a, T> for InitConfigAccountKeys<T>
+where
+    T: 'a,
+{
+    fn iter(&'a self) -> impl Iterator<Item = &'a T> {
+        std::iter::once(&self.payer)
+            .chain(std::iter::once(&self.config))
+            .chain(std::iter::once(&self.system_program))
+    }
+}
+
+impl<'a, T> InitConfigAccounts<'a, T>
+where
+    T: Clone,
+{
+    pub fn to_account_keys(&self) -> InitConfigAccountKeys<T> {
+        InitConfigAccountKeys {
+            payer: self.payer.clone(),
+            config: self.config.clone(),
+            system_program: self.system_program.clone(),
+        }
+    }
+}
+
 impl<'a, T> InstructionAccounts<'a, T> for InitConfigAccounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.payer)
             .chain(std::iter::once(self.config))
             .chain(std::iter::once(self.system_program))
-    }
-    fn iter_owned(&self) -> impl Iterator<Item = T>
-    where
-        T: Clone,
-    {
-        self.iter().cloned()
     }
 }
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]

@@ -44,6 +44,59 @@ impl<'a, T> TryFrom<&'a [T]> for RevealBidAccounts<'a, T> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RevealBidAccountKeys<T> {
+    pub bid_authority: T,
+    pub bid: T,
+    pub auction: T,
+    pub bundle: T,
+    pub vote_account: T,
+    pub vote_authority: T,
+}
+
+impl<T> RevealBidAccountKeys<T> {
+    pub fn as_accounts(&self) -> RevealBidAccounts<'_, T> {
+        RevealBidAccounts {
+            bid_authority: &self.bid_authority,
+            bid: &self.bid,
+            auction: &self.auction,
+            bundle: &self.bundle,
+            vote_account: &self.vote_account,
+            vote_authority: &self.vote_authority,
+        }
+    }
+}
+
+impl<'a, T> InstructionAccounts<'a, T> for RevealBidAccountKeys<T>
+where
+    T: 'a,
+{
+    fn iter(&'a self) -> impl Iterator<Item = &'a T> {
+        std::iter::once(&self.bid_authority)
+            .chain(std::iter::once(&self.bid))
+            .chain(std::iter::once(&self.auction))
+            .chain(std::iter::once(&self.bundle))
+            .chain(std::iter::once(&self.vote_account))
+            .chain(std::iter::once(&self.vote_authority))
+    }
+}
+
+impl<'a, T> RevealBidAccounts<'a, T>
+where
+    T: Clone,
+{
+    pub fn to_account_keys(&self) -> RevealBidAccountKeys<T> {
+        RevealBidAccountKeys {
+            bid_authority: self.bid_authority.clone(),
+            bid: self.bid.clone(),
+            auction: self.auction.clone(),
+            bundle: self.bundle.clone(),
+            vote_account: self.vote_account.clone(),
+            vote_authority: self.vote_authority.clone(),
+        }
+    }
+}
+
 impl<'a, T> InstructionAccounts<'a, T> for RevealBidAccounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.bid_authority)
@@ -52,12 +105,6 @@ impl<'a, T> InstructionAccounts<'a, T> for RevealBidAccounts<'a, T> {
             .chain(std::iter::once(self.bundle))
             .chain(std::iter::once(self.vote_account))
             .chain(std::iter::once(self.vote_authority))
-    }
-    fn iter_owned(&self) -> impl Iterator<Item = T>
-    where
-        T: Clone,
-    {
-        self.iter().cloned()
     }
 }
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
