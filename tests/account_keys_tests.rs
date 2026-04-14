@@ -1,4 +1,4 @@
-use crate::instruction::*;
+use ambient_auction_api::instruction::*;
 
 #[test]
 fn init_bundle_account_keys_round_trip_and_order() {

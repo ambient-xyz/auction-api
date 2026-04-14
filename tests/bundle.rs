@@ -6,6 +6,9 @@ use ambient_auction_api::{
 use memoffset::offset_of;
 use std::mem::size_of;
 
+#[cfg(test)]
+mod account_keys_tests;
+
 #[test]
 fn layout_offsets() {
     assert_eq!(offset_of!(RawBundleData, status), 0);
