@@ -63,13 +63,6 @@ impl<'a, T> InstructionAccounts<'a, T> for FinalizeBundleVerificationV2Accounts<
             .chain(std::iter::once(self.config_policy))
             .chain(self.bundle_verifier_pages.iter())
     }
-
-    fn iter_owned(&self) -> impl Iterator<Item = T>
-    where
-        T: Clone,
-    {
-        self.iter().cloned()
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Zeroable, Pod)]

@@ -64,12 +64,6 @@ impl<'a, T> InstructionAccounts<'a, T> for CloseBidAccounts<'a, T> {
             .chain(std::iter::once(self.vote_authority))
             .chain(std::iter::once(self.vote_program))
     }
-    fn iter_owned(&self) -> impl Iterator<Item = T>
-    where
-        T: Clone,
-    {
-        self.iter().cloned()
-    }
 }
 
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]

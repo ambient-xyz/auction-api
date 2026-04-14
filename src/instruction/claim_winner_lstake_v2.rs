@@ -40,13 +40,6 @@ impl<'a, T> InstructionAccounts<'a, T> for ClaimWinnerLstakeV2Accounts<'a, T> {
             .chain(std::iter::once(self.vote_authority))
             .chain(std::iter::once(self.config_policy))
     }
-
-    fn iter_owned(&self) -> impl Iterator<Item = T>
-    where
-        T: Clone,
-    {
-        self.iter().cloned()
-    }
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug, Pod)]

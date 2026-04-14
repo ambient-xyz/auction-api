@@ -28,13 +28,6 @@ impl<'a, T> InstructionAccounts<'a, T> for SetConfigPolicyV2Accounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.authority).chain(std::iter::once(self.config_policy))
     }
-
-    fn iter_owned(&self) -> impl Iterator<Item = T>
-    where
-        T: Clone,
-    {
-        self.iter().cloned()
-    }
 }
 
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]

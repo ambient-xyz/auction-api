@@ -37,18 +37,57 @@ impl<'a, T> TryFrom<&'a [T]> for PlaceBidAccounts<'a, T> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PlaceBidAccountKeys<T> {
+    pub payer: T,
+    pub bid: T,
+    pub auction: T,
+    pub system_program: T,
+}
+
+impl<T> PlaceBidAccountKeys<T> {
+    pub fn as_accounts(&self) -> PlaceBidAccounts<'_, T> {
+        PlaceBidAccounts {
+            payer: &self.payer,
+            bid: &self.bid,
+            auction: &self.auction,
+            system_program: &self.system_program,
+        }
+    }
+}
+
+impl<'a, T> InstructionAccounts<'a, T> for PlaceBidAccountKeys<T>
+where
+    T: 'a,
+{
+    fn iter(&'a self) -> impl Iterator<Item = &'a T> {
+        std::iter::once(&self.payer)
+            .chain(std::iter::once(&self.bid))
+            .chain(std::iter::once(&self.auction))
+            .chain(std::iter::once(&self.system_program))
+    }
+}
+
+impl<'a, T> PlaceBidAccounts<'a, T>
+where
+    T: Clone,
+{
+    pub fn to_account_keys(&self) -> PlaceBidAccountKeys<T> {
+        PlaceBidAccountKeys {
+            payer: self.payer.clone(),
+            bid: self.bid.clone(),
+            auction: self.auction.clone(),
+            system_program: self.system_program.clone(),
+        }
+    }
+}
+
 impl<'a, T> InstructionAccounts<'a, T> for PlaceBidAccounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.payer)
             .chain(std::iter::once(self.bid))
             .chain(std::iter::once(self.auction))
             .chain(std::iter::once(self.system_program))
-    }
-    fn iter_owned(&self) -> impl Iterator<Item = T>
-    where
-        T: Clone,
-    {
-        self.iter().cloned()
     }
 }
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]

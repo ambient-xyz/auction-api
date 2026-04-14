@@ -37,18 +37,57 @@ impl<'a, T> TryFrom<&'a [T]> for InitBundleAccounts<'a, T> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InitBundleAccountKeys<T> {
+    pub payer: T,
+    pub bundle: T,
+    pub registry: T,
+    pub system_program: T,
+}
+
+impl<T> InitBundleAccountKeys<T> {
+    pub fn as_accounts(&self) -> InitBundleAccounts<'_, T> {
+        InitBundleAccounts {
+            payer: &self.payer,
+            bundle: &self.bundle,
+            registry: &self.registry,
+            system_program: &self.system_program,
+        }
+    }
+}
+
+impl<'a, T> InstructionAccounts<'a, T> for InitBundleAccountKeys<T>
+where
+    T: 'a,
+{
+    fn iter(&'a self) -> impl Iterator<Item = &'a T> {
+        std::iter::once(&self.payer)
+            .chain(std::iter::once(&self.bundle))
+            .chain(std::iter::once(&self.registry))
+            .chain(std::iter::once(&self.system_program))
+    }
+}
+
+impl<'a, T> InitBundleAccounts<'a, T>
+where
+    T: Clone,
+{
+    pub fn to_account_keys(&self) -> InitBundleAccountKeys<T> {
+        InitBundleAccountKeys {
+            payer: self.payer.clone(),
+            bundle: self.bundle.clone(),
+            registry: self.registry.clone(),
+            system_program: self.system_program.clone(),
+        }
+    }
+}
+
 impl<'a, T> InstructionAccounts<'a, T> for InitBundleAccounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.payer)
             .chain(std::iter::once(self.bundle))
             .chain(std::iter::once(self.registry))
             .chain(std::iter::once(self.system_program))
-    }
-    fn iter_owned(&self) -> impl Iterator<Item = T>
-    where
-        T: Clone,
-    {
-        self.iter().cloned()
     }
 }
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Debug)]

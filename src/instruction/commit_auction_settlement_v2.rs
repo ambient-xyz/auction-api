@@ -35,13 +35,6 @@ impl<'a, T> InstructionAccounts<'a, T> for CommitAuctionSettlementV2Accounts<'a,
             .chain(std::iter::once(self.config_policy))
             .chain(std::iter::once(self.winner_vote_account))
     }
-
-    fn iter_owned(&self) -> impl Iterator<Item = T>
-    where
-        T: Clone,
-    {
-        self.iter().cloned()
-    }
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug, Pod)]

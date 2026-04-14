@@ -48,12 +48,6 @@ impl<'a, T> InstructionAccounts<'a, T> for SubmitValidationAccounts<'a, T> {
             .chain(std::iter::once(self.vote_authority))
             .chain(std::iter::once(self.job_request))
     }
-    fn iter_owned(&self) -> impl Iterator<Item = T>
-    where
-        T: Clone,
-    {
-        self.iter().cloned()
-    }
 }
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
 #[repr(C)]
