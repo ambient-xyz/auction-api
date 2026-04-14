@@ -44,12 +44,6 @@ impl<'a, T> InstructionAccounts<'a, T> for CancelBundleAccounts<'a, T> {
             .chain(std::iter::once(self.registry))
             .chain(std::iter::once(self.system_program))
     }
-    fn iter_owned(&self) -> impl Iterator<Item = T>
-    where
-        T: Clone,
-    {
-        self.iter().cloned()
-    }
 }
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
 #[repr(C)]

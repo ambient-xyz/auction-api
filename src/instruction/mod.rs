@@ -129,9 +129,12 @@ pub trait InstructionAccounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T>
     where
         T: 'a;
-    fn iter_owned(&self) -> impl Iterator<Item = T>
+    fn iter_owned(&'a self) -> impl Iterator<Item = T>
     where
-        T: Clone;
+        T: Clone + 'a,
+    {
+        self.iter().cloned()
+    }
 }
 
 impl_instruction_data!(

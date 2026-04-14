@@ -34,12 +34,6 @@ impl<'a, T> InstructionAccounts<'a, T> for AppendDataAccounts<'a, T> {
             .chain(std::iter::once(self.data_account))
             .chain(std::iter::once(self.system_program))
     }
-    fn iter_owned(&self) -> impl Iterator<Item = T>
-    where
-        T: Clone,
-    {
-        self.iter().cloned()
-    }
 }
 
 /// Expected header in the beginning of the AppendData instruction
