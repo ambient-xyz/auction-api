@@ -1,5 +1,5 @@
 use super::{AccountLayoutVersion, Pubkey, RequestTier};
-use crate::{V2_VERIFIER_QUORUM, VERIFIERS_PER_AUCTION};
+use crate::{MAX_VERIFIERS_PER_AUCTION, V2_VERIFIER_QUORUM};
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -133,7 +133,7 @@ impl Default for ConfigPolicyV2 {
             _reserved0: [0; 8],
             admin_authorities: [Pubkey::default(); CONFIG_POLICY_V2_ADMIN_CAPACITY],
             service_authorities: [Pubkey::default(); CONFIG_POLICY_V2_SERVICE_CAPACITY],
-            v2_verifiers_per_auction: VERIFIERS_PER_AUCTION as u8,
+            v2_verifiers_per_auction: MAX_VERIFIERS_PER_AUCTION as u8,
             v2_verifier_quorum: V2_VERIFIER_QUORUM as u8,
             _reserved1: [0; 6],
             tier_configs: [

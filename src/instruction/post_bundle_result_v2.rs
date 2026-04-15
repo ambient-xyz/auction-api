@@ -1,5 +1,5 @@
 use crate::error::AuctionError;
-use crate::state::{BundleVerifierPageV2Entry, BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES};
+use crate::state::{BundleVerifierPageV2Entry, MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES};
 use crate::InstructionAccounts;
 use bytemuck::{Pod, Zeroable};
 
@@ -47,5 +47,5 @@ pub struct PostBundleResultV2Args {
     pub page_index: u16,
     pub page_entry_count: u16,
     pub _reserved: [u8; 4],
-    pub page_entries: [BundleVerifierPageV2Entry; BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES],
+    pub page_entries: [BundleVerifierPageV2Entry; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
 }

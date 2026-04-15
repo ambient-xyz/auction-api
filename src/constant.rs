@@ -22,5 +22,8 @@ pub const MINIMUM_BUNDLE_AUCTION_PAIRS: usize = 2;
 pub const ID: [u8; PUBKEY_BYTES] =
     five8_const::decode_32_const("Auction111111111111111111111111111111111111");
 
-pub const VERIFIERS_PER_AUCTION: usize = 3;
+/// Protocol-level verifier capacity for auction layouts and instruction payloads.
+pub const MAX_VERIFIERS_PER_AUCTION: usize = 3;
+/// Compatibility alias for one release cycle. Prefer `MAX_VERIFIERS_PER_AUCTION`.
+pub const VERIFIERS_PER_AUCTION: usize = MAX_VERIFIERS_PER_AUCTION;
 pub const V2_VERIFIER_QUORUM: usize = 2;
