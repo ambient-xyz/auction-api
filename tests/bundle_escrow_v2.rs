@@ -47,6 +47,26 @@ fn bundle_escrow_v2_status_matches_on_associated_constants() {
 }
 
 #[test]
+fn bundle_escrow_v2_v2_bytes_round_trip() {
+    let bundle = BundleEscrowV2 {
+        status: BundleEscrowV2Status::Awarded,
+        reward_tier: RequestTier::Standard,
+        bundle_version: 13,
+        total_input_tokens: 21,
+        ..Default::default()
+    };
+    let mut bytes = vec![0u8; BundleEscrowV2::LEN_V2];
+
+    assert!(bundle.write_v2_bytes(&mut bytes));
+
+    let parsed = BundleEscrowV2::from_bytes(&bytes).unwrap();
+    assert_eq!(parsed.layout().version, AccountLayoutVersion::V2);
+    assert_eq!(parsed.status, BundleEscrowV2Status::Awarded);
+    assert_eq!(parsed.bundle_version, 13);
+    assert_eq!(parsed.total_input_tokens, 21);
+}
+
+#[test]
 fn bundle_escrow_v2_v1_bytes_round_trip() {
     let bundle = BundleEscrowV2 {
         status: BundleEscrowV2Status::Awarded,
