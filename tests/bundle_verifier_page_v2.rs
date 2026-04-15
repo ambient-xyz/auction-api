@@ -1,6 +1,6 @@
 use ambient_auction_api::{
-    AccountDiscriminator, AccountHeaderV1, BundleVerifierPageV2, BundleVerifierPageV2Entry, Pubkey,
-    VerificationVerdictV2, BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES,
+    AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, BundleVerifierPageV2,
+    BundleVerifierPageV2Entry, Pubkey, VerificationVerdictV2, BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES,
 };
 use bytemuck::Zeroable;
 use std::mem::size_of;
@@ -42,6 +42,26 @@ fn bundle_verifier_page_v2_round_trips_through_bytes() {
         [0, 8, 6, 17, 15, 34]
     );
     assert_eq!(parsed.entries[0].verifier_reward_tokens, [5, 8, 13]);
+}
+
+#[test]
+fn bundle_verifier_page_v2_v2_round_trips_through_bytes() {
+    let mut page = BundleVerifierPageV2::zeroed();
+    page.write_entries(
+        [3; 32].into(),
+        1,
+        0,
+        [BundleVerifierPageV2Entry::default(); BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES],
+    );
+
+    let mut bytes = vec![0u8; BundleVerifierPageV2::LEN_V2];
+    assert!(page.write_v2_bytes(&mut bytes));
+
+    let parsed = BundleVerifierPageV2::from_bytes(&bytes).unwrap();
+    assert_eq!(parsed.layout().version, AccountLayoutVersion::V2);
+    assert_eq!(parsed.bundle_escrow, Pubkey::from([3; 32]));
+    assert_eq!(parsed.page_index, 1);
+    assert_eq!(parsed.entry_count, 0);
 }
 
 #[test]

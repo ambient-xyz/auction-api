@@ -91,7 +91,11 @@ encryption node public key: {encryption_node_publickey:?}"
 }
 
 fn display_bundle_escrow_v2(buffer: Vec<u8>) -> Result<(), String> {
-    eprintln!("Expected len: {}", BundleEscrowV2::LEN);
+    eprintln!(
+        "Expected len: {} (V1) or {} (V2)",
+        BundleEscrowV2::LEN_V1,
+        BundleEscrowV2::LEN_V2
+    );
     let data = BundleEscrowV2::read(&buffer).ok_or_else(|| {
         "To decode BundleEscrowV2 from account bytes. Is it the right versioned account type?"
             .to_string()
