@@ -114,6 +114,22 @@ impl RequestTier {
         }
     }
 
+    pub fn get_v2_settlement_window_slots(&self) -> u64 {
+        10
+    }
+
+    pub fn get_v2_result_window_slots(&self) -> u64 {
+        10
+    }
+
+    pub fn get_v2_verification_window_slots(&self) -> u64 {
+        10
+    }
+
+    pub fn get_v2_claim_window_slots(&self) -> u64 {
+        10
+    }
+
     pub fn context_tier_for_tokens(tokens: u64) -> Option<Self> {
         Self::ALL
             .iter()

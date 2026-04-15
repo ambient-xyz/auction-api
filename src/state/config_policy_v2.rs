@@ -16,7 +16,7 @@ pub const CONFIG_POLICY_V2_FLAG_ALLOW_SERVICE_PAGE_BACKED_FINALIZE_BYPASS: u64 =
 
 pub const CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES: usize = 64;
 pub const CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES: usize = 64;
-pub const CONFIG_POLICY_V2_TYPED_RESERVED_WORDS: usize = 13;
+pub const CONFIG_POLICY_V2_TYPED_RESERVED_WORDS: usize = 8;
 pub const CONFIG_POLICY_V2_TYPED_RESERVED_LAYOUT_PADDING_BYTES: usize = 7;
 pub const CONFIG_POLICY_V2_TYPED_RESERVED_TAIL_BYTES: usize = 16;
 
@@ -32,6 +32,10 @@ pub struct RequestTierConfigV2 {
     pub job_submission_duration_slots: u64,
     pub bid_commitment_amount_multiplier: u64,
     pub auction_credits_multiplier: u64,
+    pub settlement_window_slots: u64,
+    pub result_window_slots: u64,
+    pub verification_window_slots: u64,
+    pub claim_window_slots: u64,
 }
 
 impl RequestTierConfigV2 {
@@ -45,6 +49,10 @@ impl RequestTierConfigV2 {
             job_submission_duration_slots: tier.get_job_submission_duration_slots(),
             bid_commitment_amount_multiplier: tier.get_bid_commitment_amount_multiplier(),
             auction_credits_multiplier: tier.get_auction_credits_multiplier(),
+            settlement_window_slots: tier.get_v2_settlement_window_slots(),
+            result_window_slots: tier.get_v2_result_window_slots(),
+            verification_window_slots: tier.get_v2_verification_window_slots(),
+            claim_window_slots: tier.get_v2_claim_window_slots(),
         }
     }
 
@@ -57,6 +65,42 @@ impl RequestTierConfigV2 {
             && self.job_submission_duration_slots != 0
             && self.bid_commitment_amount_multiplier != 0
             && self.auction_credits_multiplier != 0
+            && self.settlement_window_slots != 0
+            && self.result_window_slots != 0
+            && self.verification_window_slots != 0
+            && self.claim_window_slots != 0
+    }
+
+    pub fn settlement_window_slots(&self, tier: RequestTier) -> u64 {
+        if self.settlement_window_slots == 0 {
+            tier.get_v2_settlement_window_slots()
+        } else {
+            self.settlement_window_slots
+        }
+    }
+
+    pub fn result_window_slots(&self, tier: RequestTier) -> u64 {
+        if self.result_window_slots == 0 {
+            tier.get_v2_result_window_slots()
+        } else {
+            self.result_window_slots
+        }
+    }
+
+    pub fn verification_window_slots(&self, tier: RequestTier) -> u64 {
+        if self.verification_window_slots == 0 {
+            tier.get_v2_verification_window_slots()
+        } else {
+            self.verification_window_slots
+        }
+    }
+
+    pub fn claim_window_slots(&self, tier: RequestTier) -> u64 {
+        if self.claim_window_slots == 0 {
+            tier.get_v2_claim_window_slots()
+        } else {
+            self.claim_window_slots
+        }
     }
 }
 
