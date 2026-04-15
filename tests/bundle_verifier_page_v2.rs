@@ -1,6 +1,6 @@
 use ambient_auction_api::{
     AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, BundleVerifierPageV2,
-    BundleVerifierPageV2Entry, Pubkey, VerificationVerdictV2, BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES,
+    BundleVerifierPageV2Entry, MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES, Pubkey, VerificationVerdictV2,
 };
 use bytemuck::Zeroable;
 use std::mem::size_of;
@@ -21,7 +21,7 @@ fn bundle_verifier_page_v2_round_trips_through_bytes() {
             verdict: VerificationVerdictV2::Verified,
             verifier_claimed_bitmap: 0,
             _reserved: [0; 6],
-        }; BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES],
+        }; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
     );
 
     let mut bytes = vec![0u8; BundleVerifierPageV2::LEN];
@@ -51,7 +51,7 @@ fn bundle_verifier_page_v2_v2_round_trips_through_bytes() {
         [3; 32].into(),
         1,
         0,
-        [BundleVerifierPageV2Entry::default(); BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES],
+        [BundleVerifierPageV2Entry::default(); MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
     );
 
     let mut bytes = vec![0u8; BundleVerifierPageV2::LEN_V2];
@@ -76,4 +76,9 @@ fn bundle_verifier_page_v2_rejects_wrong_lengths() {
 fn bundle_verifier_page_v2_entry_layout_stays_stable() {
     assert_eq!(size_of::<BundleVerifierPageV2Entry>(), 128);
     assert_eq!(BundleVerifierPageV2::PAYLOAD_LEN, 808);
+}
+
+#[test]
+fn bundle_verifier_page_v2_entry_capacity_is_a_protocol_cap() {
+    assert_eq!(MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES, 6);
 }

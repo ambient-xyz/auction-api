@@ -2,13 +2,16 @@ use super::{
     AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, ParsedAccountLayout, Pubkey,
     CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES,
 };
-use crate::{VerificationVerdictV2, VERIFIERS_PER_AUCTION};
+use crate::{MAX_VERIFIERS_PER_AUCTION, VerificationVerdictV2};
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 
-pub const BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES: usize = 6;
+/// Protocol-level page entry capacity for `BundleVerifierPageV2`.
+pub const MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES: usize = 6;
+/// Compatibility alias for one release cycle. Prefer `MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES`.
+pub const BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES: usize = MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES;
 
 #[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -17,8 +20,8 @@ pub struct BundleVerifierPageV2Entry {
     pub job_id: Pubkey,
     pub posted_output_tokens: u64,
     pub accepted_output_tokens: u64,
-    pub assigned_verifiers_token_ranges: [u64; VERIFIERS_PER_AUCTION * 2],
-    pub verifier_reward_tokens: [u64; VERIFIERS_PER_AUCTION],
+    pub assigned_verifiers_token_ranges: [u64; MAX_VERIFIERS_PER_AUCTION * 2],
+    pub verifier_reward_tokens: [u64; MAX_VERIFIERS_PER_AUCTION],
     pub verdict: VerificationVerdictV2,
     pub verifier_claimed_bitmap: u8,
     pub _reserved: [u8; 6],
@@ -32,7 +35,7 @@ pub struct RawBundleVerifierPageV2Data {
     pub page_index: u16,
     pub entry_count: u16,
     pub _reserved0: [u8; 4],
-    pub entries: [BundleVerifierPageV2Entry; BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES],
+    pub entries: [BundleVerifierPageV2Entry; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
 }
 
 pub type BundleVerifierPageV2 = RawBundleVerifierPageV2Data;
@@ -197,9 +200,9 @@ impl RawBundleVerifierPageV2Data {
         bundle_escrow: Pubkey,
         page_index: u16,
         entry_count: u16,
-        entries: [BundleVerifierPageV2Entry; BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES],
+        entries: [BundleVerifierPageV2Entry; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
     ) -> bool {
-        if usize::from(entry_count) > BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES {
+        if usize::from(entry_count) > MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES {
             return false;
         }
 

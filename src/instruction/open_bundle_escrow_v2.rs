@@ -95,8 +95,4 @@ pub struct OpenBundleEscrowV2Args {
     pub total_input_tokens: u64,
     pub max_output_tokens: u64,
     pub escrow_lamports: u64,
-    pub settlement_deadline_slot: u64,
-    pub result_deadline_slot: u64,
-    pub verification_deadline_slot: u64,
-    pub claim_deadline_slot: u64,
 }

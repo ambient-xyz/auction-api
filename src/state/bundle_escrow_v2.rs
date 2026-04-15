@@ -2,7 +2,7 @@ use super::{
     AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, ParsedAccountLayout, Pubkey,
     RequestTier, CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES,
 };
-use crate::VERIFIERS_PER_AUCTION;
+use crate::MAX_VERIFIERS_PER_AUCTION;
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -24,7 +24,7 @@ pub struct RawBundleEscrowV2Data {
     pub winner_node_pubkey: Pubkey,
     pub winner_vote_account: Pubkey,
     pub clearing_price_per_output_token: u64,
-    pub selected_verifiers: [Pubkey; VERIFIERS_PER_AUCTION],
+    pub selected_verifiers: [Pubkey; MAX_VERIFIERS_PER_AUCTION],
     pub auction_hash: [u8; 32],
     pub result_hash: [u8; 32],
     pub verification_hash: [u8; 32],
@@ -39,7 +39,7 @@ pub struct RawBundleEscrowV2Data {
     pub quorum_verifier_bitmap: u8,
     pub verifier_page_count: u8,
     pub _reserved1: [u8; 4],
-    pub verifier_reward_remaining: [u64; VERIFIERS_PER_AUCTION],
+    pub verifier_reward_remaining: [u64; MAX_VERIFIERS_PER_AUCTION],
 }
 
 pub type BundleEscrowV2 = RawBundleEscrowV2Data;
@@ -225,7 +225,7 @@ impl RawBundleEscrowV2Data {
         winner_node_pubkey: Pubkey,
         winner_vote_account: Pubkey,
         clearing_price_per_output_token: u64,
-        selected_verifiers: [Pubkey; VERIFIERS_PER_AUCTION],
+        selected_verifiers: [Pubkey; MAX_VERIFIERS_PER_AUCTION],
     ) -> Result<(), InvalidBundleEscrowV2Transition> {
         if self.status != BundleEscrowV2Status::Open {
             return Err(InvalidBundleEscrowV2Transition::new(
@@ -270,7 +270,7 @@ impl RawBundleEscrowV2Data {
         accepted_output_tokens: u64,
         quorum_verifier_bitmap: u8,
         verifier_page_count: u8,
-        verifier_reward_remaining: [u64; VERIFIERS_PER_AUCTION],
+        verifier_reward_remaining: [u64; MAX_VERIFIERS_PER_AUCTION],
     ) -> Result<(), InvalidBundleEscrowV2Transition> {
         if self.status != BundleEscrowV2Status::ResultPosted {
             return Err(InvalidBundleEscrowV2Transition::new(
@@ -353,7 +353,7 @@ impl Default for RawBundleEscrowV2Data {
             winner_node_pubkey: Pubkey::default(),
             winner_vote_account: Pubkey::default(),
             clearing_price_per_output_token: 0,
-            selected_verifiers: [Pubkey::default(); VERIFIERS_PER_AUCTION],
+            selected_verifiers: [Pubkey::default(); MAX_VERIFIERS_PER_AUCTION],
             auction_hash: [0; 32],
             result_hash: [0; 32],
             verification_hash: [0; 32],
@@ -368,7 +368,7 @@ impl Default for RawBundleEscrowV2Data {
             quorum_verifier_bitmap: 0,
             verifier_page_count: 0,
             _reserved1: [0; 4],
-            verifier_reward_remaining: [0; VERIFIERS_PER_AUCTION],
+            verifier_reward_remaining: [0; MAX_VERIFIERS_PER_AUCTION],
         }
     }
 }
