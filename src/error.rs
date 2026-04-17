@@ -1,11 +1,10 @@
-use num_enum::FromPrimitive;
+use num_enum::TryFromPrimitive;
 use std::fmt::{Display, Formatter};
 use thiserror::Error;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Error, FromPrimitive)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Error, TryFromPrimitive)]
 #[repr(u32)]
 pub enum AuctionError {
-    #[default]
     /// An unknown/unexpected error occurred
     Unknown = 0,
     /// The auction was in an unexpected state. This is likely a bug!
@@ -124,6 +123,12 @@ pub enum AuctionError {
     InvalidAccountLayoutVersion = 58,
     /// The configured account layout version is not allowed for this authority
     UnauthorizedAccountLayoutVersion = 59,
+    /// Invalid verifier count configured for the v2 flow
+    InvalidVerifierCount = 60,
+    /// Invalid tier config configured for the v2 flow
+    InvalidTierConfig = 61,
+    /// The bundle escrow v2 settlement deadline has passed
+    SettlementDeadlinePassed = 62,
 }
 
 impl Display for AuctionError {
@@ -135,5 +140,159 @@ impl Display for AuctionError {
 impl AuctionError {
     pub fn code(&self) -> u32 {
         *self as u32
+    }
+
+    pub fn name(&self) -> &'static str {
+        match self {
+            Self::Unknown => "Unknown",
+            Self::UnexpectedState => "UnexpectedState",
+            Self::UnexpectedRequestState => "UnexpectedRequestState",
+            Self::UnexpectedBidState => "UnexpectedBidState",
+            Self::AuctionNotExpired => "AuctionNotExpired",
+            Self::IncorrectBalance => "IncorrectBalance",
+            Self::NonZeroBalance => "NonZeroBalance",
+            Self::SolanaRpc => "SolanaRpc",
+            Self::AccountNotFound => "AccountNotFound",
+            Self::Bug => "Bug",
+            Self::InvalidAccountId => "InvalidAccountId",
+            Self::IncorrectAuction => "IncorrectAuction",
+            Self::InvalidAuctionStatus => "InvalidAuctionStatus",
+            Self::AuctionIsExpired => "AuctionIsExpired",
+            Self::InvalidRequestId => "InvalidRequestId",
+            Self::InvalidRequestBundleState => "InvalidRequestBundleState",
+            Self::UnableToAddNewJobReqToBundle => "UnableToAddNewJobReqToBundle",
+            Self::TooManyJobsInBundle => "TooManyJobsInBundle",
+            Self::DecodeRequestBundleFailed => "DecodeRequestBundleFailed",
+            Self::IncorrectChildBundlePubkey => "IncorrectChildBundlePubkey",
+            Self::IncorrectChildAuctionPubkey => "IncorrectChildAuctionPubkey",
+            Self::InvalidBundleStatus => "InvalidBundleStatus",
+            Self::BundleNotExpired => "BundleNotExpired",
+            Self::InvalidChildRequestBundleState => "InvalidChildRequestBundleState",
+            Self::VerifierNotAssigned => "VerifierNotAssigned",
+            Self::NoBidsFound => "NoBidsFound",
+            Self::NotEnoughBundleAuctionAccounts => "NotEnoughBundleAuctionAccounts",
+            Self::FailedToFindAValidBundle => "FailedToFindAValidBundle",
+            Self::BundleNotAuctioned => "BundleNotAuctioned",
+            Self::InvalidRegistry => "InvalidRegistry",
+            Self::InvalidMetadata => "InvalidMetadata",
+            Self::LatestBundleCanceled => "LatestBundleCanceled",
+            Self::NotEnoughAccounts => "NotEnoughAccounts",
+            Self::InvalidConfigData => "InvalidConfigData",
+            Self::IllegalConfigOwner => "IllegalConfigOwner",
+            Self::InvalidJobVerificationState => "InvalidJobVerificationState",
+            Self::AlreadyVerified => "AlreadyVerified",
+            Self::InvalidBundleEscrowV2State => "InvalidBundleEscrowV2State",
+            Self::InvalidBundleEscrowV2Status => "InvalidBundleEscrowV2Status",
+            Self::InvalidCoordinator => "InvalidCoordinator",
+            Self::InvalidVoteAccount => "InvalidVoteAccount",
+            Self::WinnerCannotBeVerifier => "WinnerCannotBeVerifier",
+            Self::InvalidVerifierQuorum => "InvalidVerifierQuorum",
+            Self::InvalidEd25519Instruction => "InvalidEd25519Instruction",
+            Self::RewardAlreadyClaimed => "RewardAlreadyClaimed",
+            Self::ResultNotPosted => "ResultNotPosted",
+            Self::SettlementNotCommitted => "SettlementNotCommitted",
+            Self::DeadlineNotReached => "DeadlineNotReached",
+            Self::ClaimWindowStillOpen => "ClaimWindowStillOpen",
+            Self::AcceptedOutputExceedsPosted => "AcceptedOutputExceedsPosted",
+            Self::PostedOutputExceedsMax => "PostedOutputExceedsMax",
+            Self::UnauthorizedResultPoster => "UnauthorizedResultPoster",
+            Self::InsufficientEscrowBalance => "InsufficientEscrowBalance",
+            Self::InvalidBundleVerifierPageV2State => "InvalidBundleVerifierPageV2State",
+            Self::InvalidConfigPolicyV2Data => "InvalidConfigPolicyV2Data",
+            Self::IllegalConfigPolicyV2Owner => "IllegalConfigPolicyV2Owner",
+            Self::UnauthorizedConfigPolicyAuthority => "UnauthorizedConfigPolicyAuthority",
+            Self::InvalidAccountLayoutVersion => "InvalidAccountLayoutVersion",
+            Self::UnauthorizedAccountLayoutVersion => "UnauthorizedAccountLayoutVersion",
+            Self::InvalidVerifierCount => "InvalidVerifierCount",
+            Self::InvalidTierConfig => "InvalidTierConfig",
+            Self::SettlementDeadlinePassed => "SettlementDeadlinePassed",
+        }
+    }
+
+    pub fn message(&self) -> &'static str {
+        match self {
+            Self::Unknown => "Unknown auction error",
+            Self::UnexpectedState => "Auction state is invalid for this operation",
+            Self::UnexpectedRequestState => "Request state is invalid for this operation",
+            Self::UnexpectedBidState => "Bid state is invalid for this operation",
+            Self::AuctionNotExpired => "Auction has not expired",
+            Self::IncorrectBalance => "Auction balance is incorrect",
+            Self::NonZeroBalance => "Account balance must be zero to close",
+            Self::SolanaRpc => "Solana RPC request failed",
+            Self::AccountNotFound => "Account was not found",
+            Self::Bug => "Internal auction bug encountered",
+            Self::InvalidAccountId => "Account pubkey is invalid",
+            Self::IncorrectAuction => "Auction account does not match request",
+            Self::InvalidAuctionStatus => "Auction status is invalid for this instruction",
+            Self::AuctionIsExpired => "Auction has expired",
+            Self::InvalidRequestId => "Request account is invalid",
+            Self::InvalidRequestBundleState => "Request bundle state is invalid",
+            Self::UnableToAddNewJobReqToBundle => "Failed to append job request to bundle",
+            Self::TooManyJobsInBundle => "Bundle already has the maximum number of jobs",
+            Self::DecodeRequestBundleFailed => "Failed to decode request bundle",
+            Self::IncorrectChildBundlePubkey => "Child bundle pubkey is incorrect",
+            Self::IncorrectChildAuctionPubkey => "Child auction pubkey is incorrect",
+            Self::InvalidBundleStatus => "Bundle status is invalid for this instruction",
+            Self::BundleNotExpired => "Bundle has not expired",
+            Self::InvalidChildRequestBundleState => "Child request bundle state is invalid",
+            Self::VerifierNotAssigned => "Verifier is not assigned to this bundle",
+            Self::NoBidsFound => "No bids were found",
+            Self::NotEnoughBundleAuctionAccounts => {
+                "Not enough bundle auction accounts were provided"
+            }
+            Self::FailedToFindAValidBundle => "No supplied bundle can accept the request",
+            Self::BundleNotAuctioned => "Bundle is not auctioned",
+            Self::InvalidRegistry => "Bundle registry is invalid",
+            Self::InvalidMetadata => "Metadata account is invalid",
+            Self::LatestBundleCanceled => "Latest bundle cannot be canceled",
+            Self::NotEnoughAccounts => "Not enough accounts were provided",
+            Self::InvalidConfigData => "Config account data is invalid",
+            Self::IllegalConfigOwner => "Config account owner is invalid",
+            Self::InvalidJobVerificationState => "Job verification state is invalid",
+            Self::AlreadyVerified => "Token range is already verified",
+            Self::InvalidBundleEscrowV2State => "Bundle escrow v2 state is invalid",
+            Self::InvalidBundleEscrowV2Status => {
+                "Bundle escrow v2 status is invalid for this instruction"
+            }
+            Self::InvalidCoordinator => "Coordinator does not match bundle escrow",
+            Self::InvalidVoteAccount => "Vote account does not match the expected node identity",
+            Self::WinnerCannotBeVerifier => "Winner cannot be selected as a verifier",
+            Self::InvalidVerifierQuorum => "Verifier quorum is invalid",
+            Self::InvalidEd25519Instruction => "Ed25519 verification instruction is invalid",
+            Self::RewardAlreadyClaimed => "Reward has already been claimed",
+            Self::ResultNotPosted => "Bundle escrow v2 result has not been posted",
+            Self::SettlementNotCommitted => "Bundle escrow v2 settlement has not been committed",
+            Self::DeadlineNotReached => "Bundle escrow v2 deadline has not been reached",
+            Self::ClaimWindowStillOpen => "Bundle escrow v2 claim window is still open",
+            Self::AcceptedOutputExceedsPosted => {
+                "Accepted output tokens exceed posted output tokens"
+            }
+            Self::PostedOutputExceedsMax => "Posted output tokens exceed the allowed maximum",
+            Self::UnauthorizedResultPoster => "Authority is not allowed to post this result",
+            Self::InsufficientEscrowBalance => "Escrow balance is insufficient for payout",
+            Self::InvalidBundleVerifierPageV2State => "Bundle verifier page v2 state is invalid",
+            Self::InvalidConfigPolicyV2Data => "Config policy v2 account data is invalid",
+            Self::IllegalConfigPolicyV2Owner => "Config policy v2 account owner is invalid",
+            Self::UnauthorizedConfigPolicyAuthority => {
+                "Authority is not allowed to update config policy v2"
+            }
+            Self::InvalidAccountLayoutVersion => {
+                "Configured account layout version is invalid or unsupported"
+            }
+            Self::UnauthorizedAccountLayoutVersion => {
+                "Authority is not allowed to use this account layout version"
+            }
+            Self::InvalidVerifierCount => "Verifier count is invalid",
+            Self::InvalidTierConfig => "Tier config is invalid",
+            Self::SettlementDeadlinePassed => "Settlement deadline has passed",
+        }
+    }
+
+    pub fn try_from_code(code: u32) -> Result<Self, u32> {
+        Self::try_from(code).map_err(|_| code)
+    }
+
+    pub fn describe_code(code: u32) -> Option<&'static str> {
+        Self::try_from_code(code).ok().map(|error| error.message())
     }
 }
