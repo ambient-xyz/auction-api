@@ -116,6 +116,7 @@ impl TryFrom<u8> for VerificationVerdictV2 {
 pub struct FinalizeBundleVerificationV2Args {
     pub verification_hash: [u8; 32],
     pub accepted_output_tokens: u64,
+    pub winner_payout_lamports: u64,
     pub verdict: VerificationVerdictV2,
     pub quorum_verifier_bitmap: u8,
     pub _reserved: [u8; 6],
@@ -136,6 +137,7 @@ pub struct FinalizeBundleVerificationV2Message {
     pub verdict: VerificationVerdictV2,
     pub _reserved1: [u8; 7],
     pub accepted_output_tokens: u64,
+    pub winner_payout_lamports: u64,
 }
 
 impl FinalizeBundleVerificationV2Message {
@@ -149,6 +151,7 @@ impl FinalizeBundleVerificationV2Message {
         verification_hash: [u8; 32],
         verdict: VerificationVerdictV2,
         accepted_output_tokens: u64,
+        winner_payout_lamports: u64,
     ) -> Self {
         Self {
             domain: FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN,
@@ -162,6 +165,7 @@ impl FinalizeBundleVerificationV2Message {
             verdict,
             _reserved1: [0; 7],
             accepted_output_tokens,
+            winner_payout_lamports,
         }
     }
 

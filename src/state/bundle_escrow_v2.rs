@@ -21,6 +21,7 @@ pub struct RawBundleEscrowV2Data {
     pub bundle_hash: [u8; 32],
     pub total_input_tokens: u64,
     pub max_output_tokens: u64,
+    pub escrow_lamports: u64,
     pub winner_node_pubkey: Pubkey,
     pub winner_vote_account: Pubkey,
     pub clearing_price_per_output_token: u64,
@@ -30,6 +31,7 @@ pub struct RawBundleEscrowV2Data {
     pub verification_hash: [u8; 32],
     pub posted_output_tokens: u64,
     pub accepted_output_tokens: u64,
+    pub winner_payout_lamports: u64,
     pub settlement_deadline_slot: u64,
     pub result_deadline_slot: u64,
     pub verification_deadline_slot: u64,
@@ -268,6 +270,7 @@ impl RawBundleEscrowV2Data {
         final_status: BundleEscrowV2Status,
         verification_hash: [u8; 32],
         accepted_output_tokens: u64,
+        winner_payout_lamports: u64,
         quorum_verifier_bitmap: u8,
         verifier_page_count: u8,
         verifier_reward_remaining: [u64; MAX_VERIFIERS_PER_AUCTION],
@@ -291,6 +294,7 @@ impl RawBundleEscrowV2Data {
 
         self.verification_hash = verification_hash;
         self.accepted_output_tokens = accepted_output_tokens;
+        self.winner_payout_lamports = winner_payout_lamports;
         self.quorum_verifier_bitmap = quorum_verifier_bitmap;
         self.verifier_page_count = verifier_page_count;
         self.verifier_reward_remaining = verifier_reward_remaining;
@@ -350,6 +354,7 @@ impl Default for RawBundleEscrowV2Data {
             bundle_hash: [0; 32],
             total_input_tokens: 0,
             max_output_tokens: 0,
+            escrow_lamports: 0,
             winner_node_pubkey: Pubkey::default(),
             winner_vote_account: Pubkey::default(),
             clearing_price_per_output_token: 0,
@@ -359,6 +364,7 @@ impl Default for RawBundleEscrowV2Data {
             verification_hash: [0; 32],
             posted_output_tokens: 0,
             accepted_output_tokens: 0,
+            winner_payout_lamports: 0,
             settlement_deadline_slot: 0,
             result_deadline_slot: 0,
             verification_deadline_slot: 0,
