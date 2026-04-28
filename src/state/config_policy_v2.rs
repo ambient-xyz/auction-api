@@ -8,11 +8,55 @@ pub const CONFIG_POLICY_V2_ADMIN_CAPACITY: usize = 8;
 pub const CONFIG_POLICY_V2_SERVICE_CAPACITY: usize = 16;
 pub const CONFIG_POLICY_V2_TIER_CONFIG_COUNT: usize = 5;
 
-pub const CONFIG_POLICY_V2_FLAG_ALLOW_SERVICE_OPEN_ESCROW_ARGS_BYPASS: u64 = 1 << 0;
-pub const CONFIG_POLICY_V2_FLAG_ALLOW_SERVICE_COMMIT_OVERRIDE: u64 = 1 << 1;
-pub const CONFIG_POLICY_V2_FLAG_ALLOW_SERVICE_RESULT_POST_OVERRIDE: u64 = 1 << 2;
-pub const CONFIG_POLICY_V2_FLAG_ALLOW_SERVICE_FINALIZE_OVERRIDE: u64 = 1 << 3;
-pub const CONFIG_POLICY_V2_FLAG_ALLOW_SERVICE_PAGE_BACKED_FINALIZE_BYPASS: u64 = 1 << 4;
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[repr(u8)]
+pub enum ConfigPolicyV2Flag {
+    AllowServiceOpenEscrowArgsBypass = 0,
+    AllowServiceCommitOverride = 1,
+    AllowServiceResultPostOverride = 2,
+    AllowServiceFinalizeOverride = 3,
+    AllowServicePageBackedFinalizeBypass = 4,
+    AllowServicePageBackedFinalizePayout = 5,
+}
+
+impl ConfigPolicyV2Flag {
+    pub const fn mask(self) -> ConfigPolicyV2Flags {
+        ConfigPolicyV2Flags(1u64 << self as u8)
+    }
+}
+
+#[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
+#[repr(transparent)]
+pub struct ConfigPolicyV2Flags(u64);
+
+impl ConfigPolicyV2Flags {
+    pub const fn empty() -> Self {
+        Self(0)
+    }
+
+    pub const fn from_flag(flag: ConfigPolicyV2Flag) -> Self {
+        flag.mask()
+    }
+
+    pub const fn bits(self) -> u64 {
+        self.0
+    }
+
+    pub const fn contains(self, flag: ConfigPolicyV2Flag) -> bool {
+        self.0 & flag.mask().0 != 0
+    }
+
+    pub const fn contains_all(self, flags: Self) -> bool {
+        self.0 & flags.0 == flags.0
+    }
+
+    pub const fn union(self, other: Self) -> Self {
+        Self(self.0 | other.0)
+    }
+}
 
 pub const CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES: usize = 64;
 pub const CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES: usize = 64;
@@ -110,7 +154,7 @@ impl RequestTierConfigV2 {
 pub struct ConfigPolicyV2 {
     pub bump: u64,
     pub minimum_bundle_auction_pairs: u64,
-    pub policy_flags: u64,
+    pub policy_flags: ConfigPolicyV2Flags,
     pub _reserved0: [u8; 8],
     pub admin_authorities: [Pubkey; CONFIG_POLICY_V2_ADMIN_CAPACITY],
     pub service_authorities: [Pubkey; CONFIG_POLICY_V2_SERVICE_CAPACITY],
@@ -129,7 +173,7 @@ impl Default for ConfigPolicyV2 {
         Self {
             bump: 0,
             minimum_bundle_auction_pairs: 2,
-            policy_flags: 0,
+            policy_flags: ConfigPolicyV2Flags::empty(),
             _reserved0: [0; 8],
             admin_authorities: [Pubkey::default(); CONFIG_POLICY_V2_ADMIN_CAPACITY],
             service_authorities: [Pubkey::default(); CONFIG_POLICY_V2_SERVICE_CAPACITY],
