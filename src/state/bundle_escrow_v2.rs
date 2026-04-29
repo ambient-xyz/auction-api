@@ -13,7 +13,7 @@ use std::ops::{Deref, DerefMut};
 #[repr(C)]
 pub struct RawBundleEscrowV2Data {
     pub status: BundleEscrowV2Status,
-    pub reward_tier: RequestTier,
+    pub reward_tier: u64,
     pub coordinator: Pubkey,
     pub requester_refund_recipient: Pubkey,
     pub bundle_version: u32,
@@ -342,7 +342,7 @@ impl Default for RawBundleEscrowV2Data {
     fn default() -> Self {
         Self {
             status: BundleEscrowV2Status::Open,
-            reward_tier: RequestTier::Eco,
+            reward_tier: u64::from(RequestTier::Eco),
             coordinator: Pubkey::default(),
             requester_refund_recipient: Pubkey::default(),
             bundle_version: 0,
