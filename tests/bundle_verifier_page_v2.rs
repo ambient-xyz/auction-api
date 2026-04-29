@@ -1,6 +1,6 @@
 use ambient_auction_api::{
     AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, BundleVerifierPageV2,
-    BundleVerifierPageV2Entry, MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES, Pubkey, VerificationVerdictV2,
+    BundleVerifierPageV2Entry, Pubkey, VerificationVerdictV2, MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES,
 };
 use bytemuck::Zeroable;
 use std::mem::size_of;
