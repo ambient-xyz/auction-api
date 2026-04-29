@@ -2,7 +2,7 @@ use super::{
     AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, ParsedAccountLayout, Pubkey,
     CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES,
 };
-use crate::{MAX_VERIFIERS_PER_AUCTION, VerificationVerdictV2};
+use crate::{VerificationVerdictV2, MAX_VERIFIERS_PER_AUCTION};
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
