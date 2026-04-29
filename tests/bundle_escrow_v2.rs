@@ -50,7 +50,7 @@ fn bundle_escrow_v2_status_matches_on_associated_constants() {
 fn bundle_escrow_v2_v2_bytes_round_trip() {
     let bundle = BundleEscrowV2 {
         status: BundleEscrowV2Status::Awarded,
-        reward_tier: RequestTier::Standard,
+        reward_tier: u64::from(RequestTier::Standard),
         bundle_version: 13,
         total_input_tokens: 21,
         ..Default::default()
@@ -70,7 +70,7 @@ fn bundle_escrow_v2_v2_bytes_round_trip() {
 fn bundle_escrow_v2_v1_bytes_round_trip() {
     let bundle = BundleEscrowV2 {
         status: BundleEscrowV2Status::Awarded,
-        reward_tier: RequestTier::Standard,
+        reward_tier: u64::from(RequestTier::Standard),
         bundle_version: 7,
         total_input_tokens: 11,
         ..Default::default()
