@@ -1,5 +1,5 @@
 use crate::error::AuctionError;
-use crate::{InstructionAccounts, RequestTier, PUBKEY_BYTES};
+use crate::{InstructionAccounts, PUBKEY_BYTES};
 use bytemuck::{Pod, Zeroable};
 
 #[derive(Clone, Debug)]
@@ -88,7 +88,7 @@ impl<'a, T> InstructionAccounts<'a, T> for OpenBundleEscrowV2Accounts<'a, T> {
 pub struct OpenBundleEscrowV2Args {
     pub bundle_version: u32,
     pub _reserved0: [u8; 4],
-    pub reward_tier: RequestTier,
+    pub reward_tier: u64,
     pub bundle_hash: [u8; 32],
     pub coordinator: [u8; PUBKEY_BYTES],
     pub requester_refund_recipient: [u8; PUBKEY_BYTES],
