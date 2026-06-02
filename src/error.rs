@@ -129,6 +129,8 @@ pub enum AuctionError {
     InvalidTierConfig = 61,
     /// The bundle escrow v2 settlement deadline has passed
     SettlementDeadlinePassed = 62,
+    /// The auction credits update exceeds the configured v2 maximum
+    AuctionCreditsExceedMax = 63,
 }
 
 impl Display for AuctionError {
@@ -206,6 +208,7 @@ impl AuctionError {
             Self::InvalidVerifierCount => "InvalidVerifierCount",
             Self::InvalidTierConfig => "InvalidTierConfig",
             Self::SettlementDeadlinePassed => "SettlementDeadlinePassed",
+            Self::AuctionCreditsExceedMax => "AuctionCreditsExceedMax",
         }
     }
 
@@ -285,6 +288,7 @@ impl AuctionError {
             Self::InvalidVerifierCount => "Verifier count is invalid",
             Self::InvalidTierConfig => "Tier config is invalid",
             Self::SettlementDeadlinePassed => "Settlement deadline has passed",
+            Self::AuctionCreditsExceedMax => "Auction credits exceed the configured maximum",
         }
     }
 

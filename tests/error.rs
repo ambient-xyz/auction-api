@@ -27,6 +27,10 @@ fn new_error_codes_decode_strictly() {
         AuctionError::try_from_code(62),
         Ok(AuctionError::SettlementDeadlinePassed)
     );
+    assert_eq!(
+        AuctionError::try_from_code(63),
+        Ok(AuctionError::AuctionCreditsExceedMax)
+    );
 }
 
 #[test]
@@ -51,6 +55,14 @@ fn error_names_and_messages_are_stable_for_representative_variants() {
         AuctionError::InvalidTierConfig.message(),
         "Tier config is invalid"
     );
+    assert_eq!(
+        AuctionError::AuctionCreditsExceedMax.name(),
+        "AuctionCreditsExceedMax"
+    );
+    assert_eq!(
+        AuctionError::AuctionCreditsExceedMax.message(),
+        "Auction credits exceed the configured maximum"
+    );
 }
 
 #[test]
@@ -62,5 +74,9 @@ fn describe_code_returns_messages_for_known_variants() {
     assert_eq!(
         AuctionError::describe_code(AuctionError::SettlementDeadlinePassed.code()),
         Some("Settlement deadline has passed")
+    );
+    assert_eq!(
+        AuctionError::describe_code(AuctionError::AuctionCreditsExceedMax.code()),
+        Some("Auction credits exceed the configured maximum")
     );
 }
