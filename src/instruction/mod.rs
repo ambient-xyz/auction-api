@@ -17,6 +17,7 @@ mod finalize_bundle_verification_v2;
 mod init_bundle;
 #[cfg(feature = "global-config")]
 mod init_config;
+mod init_bundle_verifier_page_v2;
 mod init_config_policy_v2;
 mod open_bundle_escrow_v2;
 mod place_bid;
@@ -41,6 +42,7 @@ pub use finalize_bundle_verification_v2::*;
 pub use init_bundle::*;
 #[cfg(feature = "global-config")]
 pub use init_config::*;
+pub use init_bundle_verifier_page_v2::*;
 pub use init_config_policy_v2::*;
 pub use open_bundle_escrow_v2::*;
 pub use place_bid::*;
@@ -76,6 +78,7 @@ pub enum AuctionInstruction {
     ExpireBundleEscrowV2 = 18,
     InitConfigPolicyV2 = 19,
     SetConfigPolicyV2 = 20,
+    InitBundleVerifierPageV2 = 21,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -158,6 +161,7 @@ impl_instruction_data!(
     ExpireBundleEscrowV2Args => ExpireBundleEscrowV2,
     InitConfigPolicyV2Args => InitConfigPolicyV2,
     SetConfigPolicyV2Args => SetConfigPolicyV2,
+    InitBundleVerifierPageV2Args => InitBundleVerifierPageV2,
 );
 
 #[cfg(feature = "global-config")]
