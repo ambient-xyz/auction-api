@@ -180,6 +180,7 @@ fn bundle_escrow_v2_finalize_verified_updates_coupled_fields() {
             BundleEscrowV2Status::FinalizedVerified,
             [9; 32],
             21,
+            0,
             0b011,
             2,
             [5, 8, 0],
@@ -205,6 +206,7 @@ fn bundle_escrow_v2_finalize_rejected_updates_coupled_fields() {
         .finalize(
             BundleEscrowV2Status::FinalizedRejected,
             [10; 32],
+            0,
             0,
             0b101,
             0,
@@ -301,6 +303,7 @@ fn bundle_escrow_v2_rejects_invalid_transitions() {
             .finalize(
                 BundleEscrowV2Status::FinalizedRejected,
                 [4; 32],
+                0,
                 0,
                 0,
                 0,
