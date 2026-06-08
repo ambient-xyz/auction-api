@@ -1,12 +1,25 @@
-use ambient_auction_api::{AccountLayoutVersion, ConfigPolicyV2};
+use ambient_auction_api::{AccountLayoutVersion, ConfigPolicyV2, RequestTier};
 use memoffset::offset_of;
 use std::mem::size_of;
 
 #[test]
-fn config_policy_v2_default_credit_cap_is_unbounded() {
+fn config_policy_v2_default_credit_cap_is_production_bounded() {
     let policy = ConfigPolicyV2::default();
 
-    assert_eq!(policy.max_auction_credits_per_update, u64::MAX);
+    assert_eq!(policy.max_auction_credits_per_update, 1_000_000_000);
+}
+
+#[test]
+fn config_policy_v2_default_windows_are_production_stage_windows() {
+    let policy = ConfigPolicyV2::production_default();
+
+    for tier in RequestTier::ALL {
+        let tier_config = policy.tier_config(tier);
+        assert_eq!(tier_config.settlement_window_slots, 32);
+        assert_eq!(tier_config.result_window_slots, 32);
+        assert_eq!(tier_config.verification_window_slots, 32);
+        assert_eq!(tier_config.claim_window_slots, 32);
+    }
 }
 
 #[test]

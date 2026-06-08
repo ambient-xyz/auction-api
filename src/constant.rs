@@ -27,4 +27,3 @@ pub const ID: [u8; PUBKEY_BYTES] =
 pub const MAX_VERIFIERS_PER_AUCTION: usize = 3;
 /// Compatibility alias for one release cycle. Prefer `MAX_VERIFIERS_PER_AUCTION`.
 pub const VERIFIERS_PER_AUCTION: usize = MAX_VERIFIERS_PER_AUCTION;
-pub const V2_VERIFIER_QUORUM: usize = 2;

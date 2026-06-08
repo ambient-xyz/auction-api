@@ -1,5 +1,5 @@
 use super::{AccountLayoutVersion, Pubkey, RequestTier};
-use crate::{MAX_VERIFIERS_PER_AUCTION, V2_VERIFIER_QUORUM};
+use crate::MAX_VERIFIERS_PER_AUCTION;
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 pub const CONFIG_POLICY_V2_ADMIN_CAPACITY: usize = 8;
 pub const CONFIG_POLICY_V2_SERVICE_CAPACITY: usize = 16;
 pub const CONFIG_POLICY_V2_TIER_CONFIG_COUNT: usize = 5;
+const PRODUCTION_V2_VERIFIER_QUORUM: u8 = 2;
+const PRODUCTION_MAX_AUCTION_CREDITS_PER_UPDATE: u64 = 1_000_000_000;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -83,7 +85,7 @@ pub struct RequestTierConfigV2 {
 }
 
 impl RequestTierConfigV2 {
-    pub fn from_request_tier(tier: RequestTier) -> Self {
+    pub fn production_default_for_tier(tier: RequestTier) -> Self {
         Self {
             bid_reveal_duration: tier.get_bid_reveal_duration(),
             active_auction_duration: tier.get_active_auction_duration(),
@@ -93,11 +95,15 @@ impl RequestTierConfigV2 {
             job_submission_duration_slots: tier.get_job_submission_duration_slots(),
             bid_commitment_amount_multiplier: tier.get_bid_commitment_amount_multiplier(),
             auction_credits_multiplier: tier.get_auction_credits_multiplier(),
-            settlement_window_slots: tier.get_v2_settlement_window_slots(),
-            result_window_slots: tier.get_v2_result_window_slots(),
-            verification_window_slots: tier.get_v2_verification_window_slots(),
-            claim_window_slots: tier.get_v2_claim_window_slots(),
+            settlement_window_slots: tier.production_default_v2_settlement_window_slots(),
+            result_window_slots: tier.production_default_v2_result_window_slots(),
+            verification_window_slots: tier.production_default_v2_verification_window_slots(),
+            claim_window_slots: tier.production_default_v2_claim_window_slots(),
         }
+    }
+
+    pub fn from_request_tier(tier: RequestTier) -> Self {
+        Self::production_default_for_tier(tier)
     }
 
     pub fn validate(&self) -> bool {
@@ -115,36 +121,20 @@ impl RequestTierConfigV2 {
             && self.claim_window_slots != 0
     }
 
-    pub fn settlement_window_slots(&self, tier: RequestTier) -> u64 {
-        if self.settlement_window_slots == 0 {
-            tier.get_v2_settlement_window_slots()
-        } else {
-            self.settlement_window_slots
-        }
+    pub fn settlement_window_slots(&self, _tier: RequestTier) -> u64 {
+        self.settlement_window_slots
     }
 
-    pub fn result_window_slots(&self, tier: RequestTier) -> u64 {
-        if self.result_window_slots == 0 {
-            tier.get_v2_result_window_slots()
-        } else {
-            self.result_window_slots
-        }
+    pub fn result_window_slots(&self, _tier: RequestTier) -> u64 {
+        self.result_window_slots
     }
 
-    pub fn verification_window_slots(&self, tier: RequestTier) -> u64 {
-        if self.verification_window_slots == 0 {
-            tier.get_v2_verification_window_slots()
-        } else {
-            self.verification_window_slots
-        }
+    pub fn verification_window_slots(&self, _tier: RequestTier) -> u64 {
+        self.verification_window_slots
     }
 
-    pub fn claim_window_slots(&self, tier: RequestTier) -> u64 {
-        if self.claim_window_slots == 0 {
-            tier.get_v2_claim_window_slots()
-        } else {
-            self.claim_window_slots
-        }
+    pub fn claim_window_slots(&self, _tier: RequestTier) -> u64 {
+        self.claim_window_slots
     }
 }
 
@@ -170,22 +160,30 @@ pub struct ConfigPolicyV2 {
 
 impl Default for ConfigPolicyV2 {
     fn default() -> Self {
+        Self::production_default()
+    }
+}
+
+impl ConfigPolicyV2 {
+    pub const LEN: usize = std::mem::size_of::<ConfigPolicyV2>();
+
+    pub fn production_default() -> Self {
         Self {
             bump: 0,
             minimum_bundle_auction_pairs: 2,
             policy_flags: ConfigPolicyV2Flags::empty(),
-            max_auction_credits_per_update: u64::MAX,
+            max_auction_credits_per_update: PRODUCTION_MAX_AUCTION_CREDITS_PER_UPDATE,
             admin_authorities: [Pubkey::default(); CONFIG_POLICY_V2_ADMIN_CAPACITY],
             service_authorities: [Pubkey::default(); CONFIG_POLICY_V2_SERVICE_CAPACITY],
             v2_verifiers_per_auction: MAX_VERIFIERS_PER_AUCTION as u8,
-            v2_verifier_quorum: V2_VERIFIER_QUORUM as u8,
+            v2_verifier_quorum: PRODUCTION_V2_VERIFIER_QUORUM,
             _reserved1: [0; 6],
             tier_configs: [
-                RequestTierConfigV2::from_request_tier(RequestTier::Eco),
-                RequestTierConfigV2::from_request_tier(RequestTier::Small),
-                RequestTierConfigV2::from_request_tier(RequestTier::Standard),
-                RequestTierConfigV2::from_request_tier(RequestTier::Pro),
-                RequestTierConfigV2::from_request_tier(RequestTier::Large),
+                RequestTierConfigV2::production_default_for_tier(RequestTier::Eco),
+                RequestTierConfigV2::production_default_for_tier(RequestTier::Small),
+                RequestTierConfigV2::production_default_for_tier(RequestTier::Standard),
+                RequestTierConfigV2::production_default_for_tier(RequestTier::Pro),
+                RequestTierConfigV2::production_default_for_tier(RequestTier::Large),
             ],
             reserved_words: [[0; 32]; CONFIG_POLICY_V2_TYPED_RESERVED_WORDS],
             v2_account_layout_version: AccountLayoutVersion::V2 as u8,
@@ -193,10 +191,6 @@ impl Default for ConfigPolicyV2 {
             reserved_tail: [0; CONFIG_POLICY_V2_TYPED_RESERVED_TAIL_BYTES],
         }
     }
-}
-
-impl ConfigPolicyV2 {
-    pub const LEN: usize = std::mem::size_of::<ConfigPolicyV2>();
 
     pub fn tier_config(&self, tier: RequestTier) -> &RequestTierConfigV2 {
         &self.tier_configs[match tier {
