@@ -1,5 +1,8 @@
 use crate::error::AuctionError;
-use crate::{ConfigPolicyV2, InstructionAccounts};
+use crate::{
+    ConfigPolicyV2Flags, InstructionAccounts, Pubkey, RequestTierConfigV2,
+    CONFIG_POLICY_V2_TIER_CONFIG_COUNT,
+};
 use bytemuck::{Pod, Zeroable};
 
 #[derive(Debug, Clone)]
@@ -38,5 +41,13 @@ impl<'a, T> InstructionAccounts<'a, T> for InitConfigPolicyV2Accounts<'a, T> {
 #[repr(C)]
 pub struct InitConfigPolicyV2Args {
     pub config_policy_lamports: u64,
-    pub policy: ConfigPolicyV2,
+    pub initial_admin_authority: Pubkey,
+    pub service_authority: Pubkey,
+    pub policy_flags: ConfigPolicyV2Flags,
+    pub minimum_bundle_auction_pairs: u64,
+    pub max_auction_credits_per_update: u64,
+    pub v2_verifiers_per_auction: u8,
+    pub v2_verifier_quorum: u8,
+    pub _reserved0: [u8; 6],
+    pub tier_configs: [RequestTierConfigV2; CONFIG_POLICY_V2_TIER_CONFIG_COUNT],
 }
