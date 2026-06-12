@@ -15,29 +15,39 @@ fn existing_error_codes_still_decode_to_the_same_variants() {
 
 #[test]
 fn new_error_codes_decode_strictly() {
-    assert_eq!(
-        AuctionError::try_from_code(60),
-        Ok(AuctionError::InvalidVerifierCount)
-    );
-    assert_eq!(
-        AuctionError::try_from_code(61),
-        Ok(AuctionError::InvalidTierConfig)
-    );
-    assert_eq!(
-        AuctionError::try_from_code(62),
-        Ok(AuctionError::SettlementDeadlinePassed)
-    );
-    assert_eq!(
-        AuctionError::try_from_code(63),
-        Ok(AuctionError::AuctionCreditsExceedMax)
-    );
+    let new_errors = [
+        (60, AuctionError::InvalidVerifierCount),
+        (61, AuctionError::InvalidTierConfig),
+        (62, AuctionError::SettlementDeadlinePassed),
+        (63, AuctionError::AuctionCreditsExceedMax),
+        (15, AuctionError::InvalidOpenBundleEscrowV2Args),
+        (64, AuctionError::InvalidConfigPolicyV2Args),
+        (65, AuctionError::InvalidSettlementV2Args),
+        (66, AuctionError::ResultDeadlinePassed),
+        (67, AuctionError::VerificationDeadlinePassed),
+        (68, AuctionError::ClaimDeadlinePassed),
+        (69, AuctionError::InvalidWinnerNode),
+        (70, AuctionError::InvalidRefundRecipient),
+        (71, AuctionError::InvalidVerifierPageV2Input),
+        (72, AuctionError::InvalidVerifierRewardV2),
+        (73, AuctionError::InvalidVerificationVerdict),
+        (74, AuctionError::InvalidPostedResultV2),
+        (75, AuctionError::InvalidVerifierPagesSummary),
+    ];
+
+    for (code, error) in new_errors {
+        assert_eq!(AuctionError::try_from_code(code), Ok(error));
+        assert_eq!(error.code(), code);
+        assert_eq!(AuctionError::describe_code(code), Some(error.message()));
+        assert!(!error.name().is_empty());
+        assert!(!error.message().is_empty());
+    }
 }
 
 #[test]
 fn unknown_error_codes_are_rejected_instead_of_defaulting_to_unknown() {
-    assert_eq!(AuctionError::try_from_code(15), Err(15));
     assert_eq!(AuctionError::try_from_code(999), Err(999));
-    assert_eq!(AuctionError::describe_code(15), None);
+    assert_eq!(AuctionError::describe_code(999), None);
 }
 
 #[test]
@@ -62,6 +72,22 @@ fn error_names_and_messages_are_stable_for_representative_variants() {
     assert_eq!(
         AuctionError::AuctionCreditsExceedMax.message(),
         "Auction credits exceed the configured maximum"
+    );
+    assert_eq!(
+        AuctionError::InvalidOpenBundleEscrowV2Args.name(),
+        "InvalidOpenBundleEscrowV2Args"
+    );
+    assert_eq!(
+        AuctionError::InvalidOpenBundleEscrowV2Args.message(),
+        "Open bundle escrow v2 arguments are invalid"
+    );
+    assert_eq!(
+        AuctionError::InvalidVerifierPagesSummary.name(),
+        "InvalidVerifierPagesSummary"
+    );
+    assert_eq!(
+        AuctionError::InvalidVerifierPagesSummary.message(),
+        "Page-backed verification summary is invalid"
     );
 }
 

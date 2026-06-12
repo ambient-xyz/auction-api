@@ -35,6 +35,8 @@ pub enum AuctionError {
     AuctionIsExpired = 13,
     /// Invalid request account
     InvalidRequestId = 14,
+    /// Invalid arguments were provided for opening a bundle escrow v2
+    InvalidOpenBundleEscrowV2Args = 15,
     /// The RequestBundle had an invalid state
     InvalidRequestBundleState = 16,
     /// Appending a new JobRequest to an existing bundle failed
@@ -131,6 +133,30 @@ pub enum AuctionError {
     SettlementDeadlinePassed = 62,
     /// The auction credits update exceeds the configured v2 maximum
     AuctionCreditsExceedMax = 63,
+    /// Invalid arguments were provided for initializing config policy v2
+    InvalidConfigPolicyV2Args = 64,
+    /// Invalid arguments were provided for committing auction settlement v2
+    InvalidSettlementV2Args = 65,
+    /// The bundle escrow v2 result deadline has passed
+    ResultDeadlinePassed = 66,
+    /// The bundle escrow v2 verification deadline has passed
+    VerificationDeadlinePassed = 67,
+    /// The bundle escrow v2 claim deadline has passed
+    ClaimDeadlinePassed = 68,
+    /// The provided winner node account does not match the stored winner
+    InvalidWinnerNode = 69,
+    /// The provided refund recipient account does not match the stored refund recipient
+    InvalidRefundRecipient = 70,
+    /// Invalid bundle verifier page v2 input was provided
+    InvalidVerifierPageV2Input = 71,
+    /// Invalid verifier reward data was provided
+    InvalidVerifierRewardV2 = 72,
+    /// Invalid verification verdict was provided
+    InvalidVerificationVerdict = 73,
+    /// Invalid posted result data was provided
+    InvalidPostedResultV2 = 74,
+    /// Invalid page-backed verification summary was provided
+    InvalidVerifierPagesSummary = 75,
 }
 
 impl Display for AuctionError {
@@ -209,6 +235,19 @@ impl AuctionError {
             Self::InvalidTierConfig => "InvalidTierConfig",
             Self::SettlementDeadlinePassed => "SettlementDeadlinePassed",
             Self::AuctionCreditsExceedMax => "AuctionCreditsExceedMax",
+            Self::InvalidOpenBundleEscrowV2Args => "InvalidOpenBundleEscrowV2Args",
+            Self::InvalidConfigPolicyV2Args => "InvalidConfigPolicyV2Args",
+            Self::InvalidSettlementV2Args => "InvalidSettlementV2Args",
+            Self::ResultDeadlinePassed => "ResultDeadlinePassed",
+            Self::VerificationDeadlinePassed => "VerificationDeadlinePassed",
+            Self::ClaimDeadlinePassed => "ClaimDeadlinePassed",
+            Self::InvalidWinnerNode => "InvalidWinnerNode",
+            Self::InvalidRefundRecipient => "InvalidRefundRecipient",
+            Self::InvalidVerifierPageV2Input => "InvalidVerifierPageV2Input",
+            Self::InvalidVerifierRewardV2 => "InvalidVerifierRewardV2",
+            Self::InvalidVerificationVerdict => "InvalidVerificationVerdict",
+            Self::InvalidPostedResultV2 => "InvalidPostedResultV2",
+            Self::InvalidVerifierPagesSummary => "InvalidVerifierPagesSummary",
         }
     }
 
@@ -289,6 +328,23 @@ impl AuctionError {
             Self::InvalidTierConfig => "Tier config is invalid",
             Self::SettlementDeadlinePassed => "Settlement deadline has passed",
             Self::AuctionCreditsExceedMax => "Auction credits exceed the configured maximum",
+            Self::InvalidOpenBundleEscrowV2Args => "Open bundle escrow v2 arguments are invalid",
+            Self::InvalidConfigPolicyV2Args => "Config policy v2 init arguments are invalid",
+            Self::InvalidSettlementV2Args => "Auction settlement v2 arguments are invalid",
+            Self::ResultDeadlinePassed => "Result deadline has passed",
+            Self::VerificationDeadlinePassed => "Verification deadline has passed",
+            Self::ClaimDeadlinePassed => "Claim deadline has passed",
+            Self::InvalidWinnerNode => "Winner node account does not match bundle escrow",
+            Self::InvalidRefundRecipient => {
+                "Refund recipient account does not match bundle escrow"
+            }
+            Self::InvalidVerifierPageV2Input => "Bundle verifier page v2 input is invalid",
+            Self::InvalidVerifierRewardV2 => "Verifier reward data is invalid",
+            Self::InvalidVerificationVerdict => "Verification verdict is invalid",
+            Self::InvalidPostedResultV2 => "Posted result data is invalid",
+            Self::InvalidVerifierPagesSummary => {
+                "Page-backed verification summary is invalid"
+            }
         }
     }
 
