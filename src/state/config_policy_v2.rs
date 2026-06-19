@@ -62,7 +62,7 @@ impl ConfigPolicyV2Flags {
 
 pub const CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES: usize = 64;
 pub const CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES: usize = 64;
-pub const CONFIG_POLICY_V2_TYPED_RESERVED_WORDS: usize = 8;
+pub const CONFIG_POLICY_V2_TYPED_RESERVED_WORDS: usize = 7;
 pub const CONFIG_POLICY_V2_TYPED_RESERVED_LAYOUT_PADDING_BYTES: usize = 7;
 pub const CONFIG_POLICY_V2_TYPED_RESERVED_TAIL_BYTES: usize = 16;
 
@@ -152,6 +152,10 @@ pub struct ConfigPolicyV2 {
     pub v2_verifier_quorum: u8,
     pub _reserved1: [u8; 6],
     pub tier_configs: [RequestTierConfigV2; CONFIG_POLICY_V2_TIER_CONFIG_COUNT],
+    pub missed_verification_dispute_window_slots: u64,
+    pub dispute_verification_window_slots: u64,
+    pub paid_verification_dispute_window_slots: u64,
+    pub paid_verification_dispute_bond_lamports: u64,
     pub reserved_words: [[u8; 32]; CONFIG_POLICY_V2_TYPED_RESERVED_WORDS],
     pub v2_account_layout_version: u8,
     pub _reserved2: [u8; CONFIG_POLICY_V2_TYPED_RESERVED_LAYOUT_PADDING_BYTES],
@@ -185,6 +189,10 @@ impl ConfigPolicyV2 {
                 RequestTierConfigV2::production_default_for_tier(RequestTier::Pro),
                 RequestTierConfigV2::production_default_for_tier(RequestTier::Large),
             ],
+            missed_verification_dispute_window_slots: 0,
+            dispute_verification_window_slots: 0,
+            paid_verification_dispute_window_slots: 0,
+            paid_verification_dispute_bond_lamports: 0,
             reserved_words: [[0; 32]; CONFIG_POLICY_V2_TYPED_RESERVED_WORDS],
             v2_account_layout_version: AccountLayoutVersion::V2 as u8,
             _reserved2: [0; CONFIG_POLICY_V2_TYPED_RESERVED_LAYOUT_PADDING_BYTES],

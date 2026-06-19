@@ -40,6 +40,7 @@ impl ConfigPolicyV2PatchKind {
     pub const VERIFIER_SETTINGS: Self = Self(2);
     pub const TIER_CONFIG: Self = Self(3);
     pub const MAX_AUCTION_CREDITS_PER_UPDATE: Self = Self(4);
+    pub const DISPUTE_SETTINGS: Self = Self(5);
 }
 
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -63,6 +64,10 @@ pub struct SetConfigPolicyV2Args {
     pub tier: u64,
     pub policy_flags: ConfigPolicyV2Flags,
     pub max_auction_credits_per_update: u64,
+    pub missed_verification_dispute_window_slots: u64,
+    pub dispute_verification_window_slots: u64,
+    pub paid_verification_dispute_window_slots: u64,
+    pub paid_verification_dispute_bond_lamports: u64,
     pub authority: Pubkey,
     pub tier_config: RequestTierConfigV2,
 }
