@@ -157,6 +157,12 @@ pub enum AuctionError {
     InvalidPostedResultV2 = 74,
     /// Invalid page-backed verification summary was provided
     InvalidVerifierPagesSummary = 75,
+    /// The bundle verification dispute v2 account had an invalid state
+    InvalidBundleVerificationDisputeV2State = 76,
+    /// Invalid bundle verification dispute kind was provided
+    InvalidBundleVerificationDisputeV2Kind = 77,
+    /// The bundle verification dispute window is not open
+    VerificationDisputeWindowClosed = 78,
 }
 
 impl Display for AuctionError {
@@ -248,6 +254,13 @@ impl AuctionError {
             Self::InvalidVerificationVerdict => "InvalidVerificationVerdict",
             Self::InvalidPostedResultV2 => "InvalidPostedResultV2",
             Self::InvalidVerifierPagesSummary => "InvalidVerifierPagesSummary",
+            Self::InvalidBundleVerificationDisputeV2State => {
+                "InvalidBundleVerificationDisputeV2State"
+            }
+            Self::InvalidBundleVerificationDisputeV2Kind => {
+                "InvalidBundleVerificationDisputeV2Kind"
+            }
+            Self::VerificationDisputeWindowClosed => "VerificationDisputeWindowClosed",
         }
     }
 
@@ -335,16 +348,19 @@ impl AuctionError {
             Self::VerificationDeadlinePassed => "Verification deadline has passed",
             Self::ClaimDeadlinePassed => "Claim deadline has passed",
             Self::InvalidWinnerNode => "Winner node account does not match bundle escrow",
-            Self::InvalidRefundRecipient => {
-                "Refund recipient account does not match bundle escrow"
-            }
+            Self::InvalidRefundRecipient => "Refund recipient account does not match bundle escrow",
             Self::InvalidVerifierPageV2Input => "Bundle verifier page v2 input is invalid",
             Self::InvalidVerifierRewardV2 => "Verifier reward data is invalid",
             Self::InvalidVerificationVerdict => "Verification verdict is invalid",
             Self::InvalidPostedResultV2 => "Posted result data is invalid",
-            Self::InvalidVerifierPagesSummary => {
-                "Page-backed verification summary is invalid"
+            Self::InvalidVerifierPagesSummary => "Page-backed verification summary is invalid",
+            Self::InvalidBundleVerificationDisputeV2State => {
+                "Bundle verification dispute v2 state is invalid"
             }
+            Self::InvalidBundleVerificationDisputeV2Kind => {
+                "Bundle verification dispute v2 kind is invalid"
+            }
+            Self::VerificationDisputeWindowClosed => "Verification dispute window is not open",
         }
     }
 
