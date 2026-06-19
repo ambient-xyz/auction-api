@@ -18,6 +18,18 @@ fn bundle_escrow_v2_status_round_trips_through_raw_values() {
         BundleEscrowV2Status::try_from(5),
         Ok(BundleEscrowV2Status::Expired)
     );
+    assert_eq!(
+        BundleEscrowV2Status::try_from(6),
+        Ok(BundleEscrowV2Status::ProvisionalVerified)
+    );
+    assert_eq!(
+        BundleEscrowV2Status::try_from(7),
+        Ok(BundleEscrowV2Status::ProvisionalRejected)
+    );
+    assert_eq!(
+        BundleEscrowV2Status::try_from(8),
+        Ok(BundleEscrowV2Status::Disputed)
+    );
     assert_eq!(u64::from(BundleEscrowV2Status::Awarded), 1);
     assert_eq!(BundleEscrowV2Status::try_from(99), Err(99));
 }
@@ -29,6 +41,9 @@ fn bundle_escrow_v2_status_identifies_terminal_states() {
     assert!(BundleEscrowV2Status::FinalizedVerified.is_terminal());
     assert!(BundleEscrowV2Status::FinalizedRejected.is_terminal());
     assert!(BundleEscrowV2Status::Expired.is_terminal());
+    assert!(!BundleEscrowV2Status::ProvisionalVerified.is_terminal());
+    assert!(!BundleEscrowV2Status::ProvisionalRejected.is_terminal());
+    assert!(!BundleEscrowV2Status::Disputed.is_terminal());
 }
 
 #[test]
@@ -64,6 +79,22 @@ fn bundle_escrow_v2_v2_bytes_round_trip() {
     assert_eq!(parsed.status, BundleEscrowV2Status::Awarded);
     assert_eq!(parsed.bundle_version, 13);
     assert_eq!(parsed.total_input_tokens, 21);
+    assert_eq!(parsed.provisional_challenge_deadline_slot(), 0);
+}
+
+#[test]
+fn bundle_escrow_v2_reserved_metadata_round_trips() {
+    let bundle = BundleEscrowV2::default();
+    let mut bytes = vec![0u8; BundleEscrowV2::LEN_V2];
+    assert!(bundle.write_v2_bytes(&mut bytes));
+
+    {
+        let mut parsed = BundleEscrowV2::from_bytes_mut(&mut bytes).unwrap();
+        assert!(parsed.set_provisional_challenge_deadline_slot(77));
+    }
+
+    let parsed = BundleEscrowV2::from_bytes(&bytes).unwrap();
+    assert_eq!(parsed.provisional_challenge_deadline_slot(), 77);
 }
 
 #[test]
