@@ -30,12 +30,20 @@ fn config_policy_v2_layout_size_stays_stable() {
         offset_of!(ConfigPolicyV2, max_auction_credits_per_update),
         24
     );
+    assert_eq!(
+        offset_of!(ConfigPolicyV2, missed_verification_dispute_window_slots),
+        1_288
+    );
 }
 
 #[test]
 fn config_policy_v2_round_trips_through_bytes() {
     let policy = ConfigPolicyV2 {
         max_auction_credits_per_update: 42,
+        missed_verification_dispute_window_slots: 5,
+        dispute_verification_window_slots: 7,
+        paid_verification_dispute_window_slots: 11,
+        paid_verification_dispute_bond_lamports: 13,
         ..ConfigPolicyV2::default()
     };
 

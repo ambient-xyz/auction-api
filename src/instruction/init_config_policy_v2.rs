@@ -49,5 +49,9 @@ pub struct InitConfigPolicyV2Args {
     pub v2_verifiers_per_auction: u8,
     pub v2_verifier_quorum: u8,
     pub _reserved0: [u8; 6],
+    pub missed_verification_dispute_window_slots: u64,
+    pub dispute_verification_window_slots: u64,
+    pub paid_verification_dispute_window_slots: u64,
+    pub paid_verification_dispute_bond_lamports: u64,
     pub tier_configs: [RequestTierConfigV2; CONFIG_POLICY_V2_TIER_CONFIG_COUNT],
 }
