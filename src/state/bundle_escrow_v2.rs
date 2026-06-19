@@ -46,6 +46,25 @@ pub struct RawBundleEscrowV2Data {
 
 pub type BundleEscrowV2 = RawBundleEscrowV2Data;
 
+#[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[repr(C)]
+pub struct BundleEscrowV2ReservedData {
+    pub provisional_challenge_deadline_slot: u64,
+    pub _reserved0: [u8; 32],
+    pub _reserved1: [u8; CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES - 40],
+}
+
+impl Default for BundleEscrowV2ReservedData {
+    fn default() -> Self {
+        Self {
+            provisional_challenge_deadline_slot: 0,
+            _reserved0: [0; 32],
+            _reserved1: [0; CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES - 40],
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct InvalidBundleEscrowV2Transition {
     pub from: BundleEscrowV2Status,
@@ -62,12 +81,14 @@ impl InvalidBundleEscrowV2Transition {
 pub struct BundleEscrowV2Ref<'a> {
     header: &'a AccountHeaderV1,
     raw: &'a RawBundleEscrowV2Data,
+    reserved: Option<&'a BundleEscrowV2ReservedData>,
 }
 
 #[derive(Debug)]
 pub struct BundleEscrowV2Mut<'a> {
     header: &'a mut AccountHeaderV1,
     raw: &'a mut RawBundleEscrowV2Data,
+    reserved: Option<&'a mut BundleEscrowV2ReservedData>,
 }
 
 impl<'a> BundleEscrowV2Ref<'a> {
@@ -85,6 +106,16 @@ impl<'a> BundleEscrowV2Ref<'a> {
 
     pub fn into_raw(self) -> &'a RawBundleEscrowV2Data {
         self.raw
+    }
+
+    pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
+        self.reserved
+    }
+
+    pub fn provisional_challenge_deadline_slot(&self) -> u64 {
+        self.reserved
+            .map(|reserved| reserved.provisional_challenge_deadline_slot)
+            .unwrap_or(0)
     }
 }
 
@@ -115,6 +146,29 @@ impl<'a> BundleEscrowV2Mut<'a> {
 
     pub fn into_raw(self) -> &'a mut RawBundleEscrowV2Data {
         self.raw
+    }
+
+    pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
+        self.reserved.as_deref()
+    }
+
+    pub fn reserved_v2_mut(&mut self) -> Option<&mut BundleEscrowV2ReservedData> {
+        self.reserved.as_deref_mut()
+    }
+
+    pub fn provisional_challenge_deadline_slot(&self) -> u64 {
+        self.reserved
+            .as_ref()
+            .map(|reserved| reserved.provisional_challenge_deadline_slot)
+            .unwrap_or(0)
+    }
+
+    pub fn set_provisional_challenge_deadline_slot(&mut self, slot: u64) -> bool {
+        let Some(reserved) = self.reserved.as_deref_mut() else {
+            return false;
+        };
+        reserved.provisional_challenge_deadline_slot = slot;
+        true
     }
 }
 
@@ -163,9 +217,18 @@ impl RawBundleEscrowV2Data {
             return None;
         }
 
-        let (raw_bytes, _reserved) = raw_bytes.split_at(Self::PAYLOAD_LEN);
+        let (raw_bytes, reserved_bytes) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
-        Some(BundleEscrowV2Ref { header, raw })
+        let reserved = if layout.version == AccountLayoutVersion::V2 {
+            Some(bytemuck::try_from_bytes::<BundleEscrowV2ReservedData>(reserved_bytes).ok()?)
+        } else {
+            None
+        };
+        Some(BundleEscrowV2Ref {
+            header,
+            raw,
+            reserved,
+        })
     }
 
     pub fn from_bytes_mut(bytes: &mut [u8]) -> Option<BundleEscrowV2Mut<'_>> {
@@ -185,9 +248,18 @@ impl RawBundleEscrowV2Data {
             return None;
         }
 
-        let (raw_bytes, _reserved) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
+        let (raw_bytes, reserved_bytes) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes_mut::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
-        Some(BundleEscrowV2Mut { header, raw })
+        let reserved = if layout.version == AccountLayoutVersion::V2 {
+            Some(bytemuck::try_from_bytes_mut::<BundleEscrowV2ReservedData>(reserved_bytes).ok()?)
+        } else {
+            None
+        };
+        Some(BundleEscrowV2Mut {
+            header,
+            raw,
+            reserved,
+        })
     }
 
     pub fn read(bytes: &[u8]) -> Option<Self> {
@@ -275,20 +347,31 @@ impl RawBundleEscrowV2Data {
         verifier_page_count: u8,
         verifier_reward_remaining: [u64; MAX_VERIFIERS_PER_AUCTION],
     ) -> Result<(), InvalidBundleEscrowV2Transition> {
-        if self.status != BundleEscrowV2Status::ResultPosted {
-            return Err(InvalidBundleEscrowV2Transition::new(
-                self.status,
-                final_status,
-            ));
-        }
-
-        match final_status {
-            BundleEscrowV2Status::FinalizedVerified | BundleEscrowV2Status::FinalizedRejected => {}
+        match (self.status, final_status) {
+            (
+                BundleEscrowV2Status::ResultPosted,
+                BundleEscrowV2Status::FinalizedVerified
+                | BundleEscrowV2Status::FinalizedRejected
+                | BundleEscrowV2Status::ProvisionalVerified
+                | BundleEscrowV2Status::ProvisionalRejected,
+            )
+            | (
+                BundleEscrowV2Status::Disputed,
+                BundleEscrowV2Status::FinalizedVerified | BundleEscrowV2Status::FinalizedRejected,
+            )
+            | (
+                BundleEscrowV2Status::ProvisionalVerified,
+                BundleEscrowV2Status::FinalizedVerified,
+            )
+            | (
+                BundleEscrowV2Status::ProvisionalRejected,
+                BundleEscrowV2Status::FinalizedRejected,
+            ) => {}
             _ => {
                 return Err(InvalidBundleEscrowV2Transition::new(
                     self.status,
                     final_status,
-                ));
+                ))
             }
         }
 
@@ -319,7 +402,10 @@ impl RawBundleEscrowV2Data {
         match self.status {
             BundleEscrowV2Status::Open
             | BundleEscrowV2Status::Awarded
-            | BundleEscrowV2Status::ResultPosted => {
+            | BundleEscrowV2Status::ResultPosted
+            | BundleEscrowV2Status::ProvisionalVerified
+            | BundleEscrowV2Status::ProvisionalRejected
+            | BundleEscrowV2Status::Disputed => {
                 self.status = BundleEscrowV2Status::Expired;
                 Ok(())
             }
@@ -396,6 +482,9 @@ impl BundleEscrowV2Status {
     pub const FinalizedVerified: Self = Self(3);
     pub const FinalizedRejected: Self = Self(4);
     pub const Expired: Self = Self(5);
+    pub const ProvisionalVerified: Self = Self(6);
+    pub const ProvisionalRejected: Self = Self(7);
+    pub const Disputed: Self = Self(8);
 
     pub const fn into_u64(self) -> u64 {
         self.0
@@ -432,6 +521,9 @@ impl TryFrom<u64> for BundleEscrowV2Status {
             3 => Ok(Self::FinalizedVerified),
             4 => Ok(Self::FinalizedRejected),
             5 => Ok(Self::Expired),
+            6 => Ok(Self::ProvisionalVerified),
+            7 => Ok(Self::ProvisionalRejected),
+            8 => Ok(Self::Disputed),
             _ => Err(value),
         }
     }
