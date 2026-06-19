@@ -28,14 +28,14 @@ pub struct FinalizeBundleVerificationV2Accounts<'a, T> {
     pub requester_refund_recipient: &'a T,
     pub instructions_sysvar: &'a T,
     pub config_policy: &'a T,
-    pub bundle_verifier_pages: &'a [T],
+    pub remaining_accounts: &'a [T],
 }
 
 impl<'a, T> TryFrom<&'a [T]> for FinalizeBundleVerificationV2Accounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [coordinator, bundle_escrow, winner_node, requester_refund_recipient, instructions_sysvar, config_policy, bundle_verifier_pages @ ..] =
+        let [coordinator, bundle_escrow, winner_node, requester_refund_recipient, instructions_sysvar, config_policy, remaining_accounts @ ..] =
             accounts
         else {
             return Err(AuctionError::NotEnoughAccounts);
@@ -48,7 +48,7 @@ impl<'a, T> TryFrom<&'a [T]> for FinalizeBundleVerificationV2Accounts<'a, T> {
             requester_refund_recipient,
             instructions_sysvar,
             config_policy,
-            bundle_verifier_pages,
+            remaining_accounts,
         })
     }
 }
@@ -61,7 +61,7 @@ impl<'a, T> InstructionAccounts<'a, T> for FinalizeBundleVerificationV2Accounts<
             .chain(std::iter::once(self.requester_refund_recipient))
             .chain(std::iter::once(self.instructions_sysvar))
             .chain(std::iter::once(self.config_policy))
-            .chain(self.bundle_verifier_pages.iter())
+            .chain(self.remaining_accounts.iter())
     }
 }
 
