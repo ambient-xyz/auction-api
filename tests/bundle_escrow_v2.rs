@@ -1,7 +1,8 @@
 use ambient_auction_api::{
     AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, BundleEscrowV2,
-    BundleEscrowV2Status, InvalidBundleEscrowV2Transition, Pubkey, RequestTier,
-    VERIFIERS_PER_AUCTION,
+    BundleEscrowV2ReservedData, BundleEscrowV2Status, InvalidBundleEscrowV2Transition, Pubkey,
+    RequestTier, VERIFIERS_PER_AUCTION, VERIFIER_SELECTION_PHASE_INITIAL,
+    VERIFIER_SELECTION_PHASE_REPLACEMENT,
 };
 
 fn test_pubkey(byte: u8) -> Pubkey {
@@ -84,6 +85,7 @@ fn bundle_escrow_v2_v2_bytes_round_trip() {
 
 #[test]
 fn bundle_escrow_v2_reserved_metadata_round_trips() {
+    assert_eq!(std::mem::size_of::<BundleEscrowV2ReservedData>(), 64);
     let bundle = BundleEscrowV2::default();
     let mut bytes = vec![0u8; BundleEscrowV2::LEN_V2];
     assert!(bundle.write_v2_bytes(&mut bytes));
@@ -91,10 +93,51 @@ fn bundle_escrow_v2_reserved_metadata_round_trips() {
     {
         let mut parsed = BundleEscrowV2::from_bytes_mut(&mut bytes).unwrap();
         assert!(parsed.set_provisional_challenge_deadline_slot(77));
+        assert!(parsed.begin_verifier_selection(
+            88,
+            9,
+            VERIFIER_SELECTION_PHASE_REPLACEMENT,
+            3,
+            2,
+        ));
+        assert_ne!(
+            parsed
+                .reserved_v2()
+                .unwrap()
+                .verifier_selection_pending,
+            0
+        );
+        assert!(!parsed.begin_verifier_selection(
+            99,
+            10,
+            VERIFIER_SELECTION_PHASE_INITIAL,
+            1,
+            1,
+        ));
     }
 
-    let parsed = BundleEscrowV2::from_bytes(&bytes).unwrap();
-    assert_eq!(parsed.provisional_challenge_deadline_slot(), 77);
+    {
+        let parsed = BundleEscrowV2::from_bytes(&bytes).unwrap();
+        let reserved = parsed.reserved_v2().unwrap();
+        assert_eq!(parsed.provisional_challenge_deadline_slot(), 77);
+        assert_ne!(reserved.verifier_selection_pending, 0);
+        assert_eq!(reserved.verifier_selection_slot, 88);
+        assert_eq!(reserved.verifier_selection_epoch, 9);
+        assert_eq!(
+            reserved.verifier_selection_phase,
+            VERIFIER_SELECTION_PHASE_REPLACEMENT
+        );
+        assert_eq!(reserved.verifier_count, 3);
+        assert_eq!(reserved.verifier_quorum, 2);
+    }
+
+    let mut parsed = BundleEscrowV2::from_bytes_mut(&mut bytes).unwrap();
+    assert!(parsed.complete_verifier_selection());
+    assert!(!parsed.complete_verifier_selection());
+    let reserved = parsed.reserved_v2().unwrap();
+    assert_eq!(reserved.verifier_selection_pending, 0);
+    assert_eq!(reserved.verifier_count, 3);
+    assert_eq!(reserved.verifier_quorum, 2);
 }
 
 #[test]
@@ -168,15 +211,11 @@ fn bundle_escrow_v2_award_updates_coupled_fields() {
     let selected_verifiers = [test_pubkey(4), test_pubkey(5), test_pubkey(6)];
 
     bundle
-        .award(
-            [7; 32],
-            test_pubkey(1),
-            test_pubkey(2),
-            42,
-            selected_verifiers,
-        )
+        .commit_award([7; 32], test_pubkey(1), test_pubkey(2), 42)
         .unwrap();
 
+    assert_eq!(bundle.status, BundleEscrowV2Status::Open);
+    bundle.complete_award(selected_verifiers).unwrap();
     assert_eq!(bundle.status, BundleEscrowV2Status::Awarded);
     assert_eq!(bundle.auction_hash, [7; 32]);
     assert_eq!(bundle.winner_node_pubkey, test_pubkey(1));
