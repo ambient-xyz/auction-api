@@ -25,6 +25,7 @@ mod place_bid;
 mod post_bundle_result_v2;
 mod request_job;
 mod reveal_bid;
+mod select_bundle_verifiers_v2;
 mod set_config_policy_v2;
 mod submit_job_output;
 mod submit_validation;
@@ -51,6 +52,7 @@ pub use place_bid::*;
 pub use post_bundle_result_v2::*;
 pub use request_job::*;
 pub use reveal_bid::*;
+pub use select_bundle_verifiers_v2::*;
 pub use set_config_policy_v2::*;
 pub use submit_job_output::*;
 pub use submit_validation::*;
@@ -82,6 +84,7 @@ pub enum AuctionInstruction {
     SetConfigPolicyV2 = 20,
     InitBundleVerifierPageV2 = 21,
     DisputeBundleVerificationV2 = 22,
+    SelectBundleVerifiersV2 = 23,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -166,6 +169,7 @@ impl_instruction_data!(
     SetConfigPolicyV2Args => SetConfigPolicyV2,
     InitBundleVerifierPageV2Args => InitBundleVerifierPageV2,
     DisputeBundleVerificationV2Args => DisputeBundleVerificationV2,
+    SelectBundleVerifiersV2Args => SelectBundleVerifiersV2,
 );
 
 #[cfg(feature = "global-config")]

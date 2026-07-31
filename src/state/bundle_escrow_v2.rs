@@ -46,21 +46,36 @@ pub struct RawBundleEscrowV2Data {
 
 pub type BundleEscrowV2 = RawBundleEscrowV2Data;
 
+pub const VERIFIER_SELECTION_PHASE_INITIAL: u8 = 0;
+pub const VERIFIER_SELECTION_PHASE_REPLACEMENT: u8 = 1;
+
 #[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
 pub struct BundleEscrowV2ReservedData {
     pub provisional_challenge_deadline_slot: u64,
+    pub verifier_selection_slot: u64,
+    pub verifier_selection_epoch: u64,
+    pub verifier_selection_phase: u8,
+    pub verifier_selection_pending: u8,
+    pub verifier_count: u8,
+    pub verifier_quorum: u8,
     pub _reserved0: [u8; 32],
-    pub _reserved1: [u8; CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES - 40],
+    pub _reserved1: [u8; CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES - 60],
 }
 
 impl Default for BundleEscrowV2ReservedData {
     fn default() -> Self {
         Self {
             provisional_challenge_deadline_slot: 0,
+            verifier_selection_slot: 0,
+            verifier_selection_epoch: 0,
+            verifier_selection_phase: VERIFIER_SELECTION_PHASE_INITIAL,
+            verifier_selection_pending: 0,
+            verifier_count: 0,
+            verifier_quorum: 0,
             _reserved0: [0; 32],
-            _reserved1: [0; CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES - 40],
+            _reserved1: [0; CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES - 60],
         }
     }
 }
@@ -168,6 +183,40 @@ impl<'a> BundleEscrowV2Mut<'a> {
             return false;
         };
         reserved.provisional_challenge_deadline_slot = slot;
+        true
+    }
+
+    pub fn begin_verifier_selection(
+        &mut self,
+        slot: u64,
+        epoch: u64,
+        phase: u8,
+        verifier_count: u8,
+        verifier_quorum: u8,
+    ) -> bool {
+        let Some(reserved) = self.reserved.as_deref_mut() else {
+            return false;
+        };
+        if reserved.verifier_selection_pending != 0 {
+            return false;
+        }
+        reserved.verifier_selection_slot = slot;
+        reserved.verifier_selection_epoch = epoch;
+        reserved.verifier_selection_phase = phase;
+        reserved.verifier_selection_pending = 1;
+        reserved.verifier_count = verifier_count;
+        reserved.verifier_quorum = verifier_quorum;
+        true
+    }
+
+    pub fn complete_verifier_selection(&mut self) -> bool {
+        let Some(reserved) = self.reserved.as_deref_mut() else {
+            return false;
+        };
+        if reserved.verifier_selection_pending == 0 {
+            return false;
+        }
+        reserved.verifier_selection_pending = 0;
         true
     }
 }
@@ -292,14 +341,12 @@ impl RawBundleEscrowV2Data {
         true
     }
 
-    #[allow(clippy::too_many_arguments)]
-    pub fn award(
+    pub fn commit_award(
         &mut self,
         auction_hash: [u8; 32],
         winner_node_pubkey: Pubkey,
         winner_vote_account: Pubkey,
         clearing_price_per_output_token: u64,
-        selected_verifiers: [Pubkey; MAX_VERIFIERS_PER_AUCTION],
     ) -> Result<(), InvalidBundleEscrowV2Transition> {
         if self.status != BundleEscrowV2Status::Open {
             return Err(InvalidBundleEscrowV2Transition::new(
@@ -312,10 +359,43 @@ impl RawBundleEscrowV2Data {
         self.winner_node_pubkey = winner_node_pubkey;
         self.winner_vote_account = winner_vote_account;
         self.clearing_price_per_output_token = clearing_price_per_output_token;
+
+        Ok(())
+    }
+
+    pub fn complete_award(
+        &mut self,
+        selected_verifiers: [Pubkey; MAX_VERIFIERS_PER_AUCTION],
+    ) -> Result<(), InvalidBundleEscrowV2Transition> {
+        if self.status != BundleEscrowV2Status::Open {
+            return Err(InvalidBundleEscrowV2Transition::new(
+                self.status,
+                BundleEscrowV2Status::Awarded,
+            ));
+        }
+
         self.selected_verifiers = selected_verifiers;
         self.status = BundleEscrowV2Status::Awarded;
 
         Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn award(
+        &mut self,
+        auction_hash: [u8; 32],
+        winner_node_pubkey: Pubkey,
+        winner_vote_account: Pubkey,
+        clearing_price_per_output_token: u64,
+        selected_verifiers: [Pubkey; MAX_VERIFIERS_PER_AUCTION],
+    ) -> Result<(), InvalidBundleEscrowV2Transition> {
+        self.commit_award(
+            auction_hash,
+            winner_node_pubkey,
+            winner_vote_account,
+            clearing_price_per_output_token,
+        )?;
+        self.complete_award(selected_verifiers)
     }
 
     pub fn post_result(

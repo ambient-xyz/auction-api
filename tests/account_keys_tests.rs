@@ -84,6 +84,34 @@ fn open_bundle_escrow_v2_account_keys_round_trip_and_order() {
     assert_eq!(keys.as_accounts().to_account_keys(), keys);
 }
 
+#[test]
+fn select_bundle_verifiers_v2_accounts_preserve_optional_dispute_order() {
+    let bundle_escrow = 1_u8;
+    let bundle_verification_dispute = 3_u8;
+    let initial = SelectBundleVerifiersV2Accounts {
+        bundle_escrow: &bundle_escrow,
+        bundle_verification_dispute: None,
+    };
+    let replacement = SelectBundleVerifiersV2Accounts {
+        bundle_verification_dispute: Some(&bundle_verification_dispute),
+        ..initial.clone()
+    };
+
+    assert_eq!(initial.iter_owned().collect::<Vec<_>>(), vec![1]);
+    assert_eq!(replacement.iter_owned().collect::<Vec<_>>(), vec![1, 3]);
+    assert_eq!(
+        SelectBundleVerifiersV2Accounts::try_from(&[1_u8, 3][..])
+            .unwrap()
+            .iter_owned()
+            .collect::<Vec<_>>(),
+        vec![1, 3]
+    );
+    assert_eq!(
+        SelectBundleVerifiersV2Args {}.to_bytes(),
+        vec![AuctionInstruction::SelectBundleVerifiersV2 as u8]
+    );
+}
+
 #[cfg(feature = "global-config")]
 #[test]
 fn init_config_account_keys_round_trip_and_order() {
