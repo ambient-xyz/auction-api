@@ -56,12 +56,16 @@ pub struct BundleEscrowV2ReservedData {
     pub provisional_challenge_deadline_slot: u64,
     pub verifier_selection_slot: u64,
     pub verifier_selection_epoch: u64,
+    pub paid_verification_dispute_bond_lamports: u64,
+    pub winner_auction_credits: u64,
+    pub max_auction_credits_per_update: u64,
+    pub missed_verification_dispute_window_slots: u32,
+    pub replacement_verification_window_slots: u32,
+    pub paid_verification_dispute_window_slots: u32,
     pub verifier_selection_phase: u8,
     pub verifier_selection_pending: u8,
     pub verifier_count: u8,
     pub verifier_quorum: u8,
-    pub _reserved0: [u8; 32],
-    pub _reserved1: [u8; CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES - 60],
 }
 
 impl Default for BundleEscrowV2ReservedData {
@@ -70,12 +74,16 @@ impl Default for BundleEscrowV2ReservedData {
             provisional_challenge_deadline_slot: 0,
             verifier_selection_slot: 0,
             verifier_selection_epoch: 0,
+            paid_verification_dispute_bond_lamports: 0,
+            winner_auction_credits: 0,
+            max_auction_credits_per_update: 0,
+            missed_verification_dispute_window_slots: 0,
+            replacement_verification_window_slots: 0,
+            paid_verification_dispute_window_slots: 0,
             verifier_selection_phase: VERIFIER_SELECTION_PHASE_INITIAL,
             verifier_selection_pending: 0,
             verifier_count: 0,
             verifier_quorum: 0,
-            _reserved0: [0; 32],
-            _reserved1: [0; CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES - 60],
         }
     }
 }

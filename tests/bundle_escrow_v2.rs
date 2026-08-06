@@ -4,6 +4,8 @@ use ambient_auction_api::{
     RequestTier, VERIFIERS_PER_AUCTION, VERIFIER_SELECTION_PHASE_INITIAL,
     VERIFIER_SELECTION_PHASE_REPLACEMENT,
 };
+use memoffset::offset_of;
+use std::mem::size_of;
 
 fn test_pubkey(byte: u8) -> Pubkey {
     [byte; 32].into()
@@ -85,7 +87,6 @@ fn bundle_escrow_v2_v2_bytes_round_trip() {
 
 #[test]
 fn bundle_escrow_v2_reserved_metadata_round_trips() {
-    assert_eq!(std::mem::size_of::<BundleEscrowV2ReservedData>(), 64);
     let bundle = BundleEscrowV2::default();
     let mut bytes = vec![0u8; BundleEscrowV2::LEN_V2];
     assert!(bundle.write_v2_bytes(&mut bytes));
@@ -100,6 +101,13 @@ fn bundle_escrow_v2_reserved_metadata_round_trips() {
             3,
             2,
         ));
+        let reserved = parsed.reserved_v2_mut().unwrap();
+        reserved.paid_verification_dispute_bond_lamports = 11;
+        reserved.winner_auction_credits = 22;
+        reserved.max_auction_credits_per_update = 33;
+        reserved.missed_verification_dispute_window_slots = 44;
+        reserved.replacement_verification_window_slots = 55;
+        reserved.paid_verification_dispute_window_slots = 66;
         assert_ne!(
             parsed
                 .reserved_v2()
@@ -129,6 +137,12 @@ fn bundle_escrow_v2_reserved_metadata_round_trips() {
         );
         assert_eq!(reserved.verifier_count, 3);
         assert_eq!(reserved.verifier_quorum, 2);
+        assert_eq!(reserved.paid_verification_dispute_bond_lamports, 11);
+        assert_eq!(reserved.winner_auction_credits, 22);
+        assert_eq!(reserved.max_auction_credits_per_update, 33);
+        assert_eq!(reserved.missed_verification_dispute_window_slots, 44);
+        assert_eq!(reserved.replacement_verification_window_slots, 55);
+        assert_eq!(reserved.paid_verification_dispute_window_slots, 66);
     }
 
     let mut parsed = BundleEscrowV2::from_bytes_mut(&mut bytes).unwrap();
@@ -138,6 +152,37 @@ fn bundle_escrow_v2_reserved_metadata_round_trips() {
     assert_eq!(reserved.verifier_selection_pending, 0);
     assert_eq!(reserved.verifier_count, 3);
     assert_eq!(reserved.verifier_quorum, 2);
+}
+
+#[test]
+fn bundle_escrow_v2_reserved_layout_is_typed_and_stable() {
+    assert_eq!(size_of::<BundleEscrowV2ReservedData>(), 64);
+    assert_eq!(
+        size_of::<BundleEscrowV2ReservedData>(),
+        ambient_auction_api::CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
+    );
+    macro_rules! assert_offset {
+        ($field:ident, $offset:literal) => {
+            assert_eq!(offset_of!(BundleEscrowV2ReservedData, $field), $offset)
+        };
+    }
+    assert_offset!(provisional_challenge_deadline_slot, 0);
+    assert_offset!(verifier_selection_slot, 8);
+    assert_offset!(verifier_selection_epoch, 16);
+    assert_offset!(paid_verification_dispute_bond_lamports, 24);
+    assert_offset!(winner_auction_credits, 32);
+    assert_offset!(max_auction_credits_per_update, 40);
+    assert_offset!(missed_verification_dispute_window_slots, 48);
+    assert_offset!(replacement_verification_window_slots, 52);
+    assert_offset!(paid_verification_dispute_window_slots, 56);
+    assert_offset!(verifier_selection_phase, 60);
+    assert_offset!(verifier_selection_pending, 61);
+    assert_offset!(verifier_count, 62);
+    assert_offset!(verifier_quorum, 63);
+    assert_eq!(
+        bytemuck::bytes_of(&BundleEscrowV2ReservedData::default()),
+        &[0u8; 64]
+    );
 }
 
 #[test]
