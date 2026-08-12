@@ -38,6 +38,8 @@ impl<'a, T> InstructionAccounts<'a, T> for PostBundleResultV2Accounts<'a, T> {
     }
 }
 
+pub type PostSmallBundleResultV2Accounts<'a, T> = PostBundleResultV2Accounts<'a, T>;
+
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug, Pod)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[repr(C)]
@@ -48,4 +50,12 @@ pub struct PostBundleResultV2Args {
     pub page_entry_count: u16,
     pub _reserved: [u8; 4],
     pub page_entries: [BundleVerifierPageV2Entry; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
+}
+
+#[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug, Pod)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[repr(C)]
+pub struct PostSmallBundleResultV2Args {
+    pub post: PostBundleResultV2Args,
+    pub input_tokens: [u64; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
 }
