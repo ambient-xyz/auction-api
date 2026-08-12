@@ -46,6 +46,31 @@ pub struct RawBundleEscrowV2Data {
 
 pub type BundleEscrowV2 = RawBundleEscrowV2Data;
 
+#[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[repr(C)]
+pub struct BundleEscrowV2ReservedData {
+    bytes: [[u8; 32]; 2],
+}
+
+impl BundleEscrowV2ReservedData {
+    pub fn as_bytes(&self) -> &[u8] {
+        bytemuck::bytes_of(self)
+    }
+
+    pub fn is_zero(&self) -> bool {
+        self.as_bytes().iter().all(|byte| *byte == 0)
+    }
+}
+
+#[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[repr(C)]
+pub struct BundleEscrowV3SmallData {
+    pub mint: Pubkey,
+    pub _reserved: [u8; 32],
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct InvalidBundleEscrowV2Transition {
     pub from: BundleEscrowV2Status,
@@ -62,12 +87,14 @@ impl InvalidBundleEscrowV2Transition {
 pub struct BundleEscrowV2Ref<'a> {
     header: &'a AccountHeaderV1,
     raw: &'a RawBundleEscrowV2Data,
+    tail: &'a [u8],
 }
 
 #[derive(Debug)]
 pub struct BundleEscrowV2Mut<'a> {
     header: &'a mut AccountHeaderV1,
     raw: &'a mut RawBundleEscrowV2Data,
+    tail: &'a mut [u8],
 }
 
 impl<'a> BundleEscrowV2Ref<'a> {
@@ -85,6 +112,16 @@ impl<'a> BundleEscrowV2Ref<'a> {
 
     pub fn into_raw(self) -> &'a RawBundleEscrowV2Data {
         self.raw
+    }
+
+    pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
+        (self.layout().version == AccountLayoutVersion::V2)
+            .then(|| bytemuck::try_from_bytes(self.tail).ok())?
+    }
+
+    pub fn small_v3(&self) -> Option<&BundleEscrowV3SmallData> {
+        (self.layout().version == AccountLayoutVersion::V3)
+            .then(|| bytemuck::try_from_bytes(self.tail).ok())?
     }
 }
 
@@ -116,6 +153,23 @@ impl<'a> BundleEscrowV2Mut<'a> {
     pub fn into_raw(self) -> &'a mut RawBundleEscrowV2Data {
         self.raw
     }
+
+    pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
+        (self.layout().version == AccountLayoutVersion::V2)
+            .then(|| bytemuck::try_from_bytes(&*self.tail).ok())?
+    }
+
+    pub fn small_v3(&self) -> Option<&BundleEscrowV3SmallData> {
+        (self.layout().version == AccountLayoutVersion::V3)
+            .then(|| bytemuck::try_from_bytes(&*self.tail).ok())?
+    }
+
+    pub fn small_v3_mut(&mut self) -> Option<&mut BundleEscrowV3SmallData> {
+        if self.layout().version != AccountLayoutVersion::V3 {
+            return None;
+        }
+        bytemuck::try_from_bytes_mut(self.tail).ok()
+    }
 }
 
 impl Deref for BundleEscrowV2Mut<'_> {
@@ -138,11 +192,13 @@ impl RawBundleEscrowV2Data {
     pub const LEN_V1: usize = AccountHeaderV1::LEN + Self::PAYLOAD_LEN;
     pub const LEN_V2: usize =
         AccountHeaderV1::LEN + Self::PAYLOAD_LEN + CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES;
+    pub const LEN_V3: usize = Self::LEN_V2;
 
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {
             AccountLayoutVersion::V1 => Self::LEN_V1,
             AccountLayoutVersion::V2 => Self::LEN_V2,
+            AccountLayoutVersion::V3 => Self::LEN_V3,
             AccountLayoutVersion::LegacyV0 => 0,
         }
     }
@@ -163,9 +219,9 @@ impl RawBundleEscrowV2Data {
             return None;
         }
 
-        let (raw_bytes, _reserved) = raw_bytes.split_at(Self::PAYLOAD_LEN);
+        let (raw_bytes, tail) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
-        Some(BundleEscrowV2Ref { header, raw })
+        Some(BundleEscrowV2Ref { header, raw, tail })
     }
 
     pub fn from_bytes_mut(bytes: &mut [u8]) -> Option<BundleEscrowV2Mut<'_>> {
@@ -185,9 +241,9 @@ impl RawBundleEscrowV2Data {
             return None;
         }
 
-        let (raw_bytes, _reserved) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
+        let (raw_bytes, tail) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes_mut::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
-        Some(BundleEscrowV2Mut { header, raw })
+        Some(BundleEscrowV2Mut { header, raw, tail })
     }
 
     pub fn read(bytes: &[u8]) -> Option<Self> {
@@ -200,6 +256,10 @@ impl RawBundleEscrowV2Data {
 
     pub fn write_v2_bytes(&self, bytes: &mut [u8]) -> bool {
         self.write_bytes_with_layout(bytes, AccountLayoutVersion::V2)
+    }
+
+    pub fn write_v3_bytes(&self, bytes: &mut [u8]) -> bool {
+        self.write_bytes_with_layout(bytes, AccountLayoutVersion::V3)
     }
 
     pub fn write_bytes_with_layout(&self, bytes: &mut [u8], version: AccountLayoutVersion) -> bool {
