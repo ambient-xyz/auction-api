@@ -1,6 +1,6 @@
 use ambient_auction_api::{
     AuctionInstruction, ConfigPolicyV2, ConfigPolicyV2PatchKind, InitConfigPolicyV2Args,
-    InstructionBytes, PostBundleResultV2Args, PostSmallBundleResultV2Args, Pubkey,
+    InstructionBytes, PostBundleResultV2Args, PostBundleResultV3Args, Pubkey,
     SetConfigPolicyV2Args, SmallCreditSettings,
 };
 use bytemuck::Zeroable;
@@ -51,21 +51,23 @@ fn small_policy_uses_only_reserved_words_one_and_two() {
 }
 
 #[test]
-fn small_post_preserves_the_existing_payload_and_instruction_gaps() {
-    assert!(AuctionInstruction::try_from(22).is_err());
-    assert!(AuctionInstruction::try_from(23).is_err());
-    assert_eq!(AuctionInstruction::PostSmallBundleResultV2 as u8, 24);
+fn v3_post_preserves_the_existing_payload_and_instruction_gaps() {
+    for discriminator in [22, 23, 24] {
+        assert!(AuctionInstruction::try_from(discriminator).is_err());
+    }
     assert_eq!(size_of::<PostBundleResultV2Args>(), 816);
-    assert_eq!(size_of::<PostSmallBundleResultV2Args>(), 864);
-    assert_eq!(offset_of!(PostSmallBundleResultV2Args, input_tokens), 816);
+    assert_eq!(size_of::<PostBundleResultV3Args>(), 864);
+    assert_eq!(offset_of!(PostBundleResultV3Args, input_tokens), 816);
 
-    let mut args = PostSmallBundleResultV2Args::zeroed();
+    let mut args = PostBundleResultV3Args::zeroed();
     args.post.result_hash = [9; 32];
     args.input_tokens = [1, 2, 3, 4, 5, 6];
     let encoded = args.to_bytes();
-    assert_eq!(encoded[0], 24);
+    assert_eq!(encoded[0], AuctionInstruction::PostBundleResultV2 as u8);
     assert_eq!(&encoded[1..817], bytemuck::bytes_of(&args.post));
     assert_eq!(&encoded[817..], bytemuck::bytes_of(&args.input_tokens));
+    assert!(PostBundleResultV2Args::try_from(&encoded[1..]).is_err());
+    assert!(PostBundleResultV3Args::try_from(&encoded[1..817]).is_err());
 
     let post = args.post.to_bytes();
     assert_eq!(post[0], AuctionInstruction::PostBundleResultV2 as u8);

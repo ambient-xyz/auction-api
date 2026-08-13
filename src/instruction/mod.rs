@@ -79,7 +79,6 @@ pub enum AuctionInstruction {
     InitConfigPolicyV2 = 19,
     SetConfigPolicyV2 = 20,
     InitBundleVerifierPageV2 = 21,
-    PostSmallBundleResultV2 = 24,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -163,7 +162,7 @@ impl_instruction_data!(
     InitConfigPolicyV2Args => InitConfigPolicyV2,
     SetConfigPolicyV2Args => SetConfigPolicyV2,
     InitBundleVerifierPageV2Args => InitBundleVerifierPageV2,
-    PostSmallBundleResultV2Args => PostSmallBundleResultV2,
+    PostBundleResultV3Args => PostBundleResultV2,
 );
 
 #[cfg(feature = "global-config")]
