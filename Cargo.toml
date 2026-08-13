@@ -32,4 +32,5 @@ serde_json = "1.0"
 decoder = ["dep:base64", "dep:clap", "dep:hex", "dep:serde_json", "serde"]
 serde = ["dep:bs58", "dep:serde", "dep:borsh"]
 global-config = []
+program-id-override = []
 default = []
