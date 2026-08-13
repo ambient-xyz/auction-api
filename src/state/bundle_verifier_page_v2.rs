@@ -43,26 +43,8 @@ pub type BundleVerifierPageV2 = RawBundleVerifierPageV2Data;
 #[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
-pub struct BundleVerifierPageReservedData {
-    bytes: [[u8; 32]; 2],
-}
-
-impl BundleVerifierPageReservedData {
-    pub fn as_bytes(&self) -> &[u8] {
-        bytemuck::bytes_of(self)
-    }
-
-    pub fn is_zero(&self) -> bool {
-        self.as_bytes().iter().all(|byte| *byte == 0)
-    }
-}
-
-#[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq, Default)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[repr(C)]
 pub struct BundleVerifierPageV3SmallData {
     pub input_tokens: [u64; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
-    pub _reserved: [u8; 16],
 }
 
 #[derive(Debug)]
@@ -92,9 +74,8 @@ impl<'a> BundleVerifierPageV2Ref<'a> {
         self.raw
     }
 
-    pub fn reserved_v2(&self) -> Option<&BundleVerifierPageReservedData> {
-        (self.layout().version == AccountLayoutVersion::V2)
-            .then(|| bytemuck::try_from_bytes(self.tail).ok())?
+    pub fn has_canonical_v2_tail(&self) -> bool {
+        self.layout().version == AccountLayoutVersion::V2 && self.tail.iter().all(|byte| *byte == 0)
     }
 
     pub fn small_v3(&self) -> Option<&BundleVerifierPageV3SmallData> {
@@ -128,9 +109,8 @@ impl<'a> BundleVerifierPageV2Mut<'a> {
         self.raw
     }
 
-    pub fn reserved_v2(&self) -> Option<&BundleVerifierPageReservedData> {
-        (self.layout().version == AccountLayoutVersion::V2)
-            .then(|| bytemuck::try_from_bytes(&*self.tail).ok())?
+    pub fn has_canonical_v2_tail(&self) -> bool {
+        self.layout().version == AccountLayoutVersion::V2 && self.tail.iter().all(|byte| *byte == 0)
     }
 
     pub fn small_v3(&self) -> Option<&BundleVerifierPageV3SmallData> {
@@ -167,7 +147,7 @@ impl RawBundleVerifierPageV2Data {
     pub const LEN_V2: usize = AccountHeaderV1::LEN
         + Self::PAYLOAD_LEN
         + CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES;
-    pub const LEN_V3: usize = Self::LEN_V2;
+    pub const LEN_V3: usize = Self::LEN_V1 + std::mem::size_of::<BundleVerifierPageV3SmallData>();
 
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {

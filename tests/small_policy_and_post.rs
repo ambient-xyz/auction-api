@@ -38,11 +38,10 @@ fn small_policy_uses_only_reserved_words_one_and_two() {
 
     let bytes = bytemuck::bytes_of(&policy);
     assert_eq!(&bytes[1_320..1_352], &[5; 32]);
-    assert_eq!(&bytes[1_352..1_354], &[0; 2]);
-    assert_eq!(bytes[1_354], 1);
-    assert!(bytes[1_355..1_384].iter().all(|byte| *byte == 0));
+    assert_eq!(bytes[1_352], 1);
+    assert!(bytes[1_353..1_384].iter().all(|byte| *byte == 0));
 
-    policy.reserved_words[2][0] = 1;
+    policy.reserved_words[2][1] = 1;
     assert!(!policy.small_credit_settings_word_is_canonical());
     assert!(!SmallCreditSettings {
         enabled: true,

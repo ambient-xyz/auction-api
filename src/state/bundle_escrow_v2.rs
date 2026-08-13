@@ -49,26 +49,8 @@ pub type BundleEscrowV2 = RawBundleEscrowV2Data;
 #[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
-pub struct BundleEscrowV2ReservedData {
-    bytes: [[u8; 32]; 2],
-}
-
-impl BundleEscrowV2ReservedData {
-    pub fn as_bytes(&self) -> &[u8] {
-        bytemuck::bytes_of(self)
-    }
-
-    pub fn is_zero(&self) -> bool {
-        self.as_bytes().iter().all(|byte| *byte == 0)
-    }
-}
-
-#[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[repr(C)]
 pub struct BundleEscrowV3SmallData {
     pub mint: Pubkey,
-    pub _reserved: [u8; 32],
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -114,9 +96,8 @@ impl<'a> BundleEscrowV2Ref<'a> {
         self.raw
     }
 
-    pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
-        (self.layout().version == AccountLayoutVersion::V2)
-            .then(|| bytemuck::try_from_bytes(self.tail).ok())?
+    pub fn has_canonical_v2_tail(&self) -> bool {
+        self.layout().version == AccountLayoutVersion::V2 && self.tail.iter().all(|byte| *byte == 0)
     }
 
     pub fn small_v3(&self) -> Option<&BundleEscrowV3SmallData> {
@@ -154,9 +135,8 @@ impl<'a> BundleEscrowV2Mut<'a> {
         self.raw
     }
 
-    pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
-        (self.layout().version == AccountLayoutVersion::V2)
-            .then(|| bytemuck::try_from_bytes(&*self.tail).ok())?
+    pub fn has_canonical_v2_tail(&self) -> bool {
+        self.layout().version == AccountLayoutVersion::V2 && self.tail.iter().all(|byte| *byte == 0)
     }
 
     pub fn small_v3(&self) -> Option<&BundleEscrowV3SmallData> {
@@ -192,7 +172,7 @@ impl RawBundleEscrowV2Data {
     pub const LEN_V1: usize = AccountHeaderV1::LEN + Self::PAYLOAD_LEN;
     pub const LEN_V2: usize =
         AccountHeaderV1::LEN + Self::PAYLOAD_LEN + CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES;
-    pub const LEN_V3: usize = Self::LEN_V2;
+    pub const LEN_V3: usize = Self::LEN_V1 + std::mem::size_of::<BundleEscrowV3SmallData>();
 
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {
