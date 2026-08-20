@@ -20,8 +20,16 @@ pub const BUNDLE_VERIFIER_PAGE_V2_SEED: &[u8] = b"bundle_verifier_page_v2";
 #[cfg(not(feature = "global-config"))]
 pub const MINIMUM_BUNDLE_AUCTION_PAIRS: usize = 2;
 /// Auction Program ID
+#[cfg(not(feature = "program-id-override"))]
 pub const ID: [u8; PUBKEY_BYTES] =
     five8_const::decode_32_const("Auction111111111111111111111111111111111111");
+
+/// Auction Program ID
+#[cfg(feature = "program-id-override")]
+pub const ID: [u8; PUBKEY_BYTES] = five8_const::decode_32_const(env!(
+    "AMBIENT_AUCTION_PROGRAM_ID",
+    "program-id-override requires AMBIENT_AUCTION_PROGRAM_ID"
+));
 
 /// Protocol-level verifier capacity for auction layouts and instruction payloads.
 pub const MAX_VERIFIERS_PER_AUCTION: usize = 3;

@@ -66,6 +66,22 @@ pub const CONFIG_POLICY_V2_TYPED_RESERVED_WORDS: usize = 8;
 pub const CONFIG_POLICY_V2_TYPED_RESERVED_LAYOUT_PADDING_BYTES: usize = 7;
 pub const CONFIG_POLICY_V2_TYPED_RESERVED_TAIL_BYTES: usize = 16;
 
+const CONFIG_POLICY_V2_SMALL_CREDIT_MINT_WORD: usize = 1;
+const CONFIG_POLICY_V2_SMALL_CREDIT_ENABLED_WORD: usize = 2;
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+pub struct SmallCreditSettings {
+    pub enabled: bool,
+    pub mint: Pubkey,
+}
+
+impl SmallCreditSettings {
+    pub fn validate(&self) -> bool {
+        !self.enabled || self.mint != Pubkey::default()
+    }
+}
+
 #[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
@@ -207,5 +223,32 @@ impl ConfigPolicyV2 {
             Ok(version @ (AccountLayoutVersion::V1 | AccountLayoutVersion::V2)) => Ok(version),
             _ => Err(self.v2_account_layout_version),
         }
+    }
+
+    pub fn small_credit_enabled(&self) -> bool {
+        self.reserved_words[CONFIG_POLICY_V2_SMALL_CREDIT_ENABLED_WORD][0] == 1
+    }
+
+    pub fn small_credit_mint(&self) -> Pubkey {
+        self.reserved_words[CONFIG_POLICY_V2_SMALL_CREDIT_MINT_WORD].into()
+    }
+
+    pub fn small_credit_settings_word_is_canonical(&self) -> bool {
+        let word = &self.reserved_words[CONFIG_POLICY_V2_SMALL_CREDIT_ENABLED_WORD];
+        word[0] <= 1 && word[1..].iter().all(|byte| *byte == 0)
+    }
+
+    pub fn small_credit_settings(&self) -> SmallCreditSettings {
+        SmallCreditSettings {
+            enabled: self.small_credit_enabled(),
+            mint: self.small_credit_mint(),
+        }
+    }
+
+    pub fn set_small_credit_settings(&mut self, settings: SmallCreditSettings) {
+        self.reserved_words[CONFIG_POLICY_V2_SMALL_CREDIT_MINT_WORD] = settings.mint.inner();
+        let word = &mut self.reserved_words[CONFIG_POLICY_V2_SMALL_CREDIT_ENABLED_WORD];
+        word.fill(0);
+        word[0] = u8::from(settings.enabled);
     }
 }

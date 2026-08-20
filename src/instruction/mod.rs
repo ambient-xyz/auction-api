@@ -15,9 +15,9 @@ mod end_auction;
 mod expire_bundle_escrow_v2;
 mod finalize_bundle_verification_v2;
 mod init_bundle;
+mod init_bundle_verifier_page_v2;
 #[cfg(feature = "global-config")]
 mod init_config;
-mod init_bundle_verifier_page_v2;
 mod init_config_policy_v2;
 mod open_bundle_escrow_v2;
 mod place_bid;
@@ -40,9 +40,9 @@ pub use end_auction::*;
 pub use expire_bundle_escrow_v2::*;
 pub use finalize_bundle_verification_v2::*;
 pub use init_bundle::*;
+pub use init_bundle_verifier_page_v2::*;
 #[cfg(feature = "global-config")]
 pub use init_config::*;
-pub use init_bundle_verifier_page_v2::*;
 pub use init_config_policy_v2::*;
 pub use open_bundle_escrow_v2::*;
 pub use place_bid::*;
@@ -162,6 +162,7 @@ impl_instruction_data!(
     InitConfigPolicyV2Args => InitConfigPolicyV2,
     SetConfigPolicyV2Args => SetConfigPolicyV2,
     InitBundleVerifierPageV2Args => InitBundleVerifierPageV2,
+    PostBundleResultV3Args => PostBundleResultV2,
 );
 
 #[cfg(feature = "global-config")]
