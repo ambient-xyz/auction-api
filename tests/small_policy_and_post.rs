@@ -1,7 +1,7 @@
 use ambient_auction_api::{
     AuctionInstruction, ConfigPolicyV2, ConfigPolicyV2PatchKind, InitConfigPolicyV2Args,
     InstructionBytes, PostBundleResultV2Args, PostBundleResultV3Args, Pubkey,
-    SetConfigPolicyV2Args, SmallCreditSettings,
+    SetConfigPolicyV2Args, SlashSmallCreditsArgs, SmallCreditSettings,
 };
 use bytemuck::Zeroable;
 use memoffset::offset_of;
@@ -48,6 +48,45 @@ fn small_policy_uses_only_reserved_words_one_and_two() {
         mint: Pubkey::default(),
     }
     .validate());
+}
+
+#[test]
+fn slash_authority_uses_reserved_word_three() {
+    assert_eq!(ConfigPolicyV2::LEN, 1_568);
+    assert_eq!(ConfigPolicyV2PatchKind::SMALL_CREDIT_SLASH_AUTHORITY.0, 6);
+    assert_eq!(size_of::<SetConfigPolicyV2Args>(), 160);
+    assert_eq!(size_of::<SlashSmallCreditsArgs>(), 16);
+
+    let mut policy = ConfigPolicyV2::production_default();
+    let before = bytemuck::bytes_of(&policy).to_vec();
+    assert_eq!(policy.small_credit_slash_authority(), Pubkey::default());
+
+    let authority = Pubkey::from([7; 32]);
+    policy.set_small_credit_slash_authority(authority);
+    let after = bytemuck::bytes_of(&policy);
+    assert_eq!(policy.small_credit_slash_authority(), authority);
+    assert_eq!(&after[1_384..1_416], &[7; 32]);
+    assert_eq!(&before[..1_384], &after[..1_384]);
+    assert_eq!(&before[1_416..], &after[1_416..]);
+
+    let mut patch = SetConfigPolicyV2Args::zeroed();
+    patch.patch_kind = ConfigPolicyV2PatchKind::SMALL_CREDIT_SLASH_AUTHORITY;
+    patch.authority = authority;
+    let encoded_patch = patch.to_bytes();
+    assert_eq!(encoded_patch.len(), 161);
+    assert_eq!(
+        SetConfigPolicyV2Args::try_from(&encoded_patch[1..]),
+        Ok(patch)
+    );
+
+    let args = SlashSmallCreditsArgs {
+        amount: 2,
+        expected_token_account_balance: 5,
+    };
+    let encoded = args.to_bytes();
+    assert_eq!(encoded.len(), 17);
+    assert_eq!(encoded[0], AuctionInstruction::SlashSmallCredits as u8);
+    assert_eq!(&encoded[1..], bytemuck::bytes_of(&args));
 }
 
 #[test]

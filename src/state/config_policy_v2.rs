@@ -68,6 +68,7 @@ pub const CONFIG_POLICY_V2_TYPED_RESERVED_TAIL_BYTES: usize = 16;
 
 const CONFIG_POLICY_V2_SMALL_CREDIT_MINT_WORD: usize = 1;
 const CONFIG_POLICY_V2_SMALL_CREDIT_ENABLED_WORD: usize = 2;
+const CONFIG_POLICY_V2_SMALL_CREDIT_SLASH_AUTHORITY_WORD: usize = 3;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -233,6 +234,10 @@ impl ConfigPolicyV2 {
         self.reserved_words[CONFIG_POLICY_V2_SMALL_CREDIT_MINT_WORD].into()
     }
 
+    pub fn small_credit_slash_authority(&self) -> Pubkey {
+        self.reserved_words[CONFIG_POLICY_V2_SMALL_CREDIT_SLASH_AUTHORITY_WORD].into()
+    }
+
     pub fn small_credit_settings_word_is_canonical(&self) -> bool {
         let word = &self.reserved_words[CONFIG_POLICY_V2_SMALL_CREDIT_ENABLED_WORD];
         word[0] <= 1 && word[1..].iter().all(|byte| *byte == 0)
@@ -250,5 +255,9 @@ impl ConfigPolicyV2 {
         let word = &mut self.reserved_words[CONFIG_POLICY_V2_SMALL_CREDIT_ENABLED_WORD];
         word.fill(0);
         word[0] = u8::from(settings.enabled);
+    }
+
+    pub fn set_small_credit_slash_authority(&mut self, authority: Pubkey) {
+        self.reserved_words[CONFIG_POLICY_V2_SMALL_CREDIT_SLASH_AUTHORITY_WORD] = authority.inner();
     }
 }
