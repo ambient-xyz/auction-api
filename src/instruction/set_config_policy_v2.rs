@@ -40,6 +40,7 @@ impl ConfigPolicyV2PatchKind {
     pub const VERIFIER_SETTINGS: Self = Self(2);
     pub const TIER_CONFIG: Self = Self(3);
     pub const MAX_AUCTION_CREDITS_PER_UPDATE: Self = Self(4);
+    pub const SMALL_CREDIT_SLASH_AUTHORITY: Self = Self(6);
     pub const SMALL_CREDIT_SETTINGS: Self = Self(7);
 }
 

@@ -25,6 +25,7 @@ mod post_bundle_result_v2;
 mod request_job;
 mod reveal_bid;
 mod set_config_policy_v2;
+mod slash_small_credits;
 mod submit_job_output;
 mod submit_validation;
 
@@ -50,6 +51,7 @@ pub use post_bundle_result_v2::*;
 pub use request_job::*;
 pub use reveal_bid::*;
 pub use set_config_policy_v2::*;
+pub use slash_small_credits::*;
 pub use submit_job_output::*;
 pub use submit_validation::*;
 
@@ -79,6 +81,7 @@ pub enum AuctionInstruction {
     InitConfigPolicyV2 = 19,
     SetConfigPolicyV2 = 20,
     InitBundleVerifierPageV2 = 21,
+    SlashSmallCredits = 25,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -163,6 +166,7 @@ impl_instruction_data!(
     SetConfigPolicyV2Args => SetConfigPolicyV2,
     InitBundleVerifierPageV2Args => InitBundleVerifierPageV2,
     PostBundleResultV3Args => PostBundleResultV2,
+    SlashSmallCreditsArgs => SlashSmallCredits,
 );
 
 #[cfg(feature = "global-config")]
