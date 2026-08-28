@@ -48,5 +48,5 @@ impl<'a, T> InstructionAccounts<'a, T> for SlashSmallCreditsAccounts<'a, T> {
 #[repr(C)]
 pub struct SlashSmallCreditsArgs {
     pub amount: u64,
-    pub expected_token_account_balance: u64,
+    pub sequence: u64,
 }

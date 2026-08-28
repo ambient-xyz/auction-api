@@ -51,7 +51,7 @@ fn small_policy_uses_only_reserved_words_one_and_two() {
 }
 
 #[test]
-fn slash_authority_uses_reserved_word_three() {
+fn slash_settings_use_reserved_words_three_and_four() {
     assert_eq!(ConfigPolicyV2::LEN, 1_568);
     assert_eq!(ConfigPolicyV2PatchKind::SMALL_CREDIT_SLASH_AUTHORITY.0, 6);
     assert_eq!(size_of::<SetConfigPolicyV2Args>(), 160);
@@ -60,6 +60,8 @@ fn slash_authority_uses_reserved_word_three() {
     let mut policy = ConfigPolicyV2::production_default();
     let before = bytemuck::bytes_of(&policy).to_vec();
     assert_eq!(policy.small_credit_slash_authority(), Pubkey::default());
+    assert_eq!(policy.small_credit_slash_sequence(), 0);
+    assert!(policy.small_credit_slash_sequence_word_is_canonical());
 
     let authority = Pubkey::from([7; 32]);
     policy.set_small_credit_slash_authority(authority);
@@ -68,6 +70,14 @@ fn slash_authority_uses_reserved_word_three() {
     assert_eq!(&after[1_384..1_416], &[7; 32]);
     assert_eq!(&before[..1_384], &after[..1_384]);
     assert_eq!(&before[1_416..], &after[1_416..]);
+
+    policy.set_small_credit_slash_sequence(5);
+    let after = bytemuck::bytes_of(&policy);
+    assert_eq!(policy.small_credit_slash_sequence(), 5);
+    assert_eq!(&after[1_416..1_424], &5_u64.to_le_bytes());
+    assert!(after[1_424..1_448].iter().all(|byte| *byte == 0));
+    policy.reserved_words[4][8] = 1;
+    assert!(!policy.small_credit_slash_sequence_word_is_canonical());
 
     let mut patch = SetConfigPolicyV2Args::zeroed();
     patch.patch_kind = ConfigPolicyV2PatchKind::SMALL_CREDIT_SLASH_AUTHORITY;
@@ -81,7 +91,7 @@ fn slash_authority_uses_reserved_word_three() {
 
     let args = SlashSmallCreditsArgs {
         amount: 2,
-        expected_token_account_balance: 5,
+        sequence: 5,
     };
     let encoded = args.to_bytes();
     assert_eq!(encoded.len(), 17);
