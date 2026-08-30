@@ -163,6 +163,12 @@ pub enum AuctionError {
     InvalidBundleVerificationDisputeV2Kind = 77,
     /// The bundle verification dispute window is not open
     VerificationDisputeWindowClosed = 78,
+    /// A bid account stored a status discriminant that is not a valid `BidStatus`
+    InvalidBidStatus = 79,
+    /// A job request account stored a status discriminant that is not a valid `JobRequestStatus`
+    InvalidJobRequestStatus = 80,
+    /// An account stored a tier discriminant that is not a valid `RequestTier`
+    InvalidRequestTier = 81,
 }
 
 impl Display for AuctionError {
@@ -261,6 +267,9 @@ impl AuctionError {
                 "InvalidBundleVerificationDisputeV2Kind"
             }
             Self::VerificationDisputeWindowClosed => "VerificationDisputeWindowClosed",
+            Self::InvalidBidStatus => "InvalidBidStatus",
+            Self::InvalidJobRequestStatus => "InvalidJobRequestStatus",
+            Self::InvalidRequestTier => "InvalidRequestTier",
         }
     }
 
@@ -361,6 +370,9 @@ impl AuctionError {
                 "Bundle verification dispute v2 kind is invalid"
             }
             Self::VerificationDisputeWindowClosed => "Verification dispute window is not open",
+            Self::InvalidBidStatus => "Bid status discriminant is invalid",
+            Self::InvalidJobRequestStatus => "Job request status discriminant is invalid",
+            Self::InvalidRequestTier => "Request tier discriminant is invalid",
         }
     }
 

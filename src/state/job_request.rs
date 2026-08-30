@@ -1,10 +1,11 @@
 use super::Pubkey;
-use crate::state::request_tier::RequestTier;
+use crate::state::request_tier::{RequestTier, RequestTierRaw};
 use crate::state::verification::VerificationState;
-use crate::{constant::PUBKEY_BYTES, MaybePubkey};
+use crate::{constant::PUBKEY_BYTES, error, MaybePubkey};
 use bytemuck::{Pod, Zeroable};
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Clone, Copy, Zeroable, Debug, PartialEq, Pod)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -17,10 +18,10 @@ pub struct JobRequest {
     pub max_price_per_output_token: u64,
     /// The maximum output token this request accepts
     pub max_output_tokens: u64,
-    /// Context length tier type
-    pub context_length_tier: RequestTier,
-    /// Expiry duration tier type
-    pub expiry_duration_tier: RequestTier,
+    /// Context length tier type. Validated raw wrapper; see [`RequestTierRaw`].
+    pub context_length_tier: RequestTierRaw,
+    /// Expiry duration tier type. Validated raw wrapper; see [`RequestTierRaw`].
+    pub expiry_duration_tier: RequestTierRaw,
     /// The public key of the job requester.
     pub authority: Pubkey,
     /// An [IPFS content identifier](https://docs.ipfs.tech/concepts/content-addressing/) of the metadata necessary to complete the job.
@@ -38,7 +39,11 @@ pub struct JobRequest {
     ///
     /// Indicates whether the request is still awaiting inference,
     /// pending verification, or already completed.
-    pub status: JobRequestStatus,
+    ///
+    /// Stored as the validated raw wrapper rather than [`JobRequestStatus`] itself: `JobRequest` is
+    /// deserialized from account data with `bytemuck`, so the field type must accept every bit
+    /// pattern. Read it with `JobRequestStatus::try_from(job_request.status)`.
+    pub status: JobRequestStatusRaw,
     pub verification: VerificationState,
     pub input_data_account: MaybePubkey,
     pub output_data_account: MaybePubkey,
@@ -48,10 +53,17 @@ impl JobRequest {
     pub const LEN: usize = std::mem::size_of::<JobRequest>();
 }
 
-#[derive(Clone, Copy, Zeroable, Debug, PartialEq, Default)]
+#[derive(
+    Clone, Copy, Zeroable, Debug, PartialEq, Eq, Default, IntoPrimitive, TryFromPrimitive,
+)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(u64)]
 /// Represents the lifecycle status of a job request.
+///
+/// This enum is deliberately **not** `Pod`. `JobRequest` is deserialized from account data with
+/// `bytemuck`, and `Pod` asserts that every bit pattern of the type is a valid value; a
+/// `#[repr(u64)]` enum with three variants has three valid values out of 2^64. The account stores
+/// [`JobRequestStatusRaw`] and callers convert through `TryFrom`.
 pub enum JobRequestStatus {
     #[default]
     /// The request has been created and is waiting for inference output.
@@ -62,7 +74,63 @@ pub enum JobRequestStatus {
     OutputVerified = 2,
 }
 
-unsafe impl Pod for JobRequestStatus {}
+/// Wire representation of [`JobRequestStatus`] inside account state.
+///
+/// `#[repr(transparent)]` over a `u64` keeps `JobRequest`'s byte layout identical to the previous
+/// `status: JobRequestStatus` field while making the `Pod` impl sound. An unknown discriminant is
+/// reported as [`error::AuctionError::InvalidJobRequestStatus`] rather than executed as a variant
+/// that does not exist.
+#[derive(Clone, Copy, Zeroable, Debug, PartialEq, Eq, Default, Pod)]
+#[repr(transparent)]
+pub struct JobRequestStatusRaw(u64);
+
+impl JobRequestStatusRaw {
+    /// Builds the raw form from a known-valid status.
+    pub fn new(value: JobRequestStatus) -> Self {
+        value.into()
+    }
+
+    /// The stored discriminant, valid or not. Useful for diagnostics on a corrupt account.
+    pub fn as_u64(self) -> u64 {
+        self.0
+    }
+}
+
+impl From<JobRequestStatus> for JobRequestStatusRaw {
+    fn from(value: JobRequestStatus) -> Self {
+        Self(value.into())
+    }
+}
+
+impl TryFrom<JobRequestStatusRaw> for JobRequestStatus {
+    type Error = error::AuctionError;
+
+    fn try_from(value: JobRequestStatusRaw) -> Result<Self, Self::Error> {
+        Self::try_from(value.0).map_err(|_| error::AuctionError::InvalidJobRequestStatus)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl Serialize for JobRequestStatusRaw {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        JobRequestStatus::try_from(*self)
+            .map_err(serde::ser::Error::custom)?
+            .serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for JobRequestStatusRaw {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        JobRequestStatus::deserialize(deserializer).map(JobRequestStatusRaw::from)
+    }
+}
 
 impl std::fmt::Display for JobRequestStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -80,8 +148,8 @@ impl Default for JobRequest {
         Self {
             max_price_per_output_token: 0,
             max_output_tokens: 0,
-            context_length_tier: RequestTier::Eco,
-            expiry_duration_tier: RequestTier::Eco,
+            context_length_tier: RequestTierRaw::new(RequestTier::Eco),
+            expiry_duration_tier: RequestTierRaw::new(RequestTier::Eco),
             bundle: Pubkey::default(),
             authority: Pubkey::default(),
             input_hash: Default::default(),
