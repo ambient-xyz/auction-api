@@ -1,14 +1,14 @@
-use super::RequestTier;
+use super::RequestTierRaw;
 use crate::Pubkey;
 use bytemuck::{Pod, Zeroable};
 
 #[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq)]
 #[repr(C)]
 pub struct BundleRegistry {
-    /// Context length tier type
-    pub context_length_tier: RequestTier,
-    /// Expiry duration tier type
-    pub expiry_duration_tier: RequestTier,
+    /// Context length tier type. Validated raw wrapper; see [`RequestTierRaw`].
+    pub context_length_tier: RequestTierRaw,
+    /// Expiry duration tier type. Validated raw wrapper; see [`RequestTierRaw`].
+    pub expiry_duration_tier: RequestTierRaw,
     /// The latest bundle for this tier.
     pub latest_bundle: Pubkey,
     pub payer: Pubkey,

@@ -87,38 +87,136 @@ pub enum AuctionInstruction {
     SelectBundleVerifiersV2 = 23,
 }
 
-#[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
+/// Wire representation of an IP address inside instruction data and account state.
+///
+/// This used to be a `#[repr(C)]` Rust enum with two variants and a hand-written
+/// `unsafe impl Pod for IpAddr {}`. That impl was unsound. `Pod` is a promise that **every** bit
+/// pattern of the type's size is a valid value, and a Rust enum has exactly as many valid tag values
+/// as it has variants — here two, out of the 2^32 the tag field can hold. `PlaceBidArgs` is parsed
+/// straight out of attacker-controlled instruction data with
+/// `bytemuck::try_pod_read_unaligned` (see `macros.rs`), so a bidder could submit a tag of, say, 7 and
+/// materialize an enum value that does not exist. Every later `match` on it — including the
+/// `From<IpAddr> for std::net::IpAddr` conversion below and the endpoint validation in the listener —
+/// would then be undefined behaviour, not merely a wrong answer: the generated jump has no arm to
+/// land on.
+///
+/// The fix keeps the byte layout identical while making the type genuinely `Pod`: an explicit `u32`
+/// tag followed by a 16-byte payload, both of which accept every bit pattern. Size (20) and alignment
+/// (4) are unchanged, so the offsets of every surrounding field in `PlaceBidArgs` and `Bid` are
+/// unchanged, and the payload encoding is preserved exactly:
+///
+/// * IPv4 stored the four octets in order at payload offset 0. Unchanged; the remaining twelve bytes
+///   are now explicitly zeroed rather than left as whatever the enum's union padding happened to hold,
+///   which also removes a small uninitialised-memory disclosure from the old writer.
+/// * IPv6 stored `Ipv6Addr::segments()` as eight native-endian (little-endian on every Solana target)
+///   `u16`s. [`IpAddr::v6`] reproduces that byte for byte via `u16::to_le_bytes`.
+///
+/// An unrecognised tag is no longer undefined behaviour; it is simply not a valid address.
+/// [`IpAddr::to_std`] reports it as `None`, and the infallible `From` conversion degrades to
+/// `0.0.0.0`, which the listener's `validate_inference_endpoint` already rejects, so the failure mode
+/// is closed rather than exploitable.
+#[derive(Clone, Copy, Zeroable, Pod, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+// Round-trip through `std::net::IpAddr` for serde so the optional `serde`/`decoder` feature keeps
+// emitting a human-readable address string instead of the raw tag/payload pair.
+#[cfg_attr(feature = "serde", serde(into = "net::IpAddr", from = "net::IpAddr"))]
 #[repr(C)]
-pub enum IpAddr {
-    // Padding
-    V4([u8; 4]),
-    V6([u16; 8]),
+pub struct IpAddr {
+    /// [`IpAddr::TAG_V4`] or [`IpAddr::TAG_V6`]. Any other value is not a valid address.
+    tag: u32,
+    /// IPv4: octets in `payload[..4]`, remaining bytes zero.
+    /// IPv6: the eight `u16` segments, each little-endian, in order.
+    payload: [u8; 16],
 }
-unsafe impl Pod for IpAddr {}
+
+impl IpAddr {
+    /// Tag value for an IPv4 address. Matches the discriminant the previous enum assigned to `V4`.
+    pub const TAG_V4: u32 = 0;
+    /// Tag value for an IPv6 address. Matches the discriminant the previous enum assigned to `V6`.
+    pub const TAG_V6: u32 = 1;
+
+    /// Builds the IPv4 form. Replaces the former `IpAddr::V4(octets)` constructor.
+    pub const fn v4(octets: [u8; 4]) -> Self {
+        let mut payload = [0u8; 16];
+        payload[0] = octets[0];
+        payload[1] = octets[1];
+        payload[2] = octets[2];
+        payload[3] = octets[3];
+        Self {
+            tag: Self::TAG_V4,
+            payload,
+        }
+    }
+
+    /// Builds the IPv6 form from the same `[u16; 8]` segment array `Ipv6Addr::segments` returns.
+    /// Replaces the former `IpAddr::V6(segments)` constructor.
+    pub fn v6(segments: [u16; 8]) -> Self {
+        let mut payload = [0u8; 16];
+        for (chunk, segment) in payload.chunks_exact_mut(2).zip(segments) {
+            chunk.copy_from_slice(&segment.to_le_bytes());
+        }
+        Self {
+            tag: Self::TAG_V6,
+            payload,
+        }
+    }
+
+    /// The address as a `std::net::IpAddr`, or `None` when the tag is not one this program wrote.
+    ///
+    /// Prefer this over the infallible `From` conversion wherever a corrupt or hostile account can be
+    /// distinguished from a genuine address.
+    pub fn to_std(self) -> Option<net::IpAddr> {
+        match self.tag {
+            Self::TAG_V4 => Some(net::IpAddr::V4(net::Ipv4Addr::new(
+                self.payload[0],
+                self.payload[1],
+                self.payload[2],
+                self.payload[3],
+            ))),
+            Self::TAG_V6 => {
+                let mut segments = [0u16; 8];
+                for (segment, chunk) in segments.iter_mut().zip(self.payload.chunks_exact(2)) {
+                    // `chunks_exact(2)` yields exactly two bytes, so the conversion cannot fail.
+                    *segment = u16::from_le_bytes([chunk[0], chunk[1]]);
+                }
+                Some(net::IpAddr::V6(net::Ipv6Addr::new(
+                    segments[0],
+                    segments[1],
+                    segments[2],
+                    segments[3],
+                    segments[4],
+                    segments[5],
+                    segments[6],
+                    segments[7],
+                )))
+            }
+            _ => None,
+        }
+    }
+}
 
 impl Default for IpAddr {
     fn default() -> Self {
-        Self::V4([0, 0, 0, 0])
+        Self::v4([0, 0, 0, 0])
     }
 }
 
 impl From<IpAddr> for net::IpAddr {
     fn from(value: IpAddr) -> Self {
-        match value {
-            IpAddr::V4(b) => net::IpAddr::V4(net::Ipv4Addr::new(b[0], b[1], b[2], b[3])),
-            IpAddr::V6(b) => net::IpAddr::V6(net::Ipv6Addr::new(
-                b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7],
-            )),
-        }
+        // An unrecognised tag degrades to the unspecified address rather than panicking or inventing a
+        // plausible one: `0.0.0.0` is rejected by every endpoint validator in this workspace, so a
+        // corrupt account fails closed. Callers that need to tell the two apart use `to_std`.
+        value
+            .to_std()
+            .unwrap_or(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED))
     }
 }
 
 impl From<net::IpAddr> for IpAddr {
     fn from(value: net::IpAddr) -> Self {
         match value {
-            net::IpAddr::V4(ip) => IpAddr::V4(ip.octets()),
-            net::IpAddr::V6(ip) => IpAddr::V6(ip.segments()),
+            net::IpAddr::V4(ip) => Self::v4(ip.octets()),
+            net::IpAddr::V6(ip) => Self::v6(ip.segments()),
         }
     }
 }

@@ -2,7 +2,7 @@
 use std::io::{self, Read as _};
 
 use ambient_auction_api::{
-    instruction::SubmitJobOutputArgs, Auction, Bid, BundleEscrowV2, JobRequest,
+    instruction::SubmitJobOutputArgs, Auction, Bid, BundleEscrowV2, JobRequest, JobRequestStatus,
     JobVerificationState, RequestBundle, VerificationState,
 };
 use base64::Engine as _;
@@ -46,15 +46,20 @@ fn display_job_request(buffer: Vec<u8>) -> Result<(), String> {
                 .unwrap_or_else(|_| "Invalid".to_string())
         })
         .join(", ");
+    // `status` is the raw `u64` wrapper, so it is rendered the same way `verifier_states` already
+    // is: decoded when the discriminant is one this program writes, and reported as invalid
+    // otherwise. A decoder must be able to display a corrupt account rather than refuse to run.
+    let status_s = JobRequestStatus::try_from(status)
+        .map(|status| status.to_string())
+        .unwrap_or_else(|_| format!("Invalid({})", status.as_u64()));
     eprintln!(
         "bundle: {bundle_b58}
 input hash: {input_hash_b64}
 max output tokens: {max_output_tokens}
 output token count: {output_token_count}
 input token count: {input_token_count}
-job status: {status}
+job status: {status_s}
 merkle root: {merkle_root_b64}
-status: {status}
 output hash: {output_hash_b64}
 verified tokens: {verified_tokens:?}
 assigned verifiers: [{assigned_verifiers_s}]

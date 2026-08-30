@@ -1,7 +1,8 @@
 use ambient_auction_api::{
     bundle_account_len, parse_bundle_layout, AccountDiscriminator, AccountLayoutVersion,
-    BundleDataMut, BundleDataRef, BundleLayoutTrailerV1, BundleStatus, InvalidBundleTransition,
-    ParsedAccountLayout, RawBundleData, RawBundleMut, RawBundleRef, RequestBundle, RequestTier,
+    BundleDataMut, BundleDataRef, BundleLayoutTrailerV1, BundleStatus, BundleStatusRaw,
+    InvalidBundleTransition, ParsedAccountLayout, RawBundleData, RawBundleMut, RawBundleRef,
+    RequestBundle, RequestTier, RequestTierRaw,
 };
 use memoffset::offset_of;
 use std::mem::size_of;
@@ -20,13 +21,18 @@ fn layout_offsets() {
 
 #[test]
 fn layout_sizes() {
+    // The validated raw wrappers are `#[repr(transparent)]` over `u64`, so they occupy exactly the
+    // eight bytes the enums used to. Asserting on both the wrapper and the enum keeps the layout
+    // guarantee explicit: the wrapper is what the account stores, the enum is what callers read.
     assert_eq!(size_of::<RequestTier>(), 8);
+    assert_eq!(size_of::<RequestTierRaw>(), 8);
     assert_eq!(size_of::<BundleStatus>(), 8);
+    assert_eq!(size_of::<BundleStatusRaw>(), 8);
 
     let request = RawBundleData::default();
-    let _: BundleStatus = request.status;
-    let _: RequestTier = request.context_length_tier;
-    let _: RequestTier = request.expiry_duration_tier;
+    let _: BundleStatusRaw = request.status;
+    let _: RequestTierRaw = request.context_length_tier;
+    let _: RequestTierRaw = request.expiry_duration_tier;
     let _: u64 = request.expiry_slot;
     let _: u64 = request.requests_len;
 }
@@ -75,40 +81,66 @@ fn oversized_legacy_bundle_bytes_classify_as_legacy_v0() {
 
 #[test]
 fn state_view_matches_bundle_status() {
+    // `from_raw` is now the single validation gate: it converts the stored discriminant once and
+    // every later `status()` read is derived from the variant. Each status here is one this program
+    // writes, so `expect` documents that the gate cannot fail for these inputs.
     let mut active = RawBundleData::default();
     assert!(matches!(
-        BundleDataRef::from_raw(&active),
+        BundleDataRef::from_raw(&active).expect("default status is Active"),
         BundleDataRef::Active(_)
     ));
 
-    active.status = BundleStatus::Full;
+    active.status = BundleStatus::Full.into();
     assert!(matches!(
-        BundleDataRef::from_raw(&active),
+        BundleDataRef::from_raw(&active).expect("Full is a valid status"),
         BundleDataRef::Full(_)
     ));
 
-    active.status = BundleStatus::PendingVerification;
+    active.status = BundleStatus::PendingVerification.into();
     assert!(matches!(
-        BundleDataRef::from_raw(&active),
+        BundleDataRef::from_raw(&active).expect("PendingVerification is a valid status"),
         BundleDataRef::PendingVerification(_)
     ));
 
-    active.status = BundleStatus::Verified;
+    active.status = BundleStatus::Verified.into();
     assert!(matches!(
-        BundleDataRef::from_raw(&active),
+        BundleDataRef::from_raw(&active).expect("Verified is a valid status"),
         BundleDataRef::Verified(_)
     ));
 
-    active.status = BundleStatus::BadJobOutput;
+    active.status = BundleStatus::BadJobOutput.into();
     assert!(matches!(
-        BundleDataRef::from_raw(&active),
+        BundleDataRef::from_raw(&active).expect("BadJobOutput is a valid status"),
         BundleDataRef::BadJobOutput(_)
     ));
 
-    active.status = BundleStatus::Canceled;
+    active.status = BundleStatus::Canceled.into();
     assert!(matches!(
-        BundleDataRef::from_raw(&active),
+        BundleDataRef::from_raw(&active).expect("Canceled is a valid status"),
         BundleDataRef::Canceled(_)
+    ));
+}
+
+/// A discriminant no released program version writes must be rejected at the gate rather than
+/// matched as a state that does not exist. This is the case a `Pod` enum could not express: it
+/// would have produced an invalid `BundleStatus` value and made every later `match` undefined
+/// behaviour.
+#[test]
+fn state_view_rejects_unknown_status_discriminant() {
+    let mut raw = RawBundleData::default();
+    // `1` is deliberately not a `BundleStatus`; the enum skips it (`Active = 0`, `Full = 2`).
+    raw.status = bytemuck::cast::<u64, BundleStatusRaw>(1);
+    // Matched rather than compared with `assert_eq!` so the test does not require `PartialEq`/`Debug`
+    // on the view types themselves.
+    assert!(matches!(
+        BundleDataRef::from_raw(&raw),
+        Err(ambient_auction_api::error::AuctionError::InvalidBundleStatus)
+    ));
+
+    raw.status = bytemuck::cast::<u64, BundleStatusRaw>(u64::MAX);
+    assert!(matches!(
+        BundleDataMut::from_raw(&mut raw),
+        Err(ambient_auction_api::error::AuctionError::InvalidBundleStatus)
     ));
 }
 
@@ -116,26 +148,29 @@ fn state_view_matches_bundle_status() {
 fn transition_helpers_update_status() {
     let mut raw = RawBundleData::default();
     let raw = BundleDataMut::from_raw(&mut raw)
+        .expect("default status is Active")
         .mark_full()
         .unwrap()
         .into_raw();
-    assert_eq!(raw.status, BundleStatus::Full);
+    assert_eq!(raw.status, BundleStatusRaw::new(BundleStatus::Full));
 
     let raw = BundleDataMut::from_raw(raw)
+        .expect("Full is a valid status")
         .mark_verified()
         .unwrap()
         .into_raw();
-    assert_eq!(raw.status, BundleStatus::Verified);
+    assert_eq!(raw.status, BundleStatusRaw::new(BundleStatus::Verified));
 }
 
 #[test]
 fn transition_helpers_reject_invalid_moves() {
     let mut raw = RawBundleData {
-        status: BundleStatus::Verified,
+        status: BundleStatus::Verified.into(),
         ..Default::default()
     };
 
     let err = BundleDataMut::from_raw(&mut raw)
+        .expect("Verified is a valid status")
         .mark_canceled()
         .unwrap_err();
     assert_eq!(
@@ -210,7 +245,7 @@ fn raw_bundle_mut_mark_helpers_match_state_transitions() {
     }
 
     let reparsed = RawBundleData::from_bytes(&bytes).unwrap();
-    assert_eq!(reparsed.status, BundleStatus::Verified);
+    assert_eq!(reparsed.status, BundleStatusRaw::new(BundleStatus::Verified));
 }
 
 #[test]
@@ -259,5 +294,5 @@ fn legacy_helpers_support_v1_bundle_bytes() {
 
     let canceled =
         bytemuck::try_from_bytes::<RawBundleData>(&bytes[..RawBundleData::LEGACY_LEN]).unwrap();
-    assert_eq!(canceled.status, BundleStatus::Canceled);
+    assert_eq!(canceled.status, BundleStatusRaw::new(BundleStatus::Canceled));
 }
