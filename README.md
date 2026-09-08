@@ -16,3 +16,14 @@ To build the binary:
 ```shell
 cargo build --release --bin decode-account --features decoder
 ```
+
+## V2 IDLs
+
+The production V2 interface is published as a
+[Shank/Anchor-compatible IDL](idl/ambient_auction_v2.json) and a
+[portable Codama IDL](codama/ambient_auction_v2.json). See the
+[interface guide](idl/V2_INTERFACE.md) for dynamic page/dispute account tails
+and PDA seeds.
+
+Regenerate both artifacts with `pnpm idl` and verify them with
+`pnpm idl:check`.

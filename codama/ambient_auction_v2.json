@@ -1,0 +1,3943 @@
+{
+  "kind": "rootNode",
+  "standard": "codama",
+  "version": "1.8.0",
+  "program": {
+    "kind": "programNode",
+    "name": "ambientAuctionV2",
+    "publicKey": "Auction111111111111111111111111111111111111",
+    "version": "0.1.0",
+    "origin": "shank",
+    "accounts": [
+      {
+        "kind": "accountNode",
+        "name": "bundleEscrowV2",
+        "size": 568,
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "header",
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "accountHeaderV1"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "data",
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "rawBundleEscrowV2Data"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reserved",
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "bundleEscrowV2ReservedData"
+              }
+            }
+          ]
+        },
+        "pda": {
+          "kind": "pdaLinkNode",
+          "name": "bundleEscrowV2"
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              },
+              "value": {
+                "kind": "numberValueNode",
+                "number": 8
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "accountNode",
+        "name": "bundleVerifierPageV2",
+        "size": 880,
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "header",
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "accountHeaderV1"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "data",
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "rawBundleVerifierPageV2Data"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reserved",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 64,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            }
+          ]
+        },
+        "pda": {
+          "kind": "pdaLinkNode",
+          "name": "bundleVerifierPageV2"
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              },
+              "value": {
+                "kind": "numberValueNode",
+                "number": 9
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "accountNode",
+        "name": "bundleVerificationDisputeV2",
+        "size": 192,
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "header",
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "accountHeaderV1"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "data",
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "rawBundleVerificationDisputeV2Data"
+              }
+            }
+          ]
+        },
+        "pda": {
+          "kind": "pdaLinkNode",
+          "name": "bundleVerificationDisputeV2"
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              },
+              "value": {
+                "kind": "numberValueNode",
+                "number": 10
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "accountNode",
+        "name": "configPolicyV2",
+        "size": 1568,
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bump",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "minimumBundleAuctionPairs",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "policyFlags",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "maxAuctionCreditsPerUpdate",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "adminAuthorities",
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "publicKeyTypeNode"
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 8
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "serviceAuthorities",
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "publicKeyTypeNode"
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 16
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "v2VerifiersPerAuction",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "v2VerifierQuorum",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reserved1",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 6,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "tierConfigs",
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "requestTierConfigV2"
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 5
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "missedVerificationDisputeWindowSlots",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "disputeVerificationWindowSlots",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "paidVerificationDisputeWindowSlots",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "paidVerificationDisputeBondLamports",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reservedWords",
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "reservedWordV2"
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 7
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "v2AccountLayoutVersion",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reserved2",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 7,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reservedTail",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 16,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            }
+          ]
+        },
+        "pda": {
+          "kind": "pdaLinkNode",
+          "name": "configPolicyV2"
+        }
+      }
+    ],
+    "instructions": [
+      {
+        "kind": "instructionNode",
+        "name": "openBundleEscrowV2",
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "payer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "payerValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleEscrow",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaLinkNode",
+                "name": "bundleEscrowV2"
+              },
+              "seeds": [
+                {
+                  "kind": "pdaSeedValueNode",
+                  "name": "payer",
+                  "value": {
+                    "kind": "accountValueNode",
+                    "name": "payer"
+                  }
+                },
+                {
+                  "kind": "pdaSeedValueNode",
+                  "name": "bundleHash",
+                  "value": {
+                    "kind": "argumentValueNode",
+                    "name": "bundleHash"
+                  }
+                },
+                {
+                  "kind": "pdaSeedValueNode",
+                  "name": "bundleVersion",
+                  "value": {
+                    "kind": "argumentValueNode",
+                    "name": "bundleVersion"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "configPolicy",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaLinkNode",
+                "name": "configPolicyV2"
+              }
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "splSystem"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "defaultValue": {
+              "kind": "numberValueNode",
+              "number": 12
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "bundleVersion",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "reserved0",
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 4,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "rewardTier",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "bundleHash",
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "coordinator",
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "requesterRefundRecipient",
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "totalInputTokens",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "maxOutputTokens",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "escrowLamports",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "commitAuctionSettlementV2",
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "coordinator",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleEscrow",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "configPolicy",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaLinkNode",
+                "name": "configPolicyV2"
+              }
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "winnerVoteAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "defaultValue": {
+              "kind": "numberValueNode",
+              "number": 13
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "auctionHash",
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "winnerNodePubkey",
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "clearingPricePerOutputToken",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "postBundleResultV2",
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "identityValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleEscrow",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "configPolicy",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaLinkNode",
+                "name": "configPolicyV2"
+              }
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleVerifierPage",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "defaultValue": {
+              "kind": "numberValueNode",
+              "number": 14
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "resultHash",
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "postedOutputTokens",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "pageIndex",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u16",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "pageEntryCount",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u16",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "reserved",
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 4,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "pageEntries",
+            "type": {
+              "kind": "arrayTypeNode",
+              "item": {
+                "kind": "definedTypeLinkNode",
+                "name": "bundleVerifierPageV2Entry"
+              },
+              "count": {
+                "kind": "fixedCountNode",
+                "value": 6
+              }
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "finalizeBundleVerificationV2",
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "coordinator",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleEscrow",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "winnerNode",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "requesterRefundRecipient",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "instructionsSysvar",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "Sysvar1nstructions1111111111111111111111111"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "configPolicy",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaLinkNode",
+                "name": "configPolicyV2"
+              }
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "defaultValue": {
+              "kind": "numberValueNode",
+              "number": 15
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "verificationHash",
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "acceptedOutputTokens",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "winnerPayoutLamports",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "verdict",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "quorumVerifierBitmap",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "reserved",
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 6,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ],
+        "docs": [
+          "This instruction has context-dependent trailing accounts documented in idl/V2_INTERFACE.md."
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "claimWinnerLstakeV2",
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleEscrow",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "winnerVoteAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "voteProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "voteAuthority",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "configPolicy",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaLinkNode",
+                "name": "configPolicyV2"
+              }
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "defaultValue": {
+              "kind": "numberValueNode",
+              "number": 16
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "claimVerifierLstakeV2",
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleEscrow",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "verifierVoteAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "voteProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "voteAuthority",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "configPolicy",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaLinkNode",
+                "name": "configPolicyV2"
+              }
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "defaultValue": {
+              "kind": "numberValueNode",
+              "number": 17
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ],
+        "docs": [
+          "This instruction has context-dependent trailing accounts documented in idl/V2_INTERFACE.md."
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "expireBundleEscrowV2",
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleEscrow",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "requesterRefundRecipient",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "configPolicy",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaLinkNode",
+                "name": "configPolicyV2"
+              }
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "defaultValue": {
+              "kind": "numberValueNode",
+              "number": 18
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ],
+        "docs": [
+          "This instruction has context-dependent trailing accounts documented in idl/V2_INTERFACE.md."
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "initConfigPolicyV2",
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "identityValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "configPolicy",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaLinkNode",
+                "name": "configPolicyV2"
+              }
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "splSystem"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "defaultValue": {
+              "kind": "numberValueNode",
+              "number": 19
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "configPolicyLamports",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "initialAdminAuthority",
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "serviceAuthority",
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "policyFlags",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "minimumBundleAuctionPairs",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "maxAuctionCreditsPerUpdate",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "v2VerifiersPerAuction",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "v2VerifierQuorum",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "reserved0",
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 6,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "missedVerificationDisputeWindowSlots",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "disputeVerificationWindowSlots",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "paidVerificationDisputeWindowSlots",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "paidVerificationDisputeBondLamports",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "tierConfigs",
+            "type": {
+              "kind": "arrayTypeNode",
+              "item": {
+                "kind": "definedTypeLinkNode",
+                "name": "requestTierConfigV2"
+              },
+              "count": {
+                "kind": "fixedCountNode",
+                "value": 5
+              }
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "setConfigPolicyV2",
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "identityValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "configPolicy",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaLinkNode",
+                "name": "configPolicyV2"
+              }
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "defaultValue": {
+              "kind": "numberValueNode",
+              "number": 20
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "patchKind",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "authorityKind",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "authorityIndex",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "v2VerifiersPerAuction",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "v2VerifierQuorum",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "reserved0",
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 3,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "tier",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "policyFlags",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "maxAuctionCreditsPerUpdate",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "missedVerificationDisputeWindowSlots",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "disputeVerificationWindowSlots",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "paidVerificationDisputeWindowSlots",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "paidVerificationDisputeBondLamports",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "authority",
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "tierConfig",
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "requestTierConfigV2"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "initBundleVerifierPageV2",
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "payer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "payerValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleEscrow",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleVerifierPage",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaLinkNode",
+                "name": "bundleVerifierPageV2"
+              },
+              "seeds": [
+                {
+                  "kind": "pdaSeedValueNode",
+                  "name": "bundleEscrow",
+                  "value": {
+                    "kind": "accountValueNode",
+                    "name": "bundleEscrow"
+                  }
+                },
+                {
+                  "kind": "pdaSeedValueNode",
+                  "name": "pageIndex",
+                  "value": {
+                    "kind": "argumentValueNode",
+                    "name": "pageIndex"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "splSystem"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "defaultValue": {
+              "kind": "numberValueNode",
+              "number": 21
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "bundleVerifierPageLamports",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "pageIndex",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u16",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "reserved",
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 6,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "disputeBundleVerificationV2",
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "disputePayer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleEscrow",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleVerificationDispute",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaLinkNode",
+                "name": "bundleVerificationDisputeV2"
+              },
+              "seeds": [
+                {
+                  "kind": "pdaSeedValueNode",
+                  "name": "bundleEscrow",
+                  "value": {
+                    "kind": "accountValueNode",
+                    "name": "bundleEscrow"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "bondRefundRecipient",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "configPolicy",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaLinkNode",
+                "name": "configPolicyV2"
+              }
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "splSystem"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "defaultValue": {
+              "kind": "numberValueNode",
+              "number": 22
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "kind",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "reserved",
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 7,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "selectBundleVerifiersV2",
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleEscrow",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "bundleVerificationDispute",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "defaultValue": {
+              "kind": "numberValueNode",
+              "number": 23
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      }
+    ],
+    "definedTypes": [
+      {
+        "kind": "definedTypeNode",
+        "name": "requestTierConfigV2",
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bidRevealDuration",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "activeAuctionDuration",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bundleDuration",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "requestsPerBundle",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "maxContextLengthTokens",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "jobSubmissionDurationSlots",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bidCommitmentAmountMultiplier",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "auctionCreditsMultiplier",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "settlementWindowSlots",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "resultWindowSlots",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verificationWindowSlots",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "claimWindowSlots",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "accountHeaderV1",
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "discriminator",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "version",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reserved",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 6,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "bundleVerifierPageV2Entry",
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "jobId",
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "postedOutputTokens",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "acceptedOutputTokens",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "assignedVerifiersTokenRanges",
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 6
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verifierRewardTokens",
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 3
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verdict",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verifierClaimedBitmap",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reserved",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 6,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "rawBundleEscrowV2Data",
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "status",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "rewardTier",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "coordinator",
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "requesterRefundRecipient",
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bundleVersion",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u32",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reserved0",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 4,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bundleHash",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 32,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalInputTokens",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "maxOutputTokens",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "escrowLamports",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "winnerNodePubkey",
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "winnerVoteAccount",
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "clearingPricePerOutputToken",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "selectedVerifiers",
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "publicKeyTypeNode"
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 3
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "auctionHash",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 32,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "resultHash",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 32,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verificationHash",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 32,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "postedOutputTokens",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "acceptedOutputTokens",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "winnerPayoutLamports",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "settlementDeadlineSlot",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "resultDeadlineSlot",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verificationDeadlineSlot",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "claimDeadlineSlot",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "winnerRewardClaimed",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verifierRewardClaimedBitmap",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "quorumVerifierBitmap",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verifierPageCount",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reserved1",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 4,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verifierRewardRemaining",
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 3
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "bundleEscrowV2ReservedData",
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "provisionalChallengeDeadlineSlot",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verifierSelectionSlot",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verifierSelectionEpoch",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "paidVerificationDisputeBondLamports",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "winnerAuctionCredits",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "maxAuctionCreditsPerUpdate",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "missedVerificationDisputeWindowSlots",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u32",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "replacementVerificationWindowSlots",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u32",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "paidVerificationDisputeWindowSlots",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u32",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verifierSelectionPhase",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verifierSelectionPending",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verifierCount",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verifierQuorum",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "rawBundleVerifierPageV2Data",
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bundleEscrow",
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "pageIndex",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u16",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "entryCount",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u16",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reserved0",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 4,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "entries",
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "bundleVerifierPageV2Entry"
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 6
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "rawBundleVerificationDisputeV2Data",
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bundleEscrow",
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "kind",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "originalVerdict",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bump",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "replacementVerifierCount",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "replacementVerifierQuorum",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reserved0",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 3,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "replacementVerifiers",
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "publicKeyTypeNode"
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 3
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "replacementDeadlineSlot",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bondLamports",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bondRefundRecipient",
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "reservedWordV2",
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bytes",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 32,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "errors": [
+      {
+        "kind": "errorNode",
+        "name": "unknown",
+        "code": 0,
+        "message": "Unknown auction error",
+        "docs": [
+          "Unknown: Unknown auction error"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "unexpectedState",
+        "code": 1,
+        "message": "Auction state is invalid for this operation",
+        "docs": [
+          "UnexpectedState: Auction state is invalid for this operation"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "unexpectedRequestState",
+        "code": 2,
+        "message": "Request state is invalid for this operation",
+        "docs": [
+          "UnexpectedRequestState: Request state is invalid for this operation"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "unexpectedBidState",
+        "code": 3,
+        "message": "Bid state is invalid for this operation",
+        "docs": [
+          "UnexpectedBidState: Bid state is invalid for this operation"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "auctionNotExpired",
+        "code": 4,
+        "message": "Auction has not expired",
+        "docs": [
+          "AuctionNotExpired: Auction has not expired"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "incorrectBalance",
+        "code": 5,
+        "message": "Auction balance is incorrect",
+        "docs": [
+          "IncorrectBalance: Auction balance is incorrect"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "nonZeroBalance",
+        "code": 6,
+        "message": "Account balance must be zero to close",
+        "docs": [
+          "NonZeroBalance: Account balance must be zero to close"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "solanaRpc",
+        "code": 7,
+        "message": "Solana RPC request failed",
+        "docs": [
+          "SolanaRpc: Solana RPC request failed"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "accountNotFound",
+        "code": 8,
+        "message": "Account was not found",
+        "docs": [
+          "AccountNotFound: Account was not found"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "bug",
+        "code": 9,
+        "message": "Internal auction bug encountered",
+        "docs": [
+          "Bug: Internal auction bug encountered"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidAccountId",
+        "code": 10,
+        "message": "Account pubkey is invalid",
+        "docs": [
+          "InvalidAccountId: Account pubkey is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "incorrectAuction",
+        "code": 11,
+        "message": "Auction account does not match request",
+        "docs": [
+          "IncorrectAuction: Auction account does not match request"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidAuctionStatus",
+        "code": 12,
+        "message": "Auction status is invalid for this instruction",
+        "docs": [
+          "InvalidAuctionStatus: Auction status is invalid for this instruction"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "auctionIsExpired",
+        "code": 13,
+        "message": "Auction has expired",
+        "docs": [
+          "AuctionIsExpired: Auction has expired"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidRequestId",
+        "code": 14,
+        "message": "Request account is invalid",
+        "docs": [
+          "InvalidRequestId: Request account is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidOpenBundleEscrowV2Args",
+        "code": 15,
+        "message": "Open bundle escrow v2 arguments are invalid",
+        "docs": [
+          "InvalidOpenBundleEscrowV2Args: Open bundle escrow v2 arguments are invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidRequestBundleState",
+        "code": 16,
+        "message": "Request bundle state is invalid",
+        "docs": [
+          "InvalidRequestBundleState: Request bundle state is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "unableToAddNewJobReqToBundle",
+        "code": 17,
+        "message": "Failed to append job request to bundle",
+        "docs": [
+          "UnableToAddNewJobReqToBundle: Failed to append job request to bundle"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "tooManyJobsInBundle",
+        "code": 18,
+        "message": "Bundle already has the maximum number of jobs",
+        "docs": [
+          "TooManyJobsInBundle: Bundle already has the maximum number of jobs"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "decodeRequestBundleFailed",
+        "code": 19,
+        "message": "Failed to decode request bundle",
+        "docs": [
+          "DecodeRequestBundleFailed: Failed to decode request bundle"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "incorrectChildBundlePubkey",
+        "code": 20,
+        "message": "Child bundle pubkey is incorrect",
+        "docs": [
+          "IncorrectChildBundlePubkey: Child bundle pubkey is incorrect"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "incorrectChildAuctionPubkey",
+        "code": 21,
+        "message": "Child auction pubkey is incorrect",
+        "docs": [
+          "IncorrectChildAuctionPubkey: Child auction pubkey is incorrect"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidBundleStatus",
+        "code": 22,
+        "message": "Bundle status is invalid for this instruction",
+        "docs": [
+          "InvalidBundleStatus: Bundle status is invalid for this instruction"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "bundleNotExpired",
+        "code": 23,
+        "message": "Bundle has not expired",
+        "docs": [
+          "BundleNotExpired: Bundle has not expired"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidChildRequestBundleState",
+        "code": 24,
+        "message": "Child request bundle state is invalid",
+        "docs": [
+          "InvalidChildRequestBundleState: Child request bundle state is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "verifierNotAssigned",
+        "code": 25,
+        "message": "Verifier is not assigned to this bundle",
+        "docs": [
+          "VerifierNotAssigned: Verifier is not assigned to this bundle"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "noBidsFound",
+        "code": 26,
+        "message": "No bids were found",
+        "docs": [
+          "NoBidsFound: No bids were found"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "notEnoughBundleAuctionAccounts",
+        "code": 27,
+        "message": "Not enough bundle auction accounts were provided",
+        "docs": [
+          "NotEnoughBundleAuctionAccounts: Not enough bundle auction accounts were provided"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "failedToFindAValidBundle",
+        "code": 28,
+        "message": "No supplied bundle can accept the request",
+        "docs": [
+          "FailedToFindAValidBundle: No supplied bundle can accept the request"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "bundleNotAuctioned",
+        "code": 29,
+        "message": "Bundle is not auctioned",
+        "docs": [
+          "BundleNotAuctioned: Bundle is not auctioned"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidRegistry",
+        "code": 30,
+        "message": "Bundle registry is invalid",
+        "docs": [
+          "InvalidRegistry: Bundle registry is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidMetadata",
+        "code": 31,
+        "message": "Metadata account is invalid",
+        "docs": [
+          "InvalidMetadata: Metadata account is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "latestBundleCanceled",
+        "code": 32,
+        "message": "Latest bundle cannot be canceled",
+        "docs": [
+          "LatestBundleCanceled: Latest bundle cannot be canceled"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "notEnoughAccounts",
+        "code": 33,
+        "message": "Not enough accounts were provided",
+        "docs": [
+          "NotEnoughAccounts: Not enough accounts were provided"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidConfigData",
+        "code": 34,
+        "message": "Config account data is invalid",
+        "docs": [
+          "InvalidConfigData: Config account data is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "illegalConfigOwner",
+        "code": 35,
+        "message": "Config account owner is invalid",
+        "docs": [
+          "IllegalConfigOwner: Config account owner is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidJobVerificationState",
+        "code": 36,
+        "message": "Job verification state is invalid",
+        "docs": [
+          "InvalidJobVerificationState: Job verification state is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "alreadyVerified",
+        "code": 37,
+        "message": "Token range is already verified",
+        "docs": [
+          "AlreadyVerified: Token range is already verified"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidBundleEscrowV2State",
+        "code": 38,
+        "message": "Bundle escrow v2 state is invalid",
+        "docs": [
+          "InvalidBundleEscrowV2State: Bundle escrow v2 state is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidBundleEscrowV2Status",
+        "code": 39,
+        "message": "Bundle escrow v2 status is invalid for this instruction",
+        "docs": [
+          "InvalidBundleEscrowV2Status: Bundle escrow v2 status is invalid for this instruction"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidCoordinator",
+        "code": 40,
+        "message": "Coordinator does not match bundle escrow",
+        "docs": [
+          "InvalidCoordinator: Coordinator does not match bundle escrow"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidVoteAccount",
+        "code": 41,
+        "message": "Vote account does not match the expected node identity",
+        "docs": [
+          "InvalidVoteAccount: Vote account does not match the expected node identity"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "winnerCannotBeVerifier",
+        "code": 42,
+        "message": "Winner cannot be selected as a verifier",
+        "docs": [
+          "WinnerCannotBeVerifier: Winner cannot be selected as a verifier"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidVerifierQuorum",
+        "code": 43,
+        "message": "Verifier quorum is invalid",
+        "docs": [
+          "InvalidVerifierQuorum: Verifier quorum is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidEd25519Instruction",
+        "code": 44,
+        "message": "Ed25519 verification instruction is invalid",
+        "docs": [
+          "InvalidEd25519Instruction: Ed25519 verification instruction is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "rewardAlreadyClaimed",
+        "code": 45,
+        "message": "Reward has already been claimed",
+        "docs": [
+          "RewardAlreadyClaimed: Reward has already been claimed"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "resultNotPosted",
+        "code": 46,
+        "message": "Bundle escrow v2 result has not been posted",
+        "docs": [
+          "ResultNotPosted: Bundle escrow v2 result has not been posted"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "settlementNotCommitted",
+        "code": 47,
+        "message": "Bundle escrow v2 settlement has not been committed",
+        "docs": [
+          "SettlementNotCommitted: Bundle escrow v2 settlement has not been committed"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "deadlineNotReached",
+        "code": 48,
+        "message": "Bundle escrow v2 deadline has not been reached",
+        "docs": [
+          "DeadlineNotReached: Bundle escrow v2 deadline has not been reached"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "claimWindowStillOpen",
+        "code": 49,
+        "message": "Bundle escrow v2 claim window is still open",
+        "docs": [
+          "ClaimWindowStillOpen: Bundle escrow v2 claim window is still open"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "acceptedOutputExceedsPosted",
+        "code": 50,
+        "message": "Accepted output tokens exceed posted output tokens",
+        "docs": [
+          "AcceptedOutputExceedsPosted: Accepted output tokens exceed posted output tokens"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "postedOutputExceedsMax",
+        "code": 51,
+        "message": "Posted output tokens exceed the allowed maximum",
+        "docs": [
+          "PostedOutputExceedsMax: Posted output tokens exceed the allowed maximum"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "unauthorizedResultPoster",
+        "code": 52,
+        "message": "Authority is not allowed to post this result",
+        "docs": [
+          "UnauthorizedResultPoster: Authority is not allowed to post this result"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "insufficientEscrowBalance",
+        "code": 53,
+        "message": "Escrow balance is insufficient for payout",
+        "docs": [
+          "InsufficientEscrowBalance: Escrow balance is insufficient for payout"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidBundleVerifierPageV2State",
+        "code": 54,
+        "message": "Bundle verifier page v2 state is invalid",
+        "docs": [
+          "InvalidBundleVerifierPageV2State: Bundle verifier page v2 state is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidConfigPolicyV2Data",
+        "code": 55,
+        "message": "Config policy v2 account data is invalid",
+        "docs": [
+          "InvalidConfigPolicyV2Data: Config policy v2 account data is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "illegalConfigPolicyV2Owner",
+        "code": 56,
+        "message": "Config policy v2 account owner is invalid",
+        "docs": [
+          "IllegalConfigPolicyV2Owner: Config policy v2 account owner is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "unauthorizedConfigPolicyAuthority",
+        "code": 57,
+        "message": "Authority is not allowed to update config policy v2",
+        "docs": [
+          "UnauthorizedConfigPolicyAuthority: Authority is not allowed to update config policy v2"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidAccountLayoutVersion",
+        "code": 58,
+        "message": "Configured account layout version is invalid or unsupported",
+        "docs": [
+          "InvalidAccountLayoutVersion: Configured account layout version is invalid or unsupported"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "unauthorizedAccountLayoutVersion",
+        "code": 59,
+        "message": "Authority is not allowed to use this account layout version",
+        "docs": [
+          "UnauthorizedAccountLayoutVersion: Authority is not allowed to use this account layout version"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidVerifierCount",
+        "code": 60,
+        "message": "Verifier count is invalid",
+        "docs": [
+          "InvalidVerifierCount: Verifier count is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidTierConfig",
+        "code": 61,
+        "message": "Tier config is invalid",
+        "docs": [
+          "InvalidTierConfig: Tier config is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "settlementDeadlinePassed",
+        "code": 62,
+        "message": "Settlement deadline has passed",
+        "docs": [
+          "SettlementDeadlinePassed: Settlement deadline has passed"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "auctionCreditsExceedMax",
+        "code": 63,
+        "message": "Auction credits exceed the configured maximum",
+        "docs": [
+          "AuctionCreditsExceedMax: Auction credits exceed the configured maximum"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidConfigPolicyV2Args",
+        "code": 64,
+        "message": "Config policy v2 init arguments are invalid",
+        "docs": [
+          "InvalidConfigPolicyV2Args: Config policy v2 init arguments are invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidSettlementV2Args",
+        "code": 65,
+        "message": "Auction settlement v2 arguments are invalid",
+        "docs": [
+          "InvalidSettlementV2Args: Auction settlement v2 arguments are invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "resultDeadlinePassed",
+        "code": 66,
+        "message": "Result deadline has passed",
+        "docs": [
+          "ResultDeadlinePassed: Result deadline has passed"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "verificationDeadlinePassed",
+        "code": 67,
+        "message": "Verification deadline has passed",
+        "docs": [
+          "VerificationDeadlinePassed: Verification deadline has passed"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "claimDeadlinePassed",
+        "code": 68,
+        "message": "Claim deadline has passed",
+        "docs": [
+          "ClaimDeadlinePassed: Claim deadline has passed"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidWinnerNode",
+        "code": 69,
+        "message": "Winner node account does not match bundle escrow",
+        "docs": [
+          "InvalidWinnerNode: Winner node account does not match bundle escrow"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidRefundRecipient",
+        "code": 70,
+        "message": "Refund recipient account does not match bundle escrow",
+        "docs": [
+          "InvalidRefundRecipient: Refund recipient account does not match bundle escrow"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidVerifierPageV2Input",
+        "code": 71,
+        "message": "Bundle verifier page v2 input is invalid",
+        "docs": [
+          "InvalidVerifierPageV2Input: Bundle verifier page v2 input is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidVerifierRewardV2",
+        "code": 72,
+        "message": "Verifier reward data is invalid",
+        "docs": [
+          "InvalidVerifierRewardV2: Verifier reward data is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidVerificationVerdict",
+        "code": 73,
+        "message": "Verification verdict is invalid",
+        "docs": [
+          "InvalidVerificationVerdict: Verification verdict is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidPostedResultV2",
+        "code": 74,
+        "message": "Posted result data is invalid",
+        "docs": [
+          "InvalidPostedResultV2: Posted result data is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidVerifierPagesSummary",
+        "code": 75,
+        "message": "Page-backed verification summary is invalid",
+        "docs": [
+          "InvalidVerifierPagesSummary: Page-backed verification summary is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidBundleVerificationDisputeV2State",
+        "code": 76,
+        "message": "Bundle verification dispute v2 state is invalid",
+        "docs": [
+          "InvalidBundleVerificationDisputeV2State: Bundle verification dispute v2 state is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidBundleVerificationDisputeV2Kind",
+        "code": 77,
+        "message": "Bundle verification dispute v2 kind is invalid",
+        "docs": [
+          "InvalidBundleVerificationDisputeV2Kind: Bundle verification dispute v2 kind is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "verificationDisputeWindowClosed",
+        "code": 78,
+        "message": "Verification dispute window is not open",
+        "docs": [
+          "VerificationDisputeWindowClosed: Verification dispute window is not open"
+        ]
+      }
+    ],
+    "constants": [
+      {
+        "kind": "constantNode",
+        "name": "programId",
+        "type": {
+          "kind": "publicKeyTypeNode"
+        },
+        "value": {
+          "kind": "publicKeyValueNode",
+          "publicKey": "Auction111111111111111111111111111111111111"
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "configSeed",
+        "type": {
+          "kind": "stringTypeNode",
+          "encoding": "utf8"
+        },
+        "value": {
+          "kind": "stringValueNode",
+          "string": "global_config"
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "configPolicyV2Seed",
+        "type": {
+          "kind": "stringTypeNode",
+          "encoding": "utf8"
+        },
+        "value": {
+          "kind": "stringValueNode",
+          "string": "policy_v2"
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleEscrowV2Seed",
+        "type": {
+          "kind": "stringTypeNode",
+          "encoding": "utf8"
+        },
+        "value": {
+          "kind": "stringValueNode",
+          "string": "bundle_escrow_v2"
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleVerifierPageV2Seed",
+        "type": {
+          "kind": "stringTypeNode",
+          "encoding": "utf8"
+        },
+        "value": {
+          "kind": "stringValueNode",
+          "string": "bundle_verifier_page_v2"
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleDisputeVerifierPageV2Seed",
+        "type": {
+          "kind": "stringTypeNode",
+          "encoding": "utf8"
+        },
+        "value": {
+          "kind": "stringValueNode",
+          "string": "bundle_dispute_verifier_page_v2"
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleVerificationDisputeV2Seed",
+        "type": {
+          "kind": "stringTypeNode",
+          "encoding": "utf8"
+        },
+        "value": {
+          "kind": "stringValueNode",
+          "string": "bundle_verification_dispute_v2"
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "maxVerifiersPerAuction",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 3
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "maxBundleVerifierPageV2Entries",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 6
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleEscrowV2AccountSize",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 568
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleVerifierPageV2AccountSize",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 880
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleVerificationDisputeV2AccountSize",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 192
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "configPolicyV2AccountSize",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 1568
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "accountLayoutVersionV1",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u8",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 1
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "accountLayoutVersionV2",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u8",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 2
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "verificationVerdictV2Unset",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u8",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 0
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "verificationVerdictV2Verified",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u8",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 1
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "verificationVerdictV2Rejected",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u8",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 2
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleVerificationDisputeV2KindUnset",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u8",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 0
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleVerificationDisputeV2KindMissedVerification",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u8",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 1
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleVerificationDisputeV2KindPaidVerdictDispute",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u8",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 2
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleEscrowV2StatusOpen",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 0
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleEscrowV2StatusAwarded",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 1
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleEscrowV2StatusResultPosted",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 2
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleEscrowV2StatusFinalizedVerified",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 3
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleEscrowV2StatusFinalizedRejected",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 4
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleEscrowV2StatusExpired",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 5
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleEscrowV2StatusProvisionalVerified",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 6
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleEscrowV2StatusProvisionalRejected",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 7
+        }
+      },
+      {
+        "kind": "constantNode",
+        "name": "bundleEscrowV2StatusDisputed",
+        "type": {
+          "kind": "numberTypeNode",
+          "format": "u64",
+          "endian": "le"
+        },
+        "value": {
+          "kind": "numberValueNode",
+          "number": 8
+        }
+      }
+    ],
+    "docs": [
+      "Portable production V2 interface. Dynamic account tails are documented in idl/V2_INTERFACE.md."
+    ],
+    "pdas": [
+      {
+        "kind": "pdaNode",
+        "name": "configPolicyV2",
+        "seeds": [
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "stringTypeNode",
+              "encoding": "utf8"
+            },
+            "value": {
+              "kind": "stringValueNode",
+              "string": "global_config"
+            }
+          },
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "stringTypeNode",
+              "encoding": "utf8"
+            },
+            "value": {
+              "kind": "stringValueNode",
+              "string": "policy_v2"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "pdaNode",
+        "name": "bundleEscrowV2",
+        "seeds": [
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "stringTypeNode",
+              "encoding": "utf8"
+            },
+            "value": {
+              "kind": "stringValueNode",
+              "string": "bundle_escrow_v2"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "payer",
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "bundleHash",
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "bundleVersion",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "pdaNode",
+        "name": "bundleVerifierPageV2",
+        "seeds": [
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "stringTypeNode",
+              "encoding": "utf8"
+            },
+            "value": {
+              "kind": "stringValueNode",
+              "string": "bundle_verifier_page_v2"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "bundleEscrow",
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "pageIndex",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u16",
+              "endian": "le"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "pdaNode",
+        "name": "bundleDisputeVerifierPageV2",
+        "seeds": [
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "stringTypeNode",
+              "encoding": "utf8"
+            },
+            "value": {
+              "kind": "stringValueNode",
+              "string": "bundle_dispute_verifier_page_v2"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "bundleEscrow",
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "pageIndex",
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u16",
+              "endian": "le"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "pdaNode",
+        "name": "bundleVerificationDisputeV2",
+        "seeds": [
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "stringTypeNode",
+              "encoding": "utf8"
+            },
+            "value": {
+              "kind": "stringValueNode",
+              "string": "bundle_verification_dispute_v2"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "bundleEscrow",
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
