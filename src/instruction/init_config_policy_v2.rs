@@ -55,3 +55,19 @@ pub struct InitConfigPolicyV2Args {
     pub paid_verification_dispute_bond_lamports: u64,
     pub tier_configs: [RequestTierConfigV2; CONFIG_POLICY_V2_TIER_CONFIG_COUNT],
 }
+
+/// Initialization payload used by the Agave-master SmallV3 program.
+#[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
+#[repr(C)]
+pub struct InitConfigPolicySmallV3Args {
+    pub config_policy_lamports: u64,
+    pub initial_admin_authority: Pubkey,
+    pub service_authority: Pubkey,
+    pub policy_flags: ConfigPolicyV2Flags,
+    pub minimum_bundle_auction_pairs: u64,
+    pub max_auction_credits_per_update: u64,
+    pub v2_verifiers_per_auction: u8,
+    pub v2_verifier_quorum: u8,
+    pub _reserved0: [u8; 6],
+    pub tier_configs: [RequestTierConfigV2; CONFIG_POLICY_V2_TIER_CONFIG_COUNT],
+}
