@@ -163,6 +163,8 @@ pub enum AuctionError {
     InvalidBundleVerificationDisputeV2Kind = 77,
     /// The bundle verification dispute window is not open
     VerificationDisputeWindowClosed = 78,
+    /// Invalid verifier selection account list was provided
+    InvalidVerifierSelectionAccounts = 79,
 }
 
 impl Display for AuctionError {
@@ -261,6 +263,7 @@ impl AuctionError {
                 "InvalidBundleVerificationDisputeV2Kind"
             }
             Self::VerificationDisputeWindowClosed => "VerificationDisputeWindowClosed",
+            Self::InvalidVerifierSelectionAccounts => "InvalidVerifierSelectionAccounts",
         }
     }
 
@@ -361,6 +364,7 @@ impl AuctionError {
                 "Bundle verification dispute v2 kind is invalid"
             }
             Self::VerificationDisputeWindowClosed => "Verification dispute window is not open",
+            Self::InvalidVerifierSelectionAccounts => "Verifier selection account list is invalid",
         }
     }
 
