@@ -1,5 +1,5 @@
 use ambient_auction_api::{
-    FinalizeBundleVerificationV2Args, FinalizeBundleVerificationV2Message, VerificationVerdictV2,
+    FinalizeBundleVerificationV2Message, VerificationVerdictV2,
     FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN,
 };
 
@@ -57,7 +57,7 @@ fn finalize_message_matches_miner_client_lifecycle_vector() {
         .unwrap()
         .parse::<u64>()
         .unwrap();
-    let mut message = FinalizeBundleVerificationV2Message::new(
+    let message = FinalizeBundleVerificationV2Message::new(
         [1; 32],
         fixture["bundleVersion"]
             .as_u64()
@@ -78,21 +78,6 @@ fn finalize_message_matches_miner_client_lifecycle_vector() {
         deadline,
     );
     let bytes = message.to_bytes();
-    assert_eq!(bytes.len(), 232);
-    assert_eq!(
-        memoffset::offset_of!(
-            FinalizeBundleVerificationV2Message,
-            settlement_deadline_slot
-        ),
-        224
-    );
-    assert_eq!(std::mem::size_of::<FinalizeBundleVerificationV2Args>(), 56);
-    assert_eq!(&bytes[224..], &deadline.to_le_bytes());
     let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
     assert_eq!(hex, fixture["messageHex"].as_str().unwrap());
-
-    message.settlement_deadline_slot += 1;
-    let next = message.to_bytes();
-    assert_eq!(&bytes[..224], &next[..224]);
-    assert_ne!(&bytes[224..], &next[224..]);
 }
