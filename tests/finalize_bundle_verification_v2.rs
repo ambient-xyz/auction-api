@@ -1,4 +1,7 @@
-use ambient_auction_api::{VerificationVerdictV2, FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN};
+use ambient_auction_api::{
+    FinalizeBundleVerificationV2Message, VerificationVerdictV2,
+    FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN,
+};
 
 const FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN_TEXT: &[u8] = b"ambient.bundle.verify.v2";
 
@@ -39,4 +42,42 @@ fn finalize_bundle_verification_v2_domain_is_zero_padded() {
         [FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN_TEXT.len()..]
         .iter()
         .all(|byte| *byte == 0));
+}
+
+#[test]
+fn finalize_message_matches_miner_client_lifecycle_vector() {
+    let fixture: serde_json::Value =
+        serde_json::from_str(include_str!("fixtures/finalize-v2-lifecycle.json")).unwrap();
+    let hash = |name: &str| {
+        let hex = fixture[name].as_str().unwrap();
+        std::array::from_fn(|index| u8::from_str_radix(&hex[index * 2..index * 2 + 2], 16).unwrap())
+    };
+    let deadline = fixture["settlementDeadlineSlot"]
+        .as_str()
+        .unwrap()
+        .parse::<u64>()
+        .unwrap();
+    let message = FinalizeBundleVerificationV2Message::new(
+        [1; 32],
+        fixture["bundleVersion"]
+            .as_u64()
+            .unwrap()
+            .try_into()
+            .unwrap(),
+        hash("bundleHashHex"),
+        hash("auctionHashHex"),
+        hash("resultHashHex"),
+        hash("verificationHashHex"),
+        VerificationVerdictV2::Verified,
+        fixture["acceptedOutputTokens"].as_u64().unwrap(),
+        fixture["winnerPayoutLamports"]
+            .as_str()
+            .unwrap()
+            .parse()
+            .unwrap(),
+        deadline,
+    );
+    let bytes = message.to_bytes();
+    let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+    assert_eq!(hex, fixture["messageHex"].as_str().unwrap());
 }
