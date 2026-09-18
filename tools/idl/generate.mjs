@@ -175,8 +175,15 @@ const accounts = source.program.accounts.map((account) => accountNode({
 }));
 
 const pdaSeeds = (...entries) => entries.map(([name, value]) => pdaSeedValueNode(name, value));
+const instructionsWithOmittedOptionals = new Set([
+  'selectBundleVerifiersV2',
+  'postBundleResultV2',
+]);
 const instructions = source.program.instructions.map((instruction) => ({
   ...instruction,
+  optionalAccountStrategy: instructionsWithOmittedOptionals.has(instruction.name)
+    ? 'omitted'
+    : instruction.optionalAccountStrategy,
   docs: instruction.docs ?? (
     ['finalizeBundleVerificationV2', 'claimVerifierLstakeV2', 'expireBundleEscrowV2'].includes(instruction.name)
       ? ['This instruction has context-dependent trailing accounts documented in idl/V2_INTERFACE.md.']

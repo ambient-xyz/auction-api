@@ -660,7 +660,7 @@
       {
         "kind": "instructionNode",
         "name": "postBundleResultV2",
-        "optionalAccountStrategy": "programId",
+        "optionalAccountStrategy": "omitted",
         "accounts": [
           {
             "kind": "instructionAccountNode",
@@ -1769,7 +1769,7 @@
       {
         "kind": "instructionNode",
         "name": "selectBundleVerifiersV2",
-        "optionalAccountStrategy": "programId",
+        "optionalAccountStrategy": "omitted",
         "accounts": [
           {
             "kind": "instructionAccountNode",

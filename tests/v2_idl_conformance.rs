@@ -198,6 +198,44 @@ fn generated_instruction_interface_matches_v2_abi() {
 }
 
 #[test]
+fn codama_omitted_optional_strategy_for_trailing_optional_accounts() {
+    let codama: Value = serde_json::from_str(CODAMA_IDL).unwrap();
+    let instructions = codama["program"]["instructions"]
+        .as_array()
+        .unwrap();
+    let by_name: std::collections::HashMap<&str, &Value> = instructions
+        .iter()
+        .map(|ix| (ix["name"].as_str().unwrap(), ix))
+        .collect();
+
+    let select = by_name["selectBundleVerifiersV2"];
+    assert_eq!(select["optionalAccountStrategy"], "omitted");
+    assert_eq!(select["accounts"].as_array().unwrap()[1]["isOptional"], true);
+
+    let post = by_name["postBundleResultV2"];
+    assert_eq!(post["optionalAccountStrategy"], "omitted");
+    assert_eq!(post["accounts"].as_array().unwrap()[3]["isOptional"], true);
+
+    for (name, expected) in [
+        ("openBundleEscrowV2", "programId"),
+        ("commitAuctionSettlementV2", "programId"),
+        ("finalizeBundleVerificationV2", "programId"),
+        ("claimWinnerLstakeV2", "programId"),
+        ("claimVerifierLstakeV2", "programId"),
+        ("expireBundleEscrowV2", "programId"),
+        ("initConfigPolicyV2", "programId"),
+        ("setConfigPolicyV2", "programId"),
+        ("initBundleVerifierPageV2", "programId"),
+        ("disputeBundleVerificationV2", "programId"),
+    ] {
+        assert_eq!(
+            by_name[name]["optionalAccountStrategy"], expected,
+            "unexpected optionalAccountStrategy for {name}"
+        );
+    }
+}
+
+#[test]
 fn idl_argument_encodings_match_pod_edge_cases() {
     assert_encoding(
         &OpenBundleEscrowV2Args {

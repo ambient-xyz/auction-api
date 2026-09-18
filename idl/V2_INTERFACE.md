@@ -53,6 +53,10 @@ payout.
 
 ### Optional fixed accounts
 
+The Codama IDL uses `optionalAccountStrategy: "omitted"` for instructions with
+trailing optional accounts. Generated clients omit the account entirely when it
+is not supplied, rather than substituting the program ID.
+
 - `PostBundleResultV2` account 3 is the writable canonical page being populated.
   The older no-page encoding remains representable but is rejected by the
   production V2 settlement flow.
