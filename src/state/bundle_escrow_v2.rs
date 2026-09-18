@@ -46,6 +46,13 @@ pub struct RawBundleEscrowV2Data {
 
 pub type BundleEscrowV2 = RawBundleEscrowV2Data;
 
+#[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[repr(C)]
+pub struct BundleEscrowV3SmallData {
+    pub mint: Pubkey,
+}
+
 pub const VERIFIER_SELECTION_PHASE_INITIAL: u8 = 0;
 pub const VERIFIER_SELECTION_PHASE_REPLACEMENT: u8 = 1;
 
@@ -104,14 +111,14 @@ impl InvalidBundleEscrowV2Transition {
 pub struct BundleEscrowV2Ref<'a> {
     header: &'a AccountHeaderV1,
     raw: &'a RawBundleEscrowV2Data,
-    reserved: Option<&'a BundleEscrowV2ReservedData>,
+    tail: &'a [u8],
 }
 
 #[derive(Debug)]
 pub struct BundleEscrowV2Mut<'a> {
     header: &'a mut AccountHeaderV1,
     raw: &'a mut RawBundleEscrowV2Data,
-    reserved: Option<&'a mut BundleEscrowV2ReservedData>,
+    tail: &'a mut [u8],
 }
 
 impl<'a> BundleEscrowV2Ref<'a> {
@@ -132,13 +139,19 @@ impl<'a> BundleEscrowV2Ref<'a> {
     }
 
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
-        self.reserved
+        (self.layout().version == AccountLayoutVersion::V2)
+            .then(|| bytemuck::try_from_bytes(self.tail).ok())?
     }
 
     pub fn provisional_challenge_deadline_slot(&self) -> u64 {
-        self.reserved
+        self.reserved_v2()
             .map(|reserved| reserved.provisional_challenge_deadline_slot)
             .unwrap_or(0)
+    }
+
+    pub fn small_v3(&self) -> Option<&BundleEscrowV3SmallData> {
+        (self.layout().version == AccountLayoutVersion::V3)
+            .then(|| bytemuck::try_from_bytes(self.tail).ok())?
     }
 }
 
@@ -172,22 +185,26 @@ impl<'a> BundleEscrowV2Mut<'a> {
     }
 
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
-        self.reserved.as_deref()
+        (self.layout().version == AccountLayoutVersion::V2)
+            .then(|| bytemuck::try_from_bytes(&*self.tail).ok())?
     }
 
     pub fn reserved_v2_mut(&mut self) -> Option<&mut BundleEscrowV2ReservedData> {
-        self.reserved.as_deref_mut()
+        if self.layout().version != AccountLayoutVersion::V2 {
+            return None;
+        }
+        bytemuck::try_from_bytes_mut(self.tail).ok()
     }
 
     pub fn provisional_challenge_deadline_slot(&self) -> u64 {
-        self.reserved
+        self.reserved_v2()
             .as_ref()
             .map(|reserved| reserved.provisional_challenge_deadline_slot)
             .unwrap_or(0)
     }
 
     pub fn set_provisional_challenge_deadline_slot(&mut self, slot: u64) -> bool {
-        let Some(reserved) = self.reserved.as_deref_mut() else {
+        let Some(reserved) = self.reserved_v2_mut() else {
             return false;
         };
         reserved.provisional_challenge_deadline_slot = slot;
@@ -202,7 +219,7 @@ impl<'a> BundleEscrowV2Mut<'a> {
         verifier_count: u8,
         verifier_quorum: u8,
     ) -> bool {
-        let Some(reserved) = self.reserved.as_deref_mut() else {
+        let Some(reserved) = self.reserved_v2_mut() else {
             return false;
         };
         if reserved.verifier_selection_pending != 0 {
@@ -218,7 +235,7 @@ impl<'a> BundleEscrowV2Mut<'a> {
     }
 
     pub fn complete_verifier_selection(&mut self) -> bool {
-        let Some(reserved) = self.reserved.as_deref_mut() else {
+        let Some(reserved) = self.reserved_v2_mut() else {
             return false;
         };
         if reserved.verifier_selection_pending == 0 {
@@ -226,6 +243,18 @@ impl<'a> BundleEscrowV2Mut<'a> {
         }
         reserved.verifier_selection_pending = 0;
         true
+    }
+
+    pub fn small_v3(&self) -> Option<&BundleEscrowV3SmallData> {
+        (self.layout().version == AccountLayoutVersion::V3)
+            .then(|| bytemuck::try_from_bytes(&*self.tail).ok())?
+    }
+
+    pub fn small_v3_mut(&mut self) -> Option<&mut BundleEscrowV3SmallData> {
+        if self.layout().version != AccountLayoutVersion::V3 {
+            return None;
+        }
+        bytemuck::try_from_bytes_mut(self.tail).ok()
     }
 }
 
@@ -250,10 +279,13 @@ impl RawBundleEscrowV2Data {
     pub const LEN_V2: usize =
         AccountHeaderV1::LEN + Self::PAYLOAD_LEN + CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES;
 
+    pub const LEN_V3: usize = Self::LEN_V1 + std::mem::size_of::<BundleEscrowV3SmallData>();
+
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {
             AccountLayoutVersion::V1 => Self::LEN_V1,
             AccountLayoutVersion::V2 => Self::LEN_V2,
+            AccountLayoutVersion::V3 => Self::LEN_V3,
             AccountLayoutVersion::LegacyV0 => 0,
         }
     }
@@ -274,18 +306,9 @@ impl RawBundleEscrowV2Data {
             return None;
         }
 
-        let (raw_bytes, reserved_bytes) = raw_bytes.split_at(Self::PAYLOAD_LEN);
+        let (raw_bytes, tail) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
-        let reserved = if layout.version == AccountLayoutVersion::V2 {
-            Some(bytemuck::try_from_bytes::<BundleEscrowV2ReservedData>(reserved_bytes).ok()?)
-        } else {
-            None
-        };
-        Some(BundleEscrowV2Ref {
-            header,
-            raw,
-            reserved,
-        })
+        Some(BundleEscrowV2Ref { header, raw, tail })
     }
 
     pub fn from_bytes_mut(bytes: &mut [u8]) -> Option<BundleEscrowV2Mut<'_>> {
@@ -305,18 +328,9 @@ impl RawBundleEscrowV2Data {
             return None;
         }
 
-        let (raw_bytes, reserved_bytes) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
+        let (raw_bytes, tail) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes_mut::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
-        let reserved = if layout.version == AccountLayoutVersion::V2 {
-            Some(bytemuck::try_from_bytes_mut::<BundleEscrowV2ReservedData>(reserved_bytes).ok()?)
-        } else {
-            None
-        };
-        Some(BundleEscrowV2Mut {
-            header,
-            raw,
-            reserved,
-        })
+        Some(BundleEscrowV2Mut { header, raw, tail })
     }
 
     pub fn read(bytes: &[u8]) -> Option<Self> {
@@ -329,6 +343,10 @@ impl RawBundleEscrowV2Data {
 
     pub fn write_v2_bytes(&self, bytes: &mut [u8]) -> bool {
         self.write_bytes_with_layout(bytes, AccountLayoutVersion::V2)
+    }
+
+    pub fn write_v3_bytes(&self, bytes: &mut [u8]) -> bool {
+        self.write_bytes_with_layout(bytes, AccountLayoutVersion::V3)
     }
 
     pub fn write_bytes_with_layout(&self, bytes: &mut [u8], version: AccountLayoutVersion) -> bool {

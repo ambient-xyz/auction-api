@@ -40,16 +40,25 @@ pub struct RawBundleVerifierPageV2Data {
 
 pub type BundleVerifierPageV2 = RawBundleVerifierPageV2Data;
 
+#[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[repr(C)]
+pub struct BundleVerifierPageV3SmallData {
+    pub input_tokens: [u64; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
+}
+
 #[derive(Debug)]
 pub struct BundleVerifierPageV2Ref<'a> {
     header: &'a AccountHeaderV1,
     raw: &'a RawBundleVerifierPageV2Data,
+    tail: &'a [u8],
 }
 
 #[derive(Debug)]
 pub struct BundleVerifierPageV2Mut<'a> {
     header: &'a mut AccountHeaderV1,
     raw: &'a mut RawBundleVerifierPageV2Data,
+    tail: &'a mut [u8],
 }
 
 impl<'a> BundleVerifierPageV2Ref<'a> {
@@ -63,6 +72,15 @@ impl<'a> BundleVerifierPageV2Ref<'a> {
 
     pub fn as_raw(&self) -> &RawBundleVerifierPageV2Data {
         self.raw
+    }
+
+    pub fn has_canonical_v2_tail(&self) -> bool {
+        self.layout().version == AccountLayoutVersion::V2 && self.tail.iter().all(|byte| *byte == 0)
+    }
+
+    pub fn small_v3(&self) -> Option<&BundleVerifierPageV3SmallData> {
+        (self.layout().version == AccountLayoutVersion::V3)
+            .then(|| bytemuck::try_from_bytes(self.tail).ok())?
     }
 }
 
@@ -90,6 +108,22 @@ impl<'a> BundleVerifierPageV2Mut<'a> {
     pub fn as_raw_mut(&mut self) -> &mut RawBundleVerifierPageV2Data {
         self.raw
     }
+
+    pub fn has_canonical_v2_tail(&self) -> bool {
+        self.layout().version == AccountLayoutVersion::V2 && self.tail.iter().all(|byte| *byte == 0)
+    }
+
+    pub fn small_v3(&self) -> Option<&BundleVerifierPageV3SmallData> {
+        (self.layout().version == AccountLayoutVersion::V3)
+            .then(|| bytemuck::try_from_bytes(&*self.tail).ok())?
+    }
+
+    pub fn small_v3_mut(&mut self) -> Option<&mut BundleVerifierPageV3SmallData> {
+        if self.layout().version != AccountLayoutVersion::V3 {
+            return None;
+        }
+        bytemuck::try_from_bytes_mut(self.tail).ok()
+    }
 }
 
 impl Deref for BundleVerifierPageV2Mut<'_> {
@@ -113,11 +147,13 @@ impl RawBundleVerifierPageV2Data {
     pub const LEN_V2: usize = AccountHeaderV1::LEN
         + Self::PAYLOAD_LEN
         + CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES;
+    pub const LEN_V3: usize = Self::LEN_V1 + std::mem::size_of::<BundleVerifierPageV3SmallData>();
 
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {
             AccountLayoutVersion::V1 => Self::LEN_V1,
             AccountLayoutVersion::V2 => Self::LEN_V2,
+            AccountLayoutVersion::V3 => Self::LEN_V3,
             AccountLayoutVersion::LegacyV0 => 0,
         }
     }
@@ -138,9 +174,9 @@ impl RawBundleVerifierPageV2Data {
             return None;
         }
 
-        let (raw_bytes, _reserved) = raw_bytes.split_at(Self::PAYLOAD_LEN);
+        let (raw_bytes, tail) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleVerifierPageV2Data>(raw_bytes).ok()?;
-        Some(BundleVerifierPageV2Ref { header, raw })
+        Some(BundleVerifierPageV2Ref { header, raw, tail })
     }
 
     pub fn from_bytes_mut(bytes: &mut [u8]) -> Option<BundleVerifierPageV2Mut<'_>> {
@@ -160,9 +196,9 @@ impl RawBundleVerifierPageV2Data {
             return None;
         }
 
-        let (raw_bytes, _reserved) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
+        let (raw_bytes, tail) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes_mut::<RawBundleVerifierPageV2Data>(raw_bytes).ok()?;
-        Some(BundleVerifierPageV2Mut { header, raw })
+        Some(BundleVerifierPageV2Mut { header, raw, tail })
     }
 
     pub fn read(bytes: &[u8]) -> Option<Self> {
@@ -175,6 +211,10 @@ impl RawBundleVerifierPageV2Data {
 
     pub fn write_v2_bytes(&self, bytes: &mut [u8]) -> bool {
         self.write_bytes_with_layout(bytes, AccountLayoutVersion::V2)
+    }
+
+    pub fn write_v3_bytes(&self, bytes: &mut [u8]) -> bool {
+        self.write_bytes_with_layout(bytes, AccountLayoutVersion::V3)
     }
 
     pub fn write_bytes_with_layout(&self, bytes: &mut [u8], version: AccountLayoutVersion) -> bool {

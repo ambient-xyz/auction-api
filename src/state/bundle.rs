@@ -152,6 +152,7 @@ pub const fn bundle_account_len(version: AccountLayoutVersion) -> usize {
         AccountLayoutVersion::V1 | AccountLayoutVersion::V2 => {
             RawBundleData::LEGACY_LEN + BundleLayoutTrailerV1::LEN
         }
+        AccountLayoutVersion::V3 => 0,
     }
 }
 
