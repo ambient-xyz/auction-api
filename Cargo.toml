@@ -11,6 +11,10 @@ name = "decode-account"
 path = "src/bin/decode-account.rs"
 required-features = ["decoder"]
 
+[[example]]
+name = "generate_v2_idl"
+required-features = ["idl"]
+
 [dependencies]
 bytemuck = { version = "1", features = ["derive", "const_zeroed"] }
 num_enum = "=0.5.11"
@@ -23,6 +27,8 @@ thiserror = { version = "2.0.12", default-features = false }
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1.0", optional = true }
 borsh = { version = "0.10.4", optional = true }
+shank = { version = "=0.4.8", optional = true }
+shank_idl = { version = "=0.4.8", optional = true }
 
 [dev-dependencies]
 memoffset = "0.9.1"
@@ -32,4 +38,5 @@ serde_json = "1.0"
 decoder = ["dep:base64", "dep:clap", "dep:hex", "dep:serde_json", "serde"]
 serde = ["dep:bs58", "dep:serde", "dep:borsh"]
 global-config = []
+idl = ["dep:borsh", "dep:shank", "dep:shank_idl"]
 default = []

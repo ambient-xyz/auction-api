@@ -1,0 +1,2118 @@
+{
+  "accounts": [
+    {
+      "name": "BundleEscrowV2",
+      "type": {
+        "fields": [
+          {
+            "name": "header",
+            "type": {
+              "defined": "AccountHeaderV1"
+            }
+          },
+          {
+            "name": "data",
+            "type": {
+              "defined": "RawBundleEscrowV2Data"
+            }
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "defined": "BundleEscrowV2ReservedData"
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "BundleVerifierPageV2",
+      "type": {
+        "fields": [
+          {
+            "name": "header",
+            "type": {
+              "defined": "AccountHeaderV1"
+            }
+          },
+          {
+            "name": "data",
+            "type": {
+              "defined": "RawBundleVerifierPageV2Data"
+            }
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "BundleVerificationDisputeV2",
+      "type": {
+        "fields": [
+          {
+            "name": "header",
+            "type": {
+              "defined": "AccountHeaderV1"
+            }
+          },
+          {
+            "name": "data",
+            "type": {
+              "defined": "RawBundleVerificationDisputeV2Data"
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "ConfigPolicyV2",
+      "type": {
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u64"
+          },
+          {
+            "name": "minimumBundleAuctionPairs",
+            "type": "u64"
+          },
+          {
+            "name": "policyFlags",
+            "type": "u64"
+          },
+          {
+            "name": "maxAuctionCreditsPerUpdate",
+            "type": "u64"
+          },
+          {
+            "name": "adminAuthorities",
+            "type": {
+              "array": [
+                "publicKey",
+                8
+              ]
+            }
+          },
+          {
+            "name": "serviceAuthorities",
+            "type": {
+              "array": [
+                "publicKey",
+                16
+              ]
+            }
+          },
+          {
+            "name": "v2VerifiersPerAuction",
+            "type": "u8"
+          },
+          {
+            "name": "v2VerifierQuorum",
+            "type": "u8"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved1",
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
+            }
+          },
+          {
+            "name": "tierConfigs",
+            "type": {
+              "array": [
+                {
+                  "defined": "RequestTierConfigV2"
+                },
+                5
+              ]
+            }
+          },
+          {
+            "name": "missedVerificationDisputeWindowSlots",
+            "type": "u64"
+          },
+          {
+            "name": "disputeVerificationWindowSlots",
+            "type": "u64"
+          },
+          {
+            "name": "paidVerificationDisputeWindowSlots",
+            "type": "u64"
+          },
+          {
+            "name": "paidVerificationDisputeBondLamports",
+            "type": "u64"
+          },
+          {
+            "name": "reservedWords",
+            "type": {
+              "array": [
+                {
+                  "defined": "ReservedWordV2"
+                },
+                7
+              ]
+            }
+          },
+          {
+            "name": "v2AccountLayoutVersion",
+            "type": "u8"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved2",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reservedTail",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "msg": "Unknown auction error",
+      "name": "Unknown"
+    },
+    {
+      "code": 1,
+      "msg": "Auction state is invalid for this operation",
+      "name": "UnexpectedState"
+    },
+    {
+      "code": 2,
+      "msg": "Request state is invalid for this operation",
+      "name": "UnexpectedRequestState"
+    },
+    {
+      "code": 3,
+      "msg": "Bid state is invalid for this operation",
+      "name": "UnexpectedBidState"
+    },
+    {
+      "code": 4,
+      "msg": "Auction has not expired",
+      "name": "AuctionNotExpired"
+    },
+    {
+      "code": 5,
+      "msg": "Auction balance is incorrect",
+      "name": "IncorrectBalance"
+    },
+    {
+      "code": 6,
+      "msg": "Account balance must be zero to close",
+      "name": "NonZeroBalance"
+    },
+    {
+      "code": 7,
+      "msg": "Solana RPC request failed",
+      "name": "SolanaRpc"
+    },
+    {
+      "code": 8,
+      "msg": "Account was not found",
+      "name": "AccountNotFound"
+    },
+    {
+      "code": 9,
+      "msg": "Internal auction bug encountered",
+      "name": "Bug"
+    },
+    {
+      "code": 10,
+      "msg": "Account pubkey is invalid",
+      "name": "InvalidAccountId"
+    },
+    {
+      "code": 11,
+      "msg": "Auction account does not match request",
+      "name": "IncorrectAuction"
+    },
+    {
+      "code": 12,
+      "msg": "Auction status is invalid for this instruction",
+      "name": "InvalidAuctionStatus"
+    },
+    {
+      "code": 13,
+      "msg": "Auction has expired",
+      "name": "AuctionIsExpired"
+    },
+    {
+      "code": 14,
+      "msg": "Request account is invalid",
+      "name": "InvalidRequestId"
+    },
+    {
+      "code": 15,
+      "msg": "Open bundle escrow v2 arguments are invalid",
+      "name": "InvalidOpenBundleEscrowV2Args"
+    },
+    {
+      "code": 16,
+      "msg": "Request bundle state is invalid",
+      "name": "InvalidRequestBundleState"
+    },
+    {
+      "code": 17,
+      "msg": "Failed to append job request to bundle",
+      "name": "UnableToAddNewJobReqToBundle"
+    },
+    {
+      "code": 18,
+      "msg": "Bundle already has the maximum number of jobs",
+      "name": "TooManyJobsInBundle"
+    },
+    {
+      "code": 19,
+      "msg": "Failed to decode request bundle",
+      "name": "DecodeRequestBundleFailed"
+    },
+    {
+      "code": 20,
+      "msg": "Child bundle pubkey is incorrect",
+      "name": "IncorrectChildBundlePubkey"
+    },
+    {
+      "code": 21,
+      "msg": "Child auction pubkey is incorrect",
+      "name": "IncorrectChildAuctionPubkey"
+    },
+    {
+      "code": 22,
+      "msg": "Bundle status is invalid for this instruction",
+      "name": "InvalidBundleStatus"
+    },
+    {
+      "code": 23,
+      "msg": "Bundle has not expired",
+      "name": "BundleNotExpired"
+    },
+    {
+      "code": 24,
+      "msg": "Child request bundle state is invalid",
+      "name": "InvalidChildRequestBundleState"
+    },
+    {
+      "code": 25,
+      "msg": "Verifier is not assigned to this bundle",
+      "name": "VerifierNotAssigned"
+    },
+    {
+      "code": 26,
+      "msg": "No bids were found",
+      "name": "NoBidsFound"
+    },
+    {
+      "code": 27,
+      "msg": "Not enough bundle auction accounts were provided",
+      "name": "NotEnoughBundleAuctionAccounts"
+    },
+    {
+      "code": 28,
+      "msg": "No supplied bundle can accept the request",
+      "name": "FailedToFindAValidBundle"
+    },
+    {
+      "code": 29,
+      "msg": "Bundle is not auctioned",
+      "name": "BundleNotAuctioned"
+    },
+    {
+      "code": 30,
+      "msg": "Bundle registry is invalid",
+      "name": "InvalidRegistry"
+    },
+    {
+      "code": 31,
+      "msg": "Metadata account is invalid",
+      "name": "InvalidMetadata"
+    },
+    {
+      "code": 32,
+      "msg": "Latest bundle cannot be canceled",
+      "name": "LatestBundleCanceled"
+    },
+    {
+      "code": 33,
+      "msg": "Not enough accounts were provided",
+      "name": "NotEnoughAccounts"
+    },
+    {
+      "code": 34,
+      "msg": "Config account data is invalid",
+      "name": "InvalidConfigData"
+    },
+    {
+      "code": 35,
+      "msg": "Config account owner is invalid",
+      "name": "IllegalConfigOwner"
+    },
+    {
+      "code": 36,
+      "msg": "Job verification state is invalid",
+      "name": "InvalidJobVerificationState"
+    },
+    {
+      "code": 37,
+      "msg": "Token range is already verified",
+      "name": "AlreadyVerified"
+    },
+    {
+      "code": 38,
+      "msg": "Bundle escrow v2 state is invalid",
+      "name": "InvalidBundleEscrowV2State"
+    },
+    {
+      "code": 39,
+      "msg": "Bundle escrow v2 status is invalid for this instruction",
+      "name": "InvalidBundleEscrowV2Status"
+    },
+    {
+      "code": 40,
+      "msg": "Coordinator does not match bundle escrow",
+      "name": "InvalidCoordinator"
+    },
+    {
+      "code": 41,
+      "msg": "Vote account does not match the expected node identity",
+      "name": "InvalidVoteAccount"
+    },
+    {
+      "code": 42,
+      "msg": "Winner cannot be selected as a verifier",
+      "name": "WinnerCannotBeVerifier"
+    },
+    {
+      "code": 43,
+      "msg": "Verifier quorum is invalid",
+      "name": "InvalidVerifierQuorum"
+    },
+    {
+      "code": 44,
+      "msg": "Ed25519 verification instruction is invalid",
+      "name": "InvalidEd25519Instruction"
+    },
+    {
+      "code": 45,
+      "msg": "Reward has already been claimed",
+      "name": "RewardAlreadyClaimed"
+    },
+    {
+      "code": 46,
+      "msg": "Bundle escrow v2 result has not been posted",
+      "name": "ResultNotPosted"
+    },
+    {
+      "code": 47,
+      "msg": "Bundle escrow v2 settlement has not been committed",
+      "name": "SettlementNotCommitted"
+    },
+    {
+      "code": 48,
+      "msg": "Bundle escrow v2 deadline has not been reached",
+      "name": "DeadlineNotReached"
+    },
+    {
+      "code": 49,
+      "msg": "Bundle escrow v2 claim window is still open",
+      "name": "ClaimWindowStillOpen"
+    },
+    {
+      "code": 50,
+      "msg": "Accepted output tokens exceed posted output tokens",
+      "name": "AcceptedOutputExceedsPosted"
+    },
+    {
+      "code": 51,
+      "msg": "Posted output tokens exceed the allowed maximum",
+      "name": "PostedOutputExceedsMax"
+    },
+    {
+      "code": 52,
+      "msg": "Authority is not allowed to post this result",
+      "name": "UnauthorizedResultPoster"
+    },
+    {
+      "code": 53,
+      "msg": "Escrow balance is insufficient for payout",
+      "name": "InsufficientEscrowBalance"
+    },
+    {
+      "code": 54,
+      "msg": "Bundle verifier page v2 state is invalid",
+      "name": "InvalidBundleVerifierPageV2State"
+    },
+    {
+      "code": 55,
+      "msg": "Config policy v2 account data is invalid",
+      "name": "InvalidConfigPolicyV2Data"
+    },
+    {
+      "code": 56,
+      "msg": "Config policy v2 account owner is invalid",
+      "name": "IllegalConfigPolicyV2Owner"
+    },
+    {
+      "code": 57,
+      "msg": "Authority is not allowed to update config policy v2",
+      "name": "UnauthorizedConfigPolicyAuthority"
+    },
+    {
+      "code": 58,
+      "msg": "Configured account layout version is invalid or unsupported",
+      "name": "InvalidAccountLayoutVersion"
+    },
+    {
+      "code": 59,
+      "msg": "Authority is not allowed to use this account layout version",
+      "name": "UnauthorizedAccountLayoutVersion"
+    },
+    {
+      "code": 60,
+      "msg": "Verifier count is invalid",
+      "name": "InvalidVerifierCount"
+    },
+    {
+      "code": 61,
+      "msg": "Tier config is invalid",
+      "name": "InvalidTierConfig"
+    },
+    {
+      "code": 62,
+      "msg": "Settlement deadline has passed",
+      "name": "SettlementDeadlinePassed"
+    },
+    {
+      "code": 63,
+      "msg": "Auction credits exceed the configured maximum",
+      "name": "AuctionCreditsExceedMax"
+    },
+    {
+      "code": 64,
+      "msg": "Config policy v2 init arguments are invalid",
+      "name": "InvalidConfigPolicyV2Args"
+    },
+    {
+      "code": 65,
+      "msg": "Auction settlement v2 arguments are invalid",
+      "name": "InvalidSettlementV2Args"
+    },
+    {
+      "code": 66,
+      "msg": "Result deadline has passed",
+      "name": "ResultDeadlinePassed"
+    },
+    {
+      "code": 67,
+      "msg": "Verification deadline has passed",
+      "name": "VerificationDeadlinePassed"
+    },
+    {
+      "code": 68,
+      "msg": "Claim deadline has passed",
+      "name": "ClaimDeadlinePassed"
+    },
+    {
+      "code": 69,
+      "msg": "Winner node account does not match bundle escrow",
+      "name": "InvalidWinnerNode"
+    },
+    {
+      "code": 70,
+      "msg": "Refund recipient account does not match bundle escrow",
+      "name": "InvalidRefundRecipient"
+    },
+    {
+      "code": 71,
+      "msg": "Bundle verifier page v2 input is invalid",
+      "name": "InvalidVerifierPageV2Input"
+    },
+    {
+      "code": 72,
+      "msg": "Verifier reward data is invalid",
+      "name": "InvalidVerifierRewardV2"
+    },
+    {
+      "code": 73,
+      "msg": "Verification verdict is invalid",
+      "name": "InvalidVerificationVerdict"
+    },
+    {
+      "code": 74,
+      "msg": "Posted result data is invalid",
+      "name": "InvalidPostedResultV2"
+    },
+    {
+      "code": 75,
+      "msg": "Page-backed verification summary is invalid",
+      "name": "InvalidVerifierPagesSummary"
+    },
+    {
+      "code": 76,
+      "msg": "Bundle verification dispute v2 state is invalid",
+      "name": "InvalidBundleVerificationDisputeV2State"
+    },
+    {
+      "code": 77,
+      "msg": "Bundle verification dispute v2 kind is invalid",
+      "name": "InvalidBundleVerificationDisputeV2Kind"
+    },
+    {
+      "code": 78,
+      "msg": "Verification dispute window is not open",
+      "name": "VerificationDisputeWindowClosed"
+    }
+  ],
+  "instructions": [
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": true,
+          "name": "payer"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "bundleEscrow"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "configPolicy"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "systemProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "openBundleEscrowV2Args",
+          "type": {
+            "defined": "OpenBundleEscrowV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 12
+      },
+      "name": "OpenBundleEscrowV2"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": true,
+          "name": "coordinator"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "bundleEscrow"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "configPolicy"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "winnerVoteAccount"
+        }
+      ],
+      "args": [
+        {
+          "name": "commitAuctionSettlementV2Args",
+          "type": {
+            "defined": "CommitAuctionSettlementV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 13
+      },
+      "name": "CommitAuctionSettlementV2"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": true,
+          "name": "authority"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "bundleEscrow"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "configPolicy"
+        },
+        {
+          "isMut": true,
+          "isOptional": true,
+          "isSigner": false,
+          "name": "bundleVerifierPage"
+        }
+      ],
+      "args": [
+        {
+          "name": "postBundleResultV2Args",
+          "type": {
+            "defined": "PostBundleResultV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 14
+      },
+      "name": "PostBundleResultV2"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": true,
+          "name": "coordinator"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "bundleEscrow"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "winnerNode"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "requesterRefundRecipient"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "instructionsSysvar"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "configPolicy"
+        }
+      ],
+      "args": [
+        {
+          "name": "finalizeBundleVerificationV2Args",
+          "type": {
+            "defined": "FinalizeBundleVerificationV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 15
+      },
+      "name": "FinalizeBundleVerificationV2"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "bundleEscrow"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "winnerVoteAccount"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "voteProgram"
+        },
+        {
+          "isMut": true,
+          "isSigner": true,
+          "name": "voteAuthority"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "configPolicy"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 16
+      },
+      "name": "ClaimWinnerLstakeV2"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "bundleEscrow"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "verifierVoteAccount"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "voteProgram"
+        },
+        {
+          "isMut": true,
+          "isSigner": true,
+          "name": "voteAuthority"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "configPolicy"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 17
+      },
+      "name": "ClaimVerifierLstakeV2"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "bundleEscrow"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "requesterRefundRecipient"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "configPolicy"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 18
+      },
+      "name": "ExpireBundleEscrowV2"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": true,
+          "name": "authority"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "configPolicy"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "systemProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "initConfigPolicyV2Args",
+          "type": {
+            "defined": "InitConfigPolicyV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 19
+      },
+      "name": "InitConfigPolicyV2"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": true,
+          "name": "authority"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "configPolicy"
+        }
+      ],
+      "args": [
+        {
+          "name": "setConfigPolicyV2Args",
+          "type": {
+            "defined": "SetConfigPolicyV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 20
+      },
+      "name": "SetConfigPolicyV2"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": true,
+          "name": "payer"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "bundleEscrow"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "bundleVerifierPage"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "systemProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "initBundleVerifierPageV2Args",
+          "type": {
+            "defined": "InitBundleVerifierPageV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 21
+      },
+      "name": "InitBundleVerifierPageV2"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": true,
+          "name": "disputePayer"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "bundleEscrow"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "bundleVerificationDispute"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "bondRefundRecipient"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "configPolicy"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "systemProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "disputeBundleVerificationV2Args",
+          "type": {
+            "defined": "DisputeBundleVerificationV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 22
+      },
+      "name": "DisputeBundleVerificationV2"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "bundleEscrow"
+        },
+        {
+          "isMut": true,
+          "isOptional": true,
+          "isSigner": false,
+          "name": "bundleVerificationDispute"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 23
+      },
+      "name": "SelectBundleVerifiersV2"
+    }
+  ],
+  "metadata": {
+    "address": "Auction111111111111111111111111111111111111",
+    "origin": "shank",
+    "dynamicAccounts": "See idl/V2_INTERFACE.md",
+    "pdas": [
+      {
+        "name": "configPolicyV2",
+        "seeds": [
+          "global_config",
+          "policy_v2"
+        ]
+      },
+      {
+        "name": "bundleEscrowV2",
+        "seeds": [
+          "bundle_escrow_v2",
+          "payer",
+          "bundle_hash",
+          "bundle_version_le"
+        ]
+      },
+      {
+        "name": "bundleVerifierPageV2",
+        "seeds": [
+          "bundle_verifier_page_v2",
+          "bundle_escrow",
+          "page_index_le"
+        ]
+      },
+      {
+        "name": "bundleDisputeVerifierPageV2",
+        "seeds": [
+          "bundle_dispute_verifier_page_v2",
+          "bundle_escrow",
+          "page_index_le"
+        ]
+      },
+      {
+        "name": "bundleVerificationDisputeV2",
+        "seeds": [
+          "bundle_verification_dispute_v2",
+          "bundle_escrow"
+        ]
+      }
+    ]
+  },
+  "name": "ambient_auction_v2",
+  "types": [
+    {
+      "name": "OpenBundleEscrowV2Args",
+      "type": {
+        "fields": [
+          {
+            "name": "bundleVersion",
+            "type": "u32"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved0",
+            "type": {
+              "array": [
+                "u8",
+                4
+              ]
+            }
+          },
+          {
+            "name": "rewardTier",
+            "type": "u64"
+          },
+          {
+            "name": "bundleHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "coordinator",
+            "type": "publicKey"
+          },
+          {
+            "name": "requesterRefundRecipient",
+            "type": "publicKey"
+          },
+          {
+            "name": "totalInputTokens",
+            "type": "u64"
+          },
+          {
+            "name": "maxOutputTokens",
+            "type": "u64"
+          },
+          {
+            "name": "escrowLamports",
+            "type": "u64"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "CommitAuctionSettlementV2Args",
+      "type": {
+        "fields": [
+          {
+            "name": "auctionHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "winnerNodePubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "clearingPricePerOutputToken",
+            "type": "u64"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "PostBundleResultV2Args",
+      "type": {
+        "fields": [
+          {
+            "name": "resultHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "postedOutputTokens",
+            "type": "u64"
+          },
+          {
+            "name": "pageIndex",
+            "type": "u16"
+          },
+          {
+            "name": "pageEntryCount",
+            "type": "u16"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                4
+              ]
+            }
+          },
+          {
+            "name": "pageEntries",
+            "type": {
+              "array": [
+                {
+                  "defined": "BundleVerifierPageV2Entry"
+                },
+                6
+              ]
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "FinalizeBundleVerificationV2Args",
+      "type": {
+        "fields": [
+          {
+            "name": "verificationHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "acceptedOutputTokens",
+            "type": "u64"
+          },
+          {
+            "name": "winnerPayoutLamports",
+            "type": "u64"
+          },
+          {
+            "name": "verdict",
+            "type": "u8"
+          },
+          {
+            "name": "quorumVerifierBitmap",
+            "type": "u8"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "InitConfigPolicyV2Args",
+      "type": {
+        "fields": [
+          {
+            "name": "configPolicyLamports",
+            "type": "u64"
+          },
+          {
+            "name": "initialAdminAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "serviceAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "policyFlags",
+            "type": "u64"
+          },
+          {
+            "name": "minimumBundleAuctionPairs",
+            "type": "u64"
+          },
+          {
+            "name": "maxAuctionCreditsPerUpdate",
+            "type": "u64"
+          },
+          {
+            "name": "v2VerifiersPerAuction",
+            "type": "u8"
+          },
+          {
+            "name": "v2VerifierQuorum",
+            "type": "u8"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved0",
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
+            }
+          },
+          {
+            "name": "missedVerificationDisputeWindowSlots",
+            "type": "u64"
+          },
+          {
+            "name": "disputeVerificationWindowSlots",
+            "type": "u64"
+          },
+          {
+            "name": "paidVerificationDisputeWindowSlots",
+            "type": "u64"
+          },
+          {
+            "name": "paidVerificationDisputeBondLamports",
+            "type": "u64"
+          },
+          {
+            "name": "tierConfigs",
+            "type": {
+              "array": [
+                {
+                  "defined": "RequestTierConfigV2"
+                },
+                5
+              ]
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "SetConfigPolicyV2Args",
+      "type": {
+        "fields": [
+          {
+            "name": "patchKind",
+            "type": "u8"
+          },
+          {
+            "name": "authorityKind",
+            "type": "u8"
+          },
+          {
+            "name": "authorityIndex",
+            "type": "u8"
+          },
+          {
+            "name": "v2VerifiersPerAuction",
+            "type": "u8"
+          },
+          {
+            "name": "v2VerifierQuorum",
+            "type": "u8"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved0",
+            "type": {
+              "array": [
+                "u8",
+                3
+              ]
+            }
+          },
+          {
+            "name": "tier",
+            "type": "u64"
+          },
+          {
+            "name": "policyFlags",
+            "type": "u64"
+          },
+          {
+            "name": "maxAuctionCreditsPerUpdate",
+            "type": "u64"
+          },
+          {
+            "name": "missedVerificationDisputeWindowSlots",
+            "type": "u64"
+          },
+          {
+            "name": "disputeVerificationWindowSlots",
+            "type": "u64"
+          },
+          {
+            "name": "paidVerificationDisputeWindowSlots",
+            "type": "u64"
+          },
+          {
+            "name": "paidVerificationDisputeBondLamports",
+            "type": "u64"
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "tierConfig",
+            "type": {
+              "defined": "RequestTierConfigV2"
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "InitBundleVerifierPageV2Args",
+      "type": {
+        "fields": [
+          {
+            "name": "bundleVerifierPageLamports",
+            "type": "u64"
+          },
+          {
+            "name": "pageIndex",
+            "type": "u16"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "DisputeBundleVerificationV2Args",
+      "type": {
+        "fields": [
+          {
+            "name": "kind",
+            "type": "u8"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "RequestTierConfigV2",
+      "type": {
+        "fields": [
+          {
+            "name": "bidRevealDuration",
+            "type": "u64"
+          },
+          {
+            "name": "activeAuctionDuration",
+            "type": "u64"
+          },
+          {
+            "name": "bundleDuration",
+            "type": "u64"
+          },
+          {
+            "name": "requestsPerBundle",
+            "type": "u64"
+          },
+          {
+            "name": "maxContextLengthTokens",
+            "type": "u64"
+          },
+          {
+            "name": "jobSubmissionDurationSlots",
+            "type": "u64"
+          },
+          {
+            "name": "bidCommitmentAmountMultiplier",
+            "type": "u64"
+          },
+          {
+            "name": "auctionCreditsMultiplier",
+            "type": "u64"
+          },
+          {
+            "name": "settlementWindowSlots",
+            "type": "u64"
+          },
+          {
+            "name": "resultWindowSlots",
+            "type": "u64"
+          },
+          {
+            "name": "verificationWindowSlots",
+            "type": "u64"
+          },
+          {
+            "name": "claimWindowSlots",
+            "type": "u64"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "AccountHeaderV1",
+      "type": {
+        "fields": [
+          {
+            "name": "discriminator",
+            "type": "u8"
+          },
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "BundleVerifierPageV2Entry",
+      "type": {
+        "fields": [
+          {
+            "name": "jobId",
+            "type": "publicKey"
+          },
+          {
+            "name": "postedOutputTokens",
+            "type": "u64"
+          },
+          {
+            "name": "acceptedOutputTokens",
+            "type": "u64"
+          },
+          {
+            "name": "assignedVerifiersTokenRanges",
+            "type": {
+              "array": [
+                "u64",
+                6
+              ]
+            }
+          },
+          {
+            "name": "verifierRewardTokens",
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
+          },
+          {
+            "name": "verdict",
+            "type": "u8"
+          },
+          {
+            "name": "verifierClaimedBitmap",
+            "type": "u8"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "RawBundleEscrowV2Data",
+      "type": {
+        "fields": [
+          {
+            "name": "status",
+            "type": "u64"
+          },
+          {
+            "name": "rewardTier",
+            "type": "u64"
+          },
+          {
+            "name": "coordinator",
+            "type": "publicKey"
+          },
+          {
+            "name": "requesterRefundRecipient",
+            "type": "publicKey"
+          },
+          {
+            "name": "bundleVersion",
+            "type": "u32"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved0",
+            "type": {
+              "array": [
+                "u8",
+                4
+              ]
+            }
+          },
+          {
+            "name": "bundleHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "totalInputTokens",
+            "type": "u64"
+          },
+          {
+            "name": "maxOutputTokens",
+            "type": "u64"
+          },
+          {
+            "name": "escrowLamports",
+            "type": "u64"
+          },
+          {
+            "name": "winnerNodePubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "winnerVoteAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "clearingPricePerOutputToken",
+            "type": "u64"
+          },
+          {
+            "name": "selectedVerifiers",
+            "type": {
+              "array": [
+                "publicKey",
+                3
+              ]
+            }
+          },
+          {
+            "name": "auctionHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "resultHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "verificationHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "postedOutputTokens",
+            "type": "u64"
+          },
+          {
+            "name": "acceptedOutputTokens",
+            "type": "u64"
+          },
+          {
+            "name": "winnerPayoutLamports",
+            "type": "u64"
+          },
+          {
+            "name": "settlementDeadlineSlot",
+            "type": "u64"
+          },
+          {
+            "name": "resultDeadlineSlot",
+            "type": "u64"
+          },
+          {
+            "name": "verificationDeadlineSlot",
+            "type": "u64"
+          },
+          {
+            "name": "claimDeadlineSlot",
+            "type": "u64"
+          },
+          {
+            "name": "winnerRewardClaimed",
+            "type": "u8"
+          },
+          {
+            "name": "verifierRewardClaimedBitmap",
+            "type": "u8"
+          },
+          {
+            "name": "quorumVerifierBitmap",
+            "type": "u8"
+          },
+          {
+            "name": "verifierPageCount",
+            "type": "u8"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved1",
+            "type": {
+              "array": [
+                "u8",
+                4
+              ]
+            }
+          },
+          {
+            "name": "verifierRewardRemaining",
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "BundleEscrowV2ReservedData",
+      "type": {
+        "fields": [
+          {
+            "name": "provisionalChallengeDeadlineSlot",
+            "type": "u64"
+          },
+          {
+            "name": "verifierSelectionSlot",
+            "type": "u64"
+          },
+          {
+            "name": "verifierSelectionEpoch",
+            "type": "u64"
+          },
+          {
+            "name": "paidVerificationDisputeBondLamports",
+            "type": "u64"
+          },
+          {
+            "name": "winnerAuctionCredits",
+            "type": "u64"
+          },
+          {
+            "name": "maxAuctionCreditsPerUpdate",
+            "type": "u64"
+          },
+          {
+            "name": "missedVerificationDisputeWindowSlots",
+            "type": "u32"
+          },
+          {
+            "name": "replacementVerificationWindowSlots",
+            "type": "u32"
+          },
+          {
+            "name": "paidVerificationDisputeWindowSlots",
+            "type": "u32"
+          },
+          {
+            "name": "verifierSelectionPhase",
+            "type": "u8"
+          },
+          {
+            "name": "verifierSelectionPending",
+            "type": "u8"
+          },
+          {
+            "name": "verifierCount",
+            "type": "u8"
+          },
+          {
+            "name": "verifierQuorum",
+            "type": "u8"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "RawBundleVerifierPageV2Data",
+      "type": {
+        "fields": [
+          {
+            "name": "bundleEscrow",
+            "type": "publicKey"
+          },
+          {
+            "name": "pageIndex",
+            "type": "u16"
+          },
+          {
+            "name": "entryCount",
+            "type": "u16"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved0",
+            "type": {
+              "array": [
+                "u8",
+                4
+              ]
+            }
+          },
+          {
+            "name": "entries",
+            "type": {
+              "array": [
+                {
+                  "defined": "BundleVerifierPageV2Entry"
+                },
+                6
+              ]
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "RawBundleVerificationDisputeV2Data",
+      "type": {
+        "fields": [
+          {
+            "name": "bundleEscrow",
+            "type": "publicKey"
+          },
+          {
+            "name": "kind",
+            "type": "u8"
+          },
+          {
+            "name": "originalVerdict",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "replacementVerifierCount",
+            "type": "u8"
+          },
+          {
+            "name": "replacementVerifierQuorum",
+            "type": "u8"
+          },
+          {
+            "attrs": [
+              "padding"
+            ],
+            "name": "reserved0",
+            "type": {
+              "array": [
+                "u8",
+                3
+              ]
+            }
+          },
+          {
+            "name": "replacementVerifiers",
+            "type": {
+              "array": [
+                "publicKey",
+                3
+              ]
+            }
+          },
+          {
+            "name": "replacementDeadlineSlot",
+            "type": "u64"
+          },
+          {
+            "name": "bondLamports",
+            "type": "u64"
+          },
+          {
+            "name": "bondRefundRecipient",
+            "type": "publicKey"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "ReservedWordV2",
+      "type": {
+        "fields": [
+          {
+            "name": "bytes",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    }
+  ],
+  "version": "0.1.0",
+  "constants": [
+    {
+      "name": "PROGRAM_ID",
+      "type": "publicKey",
+      "value": "\"Auction111111111111111111111111111111111111\""
+    },
+    {
+      "name": "CONFIG_SEED",
+      "type": "string",
+      "value": "\"global_config\""
+    },
+    {
+      "name": "CONFIG_POLICY_V2_SEED",
+      "type": "string",
+      "value": "\"policy_v2\""
+    },
+    {
+      "name": "BUNDLE_ESCROW_V2_SEED",
+      "type": "string",
+      "value": "\"bundle_escrow_v2\""
+    },
+    {
+      "name": "BUNDLE_VERIFIER_PAGE_V2_SEED",
+      "type": "string",
+      "value": "\"bundle_verifier_page_v2\""
+    },
+    {
+      "name": "BUNDLE_DISPUTE_VERIFIER_PAGE_V2_SEED",
+      "type": "string",
+      "value": "\"bundle_dispute_verifier_page_v2\""
+    },
+    {
+      "name": "BUNDLE_VERIFICATION_DISPUTE_V2_SEED",
+      "type": "string",
+      "value": "\"bundle_verification_dispute_v2\""
+    },
+    {
+      "name": "MAX_VERIFIERS_PER_AUCTION",
+      "type": "u64",
+      "value": "3"
+    },
+    {
+      "name": "MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES",
+      "type": "u64",
+      "value": "6"
+    },
+    {
+      "name": "BUNDLE_ESCROW_V2_ACCOUNT_SIZE",
+      "type": "u64",
+      "value": "568"
+    },
+    {
+      "name": "BUNDLE_VERIFIER_PAGE_V2_ACCOUNT_SIZE",
+      "type": "u64",
+      "value": "880"
+    },
+    {
+      "name": "BUNDLE_VERIFICATION_DISPUTE_V2_ACCOUNT_SIZE",
+      "type": "u64",
+      "value": "192"
+    },
+    {
+      "name": "CONFIG_POLICY_V2_ACCOUNT_SIZE",
+      "type": "u64",
+      "value": "1568"
+    },
+    {
+      "name": "ACCOUNT_LAYOUT_VERSION_V1",
+      "type": "u8",
+      "value": "1"
+    },
+    {
+      "name": "ACCOUNT_LAYOUT_VERSION_V2",
+      "type": "u8",
+      "value": "2"
+    },
+    {
+      "name": "VERIFICATION_VERDICT_V2_UNSET",
+      "type": "u8",
+      "value": "0"
+    },
+    {
+      "name": "VERIFICATION_VERDICT_V2_VERIFIED",
+      "type": "u8",
+      "value": "1"
+    },
+    {
+      "name": "VERIFICATION_VERDICT_V2_REJECTED",
+      "type": "u8",
+      "value": "2"
+    },
+    {
+      "name": "BUNDLE_VERIFICATION_DISPUTE_V2_KIND_UNSET",
+      "type": "u8",
+      "value": "0"
+    },
+    {
+      "name": "BUNDLE_VERIFICATION_DISPUTE_V2_KIND_MISSED_VERIFICATION",
+      "type": "u8",
+      "value": "1"
+    },
+    {
+      "name": "BUNDLE_VERIFICATION_DISPUTE_V2_KIND_PAID_VERDICT_DISPUTE",
+      "type": "u8",
+      "value": "2"
+    },
+    {
+      "name": "BUNDLE_ESCROW_V2_STATUS_OPEN",
+      "type": "u64",
+      "value": "0"
+    },
+    {
+      "name": "BUNDLE_ESCROW_V2_STATUS_AWARDED",
+      "type": "u64",
+      "value": "1"
+    },
+    {
+      "name": "BUNDLE_ESCROW_V2_STATUS_RESULT_POSTED",
+      "type": "u64",
+      "value": "2"
+    },
+    {
+      "name": "BUNDLE_ESCROW_V2_STATUS_FINALIZED_VERIFIED",
+      "type": "u64",
+      "value": "3"
+    },
+    {
+      "name": "BUNDLE_ESCROW_V2_STATUS_FINALIZED_REJECTED",
+      "type": "u64",
+      "value": "4"
+    },
+    {
+      "name": "BUNDLE_ESCROW_V2_STATUS_EXPIRED",
+      "type": "u64",
+      "value": "5"
+    },
+    {
+      "name": "BUNDLE_ESCROW_V2_STATUS_PROVISIONAL_VERIFIED",
+      "type": "u64",
+      "value": "6"
+    },
+    {
+      "name": "BUNDLE_ESCROW_V2_STATUS_PROVISIONAL_REJECTED",
+      "type": "u64",
+      "value": "7"
+    },
+    {
+      "name": "BUNDLE_ESCROW_V2_STATUS_DISPUTED",
+      "type": "u64",
+      "value": "8"
+    }
+  ]
+}
