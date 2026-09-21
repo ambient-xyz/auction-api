@@ -21,9 +21,13 @@ pub const BUNDLE_VERIFICATION_DISPUTE_V2_SEED: &[u8] = b"bundle_verification_dis
 /// Eg. if set to 2 means two bundle-auction pairs have to be submitted ie 4 accounts
 #[cfg(not(feature = "global-config"))]
 pub const MINIMUM_BUNDLE_AUCTION_PAIRS: usize = 2;
+/// Base58 auction program ID used by this build.
+pub const PROGRAM_ID_B58: &str = env!(
+    "AMBIENT_AUCTION_PROGRAM_ID",
+    "AMBIENT_AUCTION_PROGRAM_ID must be set when building ambient-auction-api"
+);
 /// Auction Program ID
-pub const ID: [u8; PUBKEY_BYTES] =
-    five8_const::decode_32_const("Auction111111111111111111111111111111111111");
+pub const ID: [u8; PUBKEY_BYTES] = five8_const::decode_32_const(PROGRAM_ID_B58);
 
 /// Protocol-level verifier capacity for auction layouts and instruction payloads.
 pub const MAX_VERIFIERS_PER_AUCTION: usize = 3;
