@@ -31,6 +31,8 @@ pub enum AccountLayoutVersion {
     LegacyV0 = 0,
     V1 = 1,
     V2 = 2,
+    // Versions 3 and 4 are used by the separate Small layouts.
+    V5 = 5,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
