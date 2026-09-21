@@ -54,6 +54,7 @@ impl ConfigPolicyV2AuthorityKind {
     pub const SERVICE: Self = Self(1);
 }
 
+/// Newer V2 payload; SmallV3 programs require [`SetConfigPolicySmallV3Args`].
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct SetConfigPolicyV2Args {
@@ -74,7 +75,7 @@ pub struct SetConfigPolicyV2Args {
     pub tier_config: RequestTierConfigV2,
 }
 
-/// Configuration payload used by the Agave-master SmallV3 program.
+/// 160-byte configuration payload used by SmallV3 program revision `4f7756b`.
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct SetConfigPolicySmallV3Args {

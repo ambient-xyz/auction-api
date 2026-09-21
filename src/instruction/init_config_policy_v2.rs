@@ -37,6 +37,7 @@ impl<'a, T> InstructionAccounts<'a, T> for InitConfigPolicyV2Accounts<'a, T> {
     }
 }
 
+/// Newer V2 payload; SmallV3 programs require [`InitConfigPolicySmallV3Args`].
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct InitConfigPolicyV2Args {
@@ -56,7 +57,7 @@ pub struct InitConfigPolicyV2Args {
     pub tier_configs: [RequestTierConfigV2; CONFIG_POLICY_V2_TIER_CONFIG_COUNT],
 }
 
-/// Initialization payload used by the Agave-master SmallV3 program.
+/// 584-byte initialization payload used by SmallV3 program revision `4f7756b`.
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct InitConfigPolicySmallV3Args {

@@ -198,7 +198,6 @@ impl<'a> BundleEscrowV2Mut<'a> {
 
     pub fn provisional_challenge_deadline_slot(&self) -> u64 {
         self.reserved_v2()
-            .as_ref()
             .map(|reserved| reserved.provisional_challenge_deadline_slot)
             .unwrap_or(0)
     }

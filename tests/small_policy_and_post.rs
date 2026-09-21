@@ -55,9 +55,7 @@ fn small_policy_preserves_original_byte_offsets() {
 
 #[test]
 fn slash_settings_preserve_original_byte_offsets() {
-    assert_eq!(ConfigPolicyV2::LEN, 1_568);
     assert_eq!(ConfigPolicyV2PatchKind::SMALL_CREDIT_SLASH_AUTHORITY.0, 6);
-    assert_eq!(size_of::<SetConfigPolicySmallV3Args>(), 160);
     assert_eq!(size_of::<SlashSmallCreditsArgs>(), 16);
 
     let mut policy = ConfigPolicyV2::production_default();

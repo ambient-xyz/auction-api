@@ -15,7 +15,7 @@ fn fnv1a64(bytes: &[u8]) -> u64 {
 }
 
 #[test]
-fn deployed_v2_account_bytes_remain_stable() {
+fn v2_account_bytes_remain_stable() {
     let escrow = BundleEscrowV2 {
         status: BundleEscrowV2Status::ResultPosted,
         reward_tier: u64::from(RequestTier::Pro),

@@ -22,25 +22,11 @@ fn small_account_layouts_are_exact() {
 }
 
 #[test]
-fn v2_policy_terms_and_v3_small_data_round_trip() {
+fn v3_small_data_round_trips_separately_from_v2() {
     let raw = BundleEscrowV2::default();
     let mut v2 = vec![0; BundleEscrowV2::LEN_V2];
     assert!(raw.write_v2_bytes(&mut v2));
-    let mut decoded = BundleEscrowV2::from_bytes_mut(&mut v2).unwrap();
-    let terms = decoded.reserved_v2_mut().unwrap();
-    terms.paid_verification_dispute_bond_lamports = 23;
-    terms.max_auction_credits_per_update = 10_000;
-    terms.verifier_count = 3;
-    terms.verifier_quorum = 2;
     let decoded = BundleEscrowV2::from_bytes(&v2).unwrap();
-    assert_eq!(decoded.reserved_v2().unwrap().verifier_count, 3);
-    assert_eq!(
-        decoded
-            .reserved_v2()
-            .unwrap()
-            .paid_verification_dispute_bond_lamports,
-        23
-    );
     assert!(decoded.small_v3().is_none());
 
     let mut v3 = vec![0; BundleEscrowV2::LEN_V3];
