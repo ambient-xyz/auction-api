@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::net;
 
 mod append_data;
+mod authorize_bundle_dispute_evidence_v5;
 mod cancel_bundle;
 mod claim_verifier_lstake_v2;
 mod claim_winner_lstake_v2;
@@ -33,6 +34,7 @@ mod submit_validation;
 
 use crate::macros::impl_instruction_data;
 pub use append_data::*;
+pub use authorize_bundle_dispute_evidence_v5::*;
 pub use cancel_bundle::*;
 pub use claim_verifier_lstake_v2::*;
 pub use claim_winner_lstake_v2::*;
@@ -90,6 +92,7 @@ pub enum AuctionInstruction {
     // 24 and 25 are reserved by the separate Small instruction family.
     OpenBundleEscrowV5 = 26,
     CloseBundleVerifierPageV5 = 27,
+    AuthorizeBundleDisputeEvidenceV5 = 28,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -166,6 +169,7 @@ impl_instruction_data!(
     OpenBundleEscrowV2Args => OpenBundleEscrowV2,
     OpenBundleEscrowV5Args => OpenBundleEscrowV5,
     CloseBundleVerifierPageV5Args => CloseBundleVerifierPageV5,
+    AuthorizeBundleDisputeEvidenceV5Args => AuthorizeBundleDisputeEvidenceV5,
     CommitAuctionSettlementV2Args => CommitAuctionSettlementV2,
     PostBundleResultV2Args => PostBundleResultV2,
     FinalizeBundleVerificationV2Args => FinalizeBundleVerificationV2,
