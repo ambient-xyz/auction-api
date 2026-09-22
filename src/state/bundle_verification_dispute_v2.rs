@@ -1,7 +1,7 @@
 use super::{
     AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, ParsedAccountLayout, Pubkey,
 };
-use crate::{VerificationVerdictV2, MAX_VERIFIERS_PER_AUCTION};
+use crate::{VerificationVerdictV2, MAX_BUNDLE_VERIFIER_PAGES, MAX_VERIFIERS_PER_AUCTION};
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -72,19 +72,35 @@ pub struct RawBundleVerificationDisputeV2Data {
 
 pub type BundleVerificationDisputeV2 = RawBundleVerificationDisputeV2Data;
 
+#[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[repr(C)]
+pub struct BundleDisputeEvidenceV5Data {
+    pub verification_hash: [u8; 32],
+    pub page_hashes: [[u8; 32]; MAX_BUNDLE_VERIFIER_PAGES as usize],
+    pub authorized: u8,
+    pub _reserved: [u8; 7],
+}
+
 #[derive(Debug)]
 pub struct BundleVerificationDisputeV2Ref<'a> {
     header: &'a AccountHeaderV1,
     raw: &'a RawBundleVerificationDisputeV2Data,
+    v5: Option<&'a BundleDisputeEvidenceV5Data>,
 }
 
 #[derive(Debug)]
 pub struct BundleVerificationDisputeV2Mut<'a> {
     header: &'a mut AccountHeaderV1,
     raw: &'a mut RawBundleVerificationDisputeV2Data,
+    v5: Option<&'a mut BundleDisputeEvidenceV5Data>,
 }
 
 impl<'a> BundleVerificationDisputeV2Ref<'a> {
+    pub fn v5(&self) -> Option<&BundleDisputeEvidenceV5Data> {
+        self.v5
+    }
+
     pub fn header(&self) -> &AccountHeaderV1 {
         self.header
     }
@@ -107,6 +123,13 @@ impl Deref for BundleVerificationDisputeV2Ref<'_> {
 }
 
 impl<'a> BundleVerificationDisputeV2Mut<'a> {
+    pub fn v5(&self) -> Option<&BundleDisputeEvidenceV5Data> {
+        self.v5.as_deref()
+    }
+    pub fn v5_mut(&mut self) -> Option<&mut BundleDisputeEvidenceV5Data> {
+        self.v5.as_deref_mut()
+    }
+
     pub fn header(&self) -> &AccountHeaderV1 {
         self.header
     }
@@ -141,9 +164,18 @@ impl DerefMut for BundleVerificationDisputeV2Mut<'_> {
 impl RawBundleVerificationDisputeV2Data {
     pub const PAYLOAD_LEN: usize = std::mem::size_of::<RawBundleVerificationDisputeV2Data>();
     pub const LEN: usize = AccountHeaderV1::LEN + Self::PAYLOAD_LEN;
+    pub const LEN_V5: usize = Self::LEN + std::mem::size_of::<BundleDisputeEvidenceV5Data>();
+
+    pub const fn account_len(version: AccountLayoutVersion) -> usize {
+        match version {
+            AccountLayoutVersion::V1 => Self::LEN,
+            AccountLayoutVersion::V5 => Self::LEN_V5,
+            _ => 0,
+        }
+    }
 
     pub fn from_bytes(bytes: &[u8]) -> Option<BundleVerificationDisputeV2Ref<'_>> {
-        if bytes.len() != Self::LEN {
+        if bytes.len() < Self::LEN {
             return None;
         }
 
@@ -151,44 +183,65 @@ impl RawBundleVerificationDisputeV2Data {
         let header = bytemuck::try_from_bytes::<AccountHeaderV1>(header_bytes).ok()?;
         let layout = header.layout()?;
         if layout.discriminator != AccountDiscriminator::BundleVerificationDisputeV2
-            || layout.version != AccountLayoutVersion::V1
+            || bytes.len() != Self::account_len(layout.version)
         {
             return None;
         }
 
+        let (raw_bytes, extension) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleVerificationDisputeV2Data>(raw_bytes).ok()?;
-        Some(BundleVerificationDisputeV2Ref { header, raw })
+        let v5 = if layout.version == AccountLayoutVersion::V5 {
+            Some(bytemuck::try_from_bytes::<BundleDisputeEvidenceV5Data>(extension).ok()?)
+        } else {
+            None
+        };
+        Some(BundleVerificationDisputeV2Ref { header, raw, v5 })
     }
 
     pub fn from_bytes_mut(bytes: &mut [u8]) -> Option<BundleVerificationDisputeV2Mut<'_>> {
-        if bytes.len() != Self::LEN {
+        if bytes.len() < Self::LEN {
             return None;
         }
 
+        let bytes_len = bytes.len();
         let (header_bytes, raw_bytes) = bytes.split_at_mut(AccountHeaderV1::LEN);
         let header = bytemuck::try_from_bytes_mut::<AccountHeaderV1>(header_bytes).ok()?;
         let layout = header.layout()?;
         if layout.discriminator != AccountDiscriminator::BundleVerificationDisputeV2
-            || layout.version != AccountLayoutVersion::V1
+            || bytes_len != Self::account_len(layout.version)
         {
             return None;
         }
 
+        let (raw_bytes, extension) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw =
             bytemuck::try_from_bytes_mut::<RawBundleVerificationDisputeV2Data>(raw_bytes).ok()?;
-        Some(BundleVerificationDisputeV2Mut { header, raw })
+        let v5 = if layout.version == AccountLayoutVersion::V5 {
+            Some(bytemuck::try_from_bytes_mut::<BundleDisputeEvidenceV5Data>(extension).ok()?)
+        } else {
+            None
+        };
+        Some(BundleVerificationDisputeV2Mut { header, raw, v5 })
     }
 
     pub fn write_bytes(&self, bytes: &mut [u8]) -> bool {
-        if bytes.len() != Self::LEN {
+        self.write_bytes_with_layout(bytes, AccountLayoutVersion::V1)
+    }
+
+    pub fn write_bytes_with_layout(&self, bytes: &mut [u8], version: AccountLayoutVersion) -> bool {
+        if Self::account_len(version) == 0 || bytes.len() != Self::account_len(version) {
             return false;
         }
 
         let (header_bytes, raw_bytes) = bytes.split_at_mut(AccountHeaderV1::LEN);
-        header_bytes.copy_from_slice(bytemuck::bytes_of(&AccountHeaderV1::new(
-            AccountDiscriminator::BundleVerificationDisputeV2,
-        )));
+        header_bytes.copy_from_slice(bytemuck::bytes_of(&AccountHeaderV1 {
+            discriminator: AccountDiscriminator::BundleVerificationDisputeV2 as u8,
+            version: version as u8,
+            reserved: [0; 6],
+        }));
+        let (raw_bytes, extension) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         raw_bytes.copy_from_slice(bytemuck::bytes_of(self));
+        extension.fill(0);
         true
     }
 }

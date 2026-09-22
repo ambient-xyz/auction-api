@@ -88,6 +88,17 @@ impl Default for BundleEscrowV2ReservedData {
     }
 }
 
+/// Additional lifecycle metadata present only in layout version 5.
+#[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[repr(C)]
+pub struct BundleEscrowV5Data {
+    pub expected_page_count: u8,
+    /// Bits 0..3 track canonical pages; bits 3..6 track dispute staging pages.
+    pub allocated_page_bitmap: u8,
+    pub _reserved: [u8; 6],
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct InvalidBundleEscrowV2Transition {
     pub from: BundleEscrowV2Status,
@@ -105,6 +116,7 @@ pub struct BundleEscrowV2Ref<'a> {
     header: &'a AccountHeaderV1,
     raw: &'a RawBundleEscrowV2Data,
     reserved: Option<&'a BundleEscrowV2ReservedData>,
+    v5: Option<&'a BundleEscrowV5Data>,
 }
 
 #[derive(Debug)]
@@ -112,6 +124,7 @@ pub struct BundleEscrowV2Mut<'a> {
     header: &'a mut AccountHeaderV1,
     raw: &'a mut RawBundleEscrowV2Data,
     reserved: Option<&'a mut BundleEscrowV2ReservedData>,
+    v5: Option<&'a mut BundleEscrowV5Data>,
 }
 
 impl<'a> BundleEscrowV2Ref<'a> {
@@ -129,6 +142,10 @@ impl<'a> BundleEscrowV2Ref<'a> {
 
     pub fn into_raw(self) -> &'a RawBundleEscrowV2Data {
         self.raw
+    }
+
+    pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
+        self.v5
     }
 
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
@@ -169,6 +186,14 @@ impl<'a> BundleEscrowV2Mut<'a> {
 
     pub fn into_raw(self) -> &'a mut RawBundleEscrowV2Data {
         self.raw
+    }
+
+    pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
+        self.v5.as_deref()
+    }
+
+    pub fn v5_mut(&mut self) -> Option<&mut BundleEscrowV5Data> {
+        self.v5.as_deref_mut()
     }
 
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
@@ -250,10 +275,13 @@ impl RawBundleEscrowV2Data {
     pub const LEN_V2: usize =
         AccountHeaderV1::LEN + Self::PAYLOAD_LEN + CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES;
 
+    pub const LEN_V5: usize = Self::LEN_V2 + std::mem::size_of::<BundleEscrowV5Data>();
+
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {
             AccountLayoutVersion::V1 => Self::LEN_V1,
             AccountLayoutVersion::V2 => Self::LEN_V2,
+            AccountLayoutVersion::V5 => Self::LEN_V5,
             AccountLayoutVersion::LegacyV0 => 0,
         }
     }
@@ -276,15 +304,28 @@ impl RawBundleEscrowV2Data {
 
         let (raw_bytes, reserved_bytes) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
-        let reserved = if layout.version == AccountLayoutVersion::V2 {
-            Some(bytemuck::try_from_bytes::<BundleEscrowV2ReservedData>(reserved_bytes).ok()?)
+        let (reserved, v5) = if matches!(
+            layout.version,
+            AccountLayoutVersion::V2 | AccountLayoutVersion::V5
+        ) {
+            let (policy_bytes, tail) =
+                reserved_bytes.split_at(CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES);
+            let reserved =
+                Some(bytemuck::try_from_bytes::<BundleEscrowV2ReservedData>(policy_bytes).ok()?);
+            let v5 = if layout.version == AccountLayoutVersion::V5 {
+                Some(bytemuck::try_from_bytes::<BundleEscrowV5Data>(tail).ok()?)
+            } else {
+                None
+            };
+            (reserved, v5)
         } else {
-            None
+            (None, None)
         };
         Some(BundleEscrowV2Ref {
             header,
             raw,
             reserved,
+            v5,
         })
     }
 
@@ -307,15 +348,29 @@ impl RawBundleEscrowV2Data {
 
         let (raw_bytes, reserved_bytes) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes_mut::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
-        let reserved = if layout.version == AccountLayoutVersion::V2 {
-            Some(bytemuck::try_from_bytes_mut::<BundleEscrowV2ReservedData>(reserved_bytes).ok()?)
+        let (reserved, v5) = if matches!(
+            layout.version,
+            AccountLayoutVersion::V2 | AccountLayoutVersion::V5
+        ) {
+            let (policy_bytes, tail) =
+                reserved_bytes.split_at_mut(CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES);
+            let reserved = Some(
+                bytemuck::try_from_bytes_mut::<BundleEscrowV2ReservedData>(policy_bytes).ok()?,
+            );
+            let v5 = if layout.version == AccountLayoutVersion::V5 {
+                Some(bytemuck::try_from_bytes_mut::<BundleEscrowV5Data>(tail).ok()?)
+            } else {
+                None
+            };
+            (reserved, v5)
         } else {
-            None
+            (None, None)
         };
         Some(BundleEscrowV2Mut {
             header,
             raw,
             reserved,
+            v5,
         })
     }
 
