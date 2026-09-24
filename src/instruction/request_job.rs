@@ -12,90 +12,9 @@ use bytemuck::{Pod, Zeroable};
 /// 0. `[WRITE, SIGNER]` Funding account
 /// 1. `[WRITE]` New job request account
 /// 2. `[WRITE]` Bundle registry account
-/// 3. `[READ]` System program
-/// 4. `[WRITE]` Input data account
-/// 5. `[WRITE]` Parent bundle account
-/// 6. `[WRITE]` Parent auction account
-/// 7. `[WRITE]` Child bundle account
-/// 8. `[WRITE]` Child auction account
-///
-///     Repeating (0 or more):
-///
-///       `[WRITE]` Additional bundle-auction account pair(s)
-/// 9. `[WRITE]` Last bundle account
-#[cfg(not(feature = "global-config"))]
-#[derive(Clone, Debug)]
-#[repr(C)]
-pub struct RequestJobAccounts<'a, T, U> {
-    pub payer: &'a T,
-    pub job_request: &'a T,
-    pub registry: &'a T,
-    pub input_data: &'a T,
-    pub system_program: &'a T,
-    pub bundle_auction_account_pairs: U,
-    pub last_bundle: &'a T,
-}
-
-#[cfg(not(feature = "global-config"))]
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct RequestJobAccountKeys<T, U = Vec<T>> {
-    pub payer: T,
-    pub job_request: T,
-    pub registry: T,
-    pub input_data: T,
-    pub system_program: T,
-    pub bundle_auction_account_pairs: U,
-    pub last_bundle: T,
-}
-
-#[cfg(not(feature = "global-config"))]
-impl<T, U> RequestJobAccountKeys<T, U>
-where
-    U: AsRef<[T]>,
-{
-    pub fn as_accounts(&self) -> RequestJobAccounts<'_, T, &[T]> {
-        RequestJobAccounts {
-            payer: &self.payer,
-            job_request: &self.job_request,
-            registry: &self.registry,
-            input_data: &self.input_data,
-            system_program: &self.system_program,
-            bundle_auction_account_pairs: self.bundle_auction_account_pairs.as_ref(),
-            last_bundle: &self.last_bundle,
-        }
-    }
-}
-
-#[cfg(not(feature = "global-config"))]
-impl<'a, T, U> InstructionAccounts<'a, T> for RequestJobAccountKeys<T, U>
-where
-    T: 'a,
-    U: AsRef<[T]> + 'a,
-{
-    fn iter(&'a self) -> impl Iterator<Item = &'a T> {
-        std::iter::once(&self.payer)
-            .chain(std::iter::once(&self.job_request))
-            .chain(std::iter::once(&self.registry))
-            .chain(std::iter::once(&self.input_data))
-            .chain(std::iter::once(&self.system_program))
-            .chain(self.bundle_auction_account_pairs.as_ref().iter())
-            .chain(std::iter::once(&self.last_bundle))
-    }
-}
-
-/// RequestJob instruction
-///
-/// creates a [`JobRequest`] account after placing it in a bundle.
-/// Additionally, creates an associated [`Auction`] and a child [`RequestBundle`] account if the bundle is filled.
-///
-/// # Account References:
-///
-/// 0. `[WRITE, SIGNER]` Funding account
-/// 1. `[WRITE]` New job request account
-/// 2. `[WRITE]` Bundle registry account
-/// 3. `[READ]` System program
-/// 4. `[READ]` Global Config account
-/// 5. `[WRITE]` Input data account
+/// 3. `[WRITE]` Input data account
+/// 4. `[READ]` System program
+/// 5. `[WRITE]` Global configuration account
 /// 6. `[WRITE]` Parent bundle account
 /// 7. `[WRITE]` Parent auction account
 /// 8. `[WRITE]` Child bundle account
@@ -105,7 +24,6 @@ where
 ///
 ///       `[WRITE]` Additional bundle-auction account pair(s)
 /// 10. `[WRITE]` Last bundle account
-#[cfg(feature = "global-config")]
 #[derive(Clone, Debug)]
 #[repr(C)]
 pub struct RequestJobAccounts<'a, T, U> {
@@ -119,7 +37,6 @@ pub struct RequestJobAccounts<'a, T, U> {
     pub last_bundle: &'a T,
 }
 
-#[cfg(feature = "global-config")]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RequestJobAccountKeys<T, U = Vec<T>> {
     pub payer: T,
@@ -132,7 +49,6 @@ pub struct RequestJobAccountKeys<T, U = Vec<T>> {
     pub last_bundle: T,
 }
 
-#[cfg(feature = "global-config")]
 impl<T, U> RequestJobAccountKeys<T, U>
 where
     U: AsRef<[T]>,
@@ -151,7 +67,6 @@ where
     }
 }
 
-#[cfg(feature = "global-config")]
 impl<'a, T, U> InstructionAccounts<'a, T> for RequestJobAccountKeys<T, U>
 where
     T: 'a,
@@ -168,7 +83,6 @@ where
             .chain(std::iter::once(&self.last_bundle))
     }
 }
-#[cfg(feature = "global-config")]
 impl<'a, T> TryFrom<&'a [T]> for RequestJobAccounts<'a, T, &'a [T]> {
     type Error = AuctionError;
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
@@ -197,51 +111,6 @@ impl<'a, T> TryFrom<&'a [T]> for RequestJobAccounts<'a, T, &'a [T]> {
     }
 }
 
-#[cfg(not(feature = "global-config"))]
-impl<'a, T> TryFrom<&'a [T]> for RequestJobAccounts<'a, T, &'a [T]> {
-    type Error = AuctionError;
-    fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [payer, job_request, registry, input_data, system_program, bundle_auction_account_pairs @ ..] =
-            accounts
-        else {
-            return Err(Self::Error::NotEnoughAccounts);
-        };
-
-        let Some((last_bundle, bundle_auction_account_pairs)) =
-            bundle_auction_account_pairs.split_last()
-        else {
-            return Err(Self::Error::NotEnoughBundleAuctionAccounts);
-        };
-
-        Ok(Self {
-            payer,
-            job_request,
-            registry,
-            input_data,
-            system_program,
-            bundle_auction_account_pairs,
-            last_bundle,
-        })
-    }
-}
-
-#[cfg(not(feature = "global-config"))]
-impl<'a, T, U> InstructionAccounts<'a, T> for RequestJobAccounts<'a, T, U>
-where
-    U: AsRef<[T]>,
-{
-    fn iter(&'a self) -> impl Iterator<Item = &'a T> {
-        std::iter::once(self.payer)
-            .chain(std::iter::once(self.job_request))
-            .chain(std::iter::once(self.registry))
-            .chain(std::iter::once(self.input_data))
-            .chain(std::iter::once(self.system_program))
-            .chain(self.bundle_auction_account_pairs.as_ref())
-            .chain(std::iter::once(self.last_bundle))
-    }
-}
-
-#[cfg(feature = "global-config")]
 impl<'a, T, U> InstructionAccounts<'a, T> for RequestJobAccounts<'a, T, U>
 where
     U: AsRef<[T]>,
@@ -258,26 +127,6 @@ where
     }
 }
 
-#[cfg(not(feature = "global-config"))]
-impl<'a, T, U> RequestJobAccounts<'a, T, U>
-where
-    T: Clone,
-    U: AsRef<[T]>,
-{
-    pub fn to_account_keys(&self) -> RequestJobAccountKeys<T> {
-        RequestJobAccountKeys {
-            payer: self.payer.clone(),
-            job_request: self.job_request.clone(),
-            registry: self.registry.clone(),
-            input_data: self.input_data.clone(),
-            system_program: self.system_program.clone(),
-            bundle_auction_account_pairs: self.bundle_auction_account_pairs.as_ref().to_vec(),
-            last_bundle: self.last_bundle.clone(),
-        }
-    }
-}
-
-#[cfg(feature = "global-config")]
 impl<'a, T, U> RequestJobAccounts<'a, T, U>
 where
     T: Clone,
