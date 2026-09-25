@@ -53,8 +53,6 @@ pub struct BundleEscrowV3SmallData {
     pub mint: Pubkey,
 }
 
-pub const VERIFIER_SELECTION_PHASE_INITIAL: u8 = 0;
-
 #[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
