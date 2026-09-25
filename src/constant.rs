@@ -20,8 +20,13 @@ pub const BUNDLE_VERIFICATION_DISPUTE_V2_SEED: &[u8] = b"bundle_verification_dis
 /// Auction Program ID
 pub const ID: [u8; PUBKEY_BYTES] =
     five8_const::decode_32_const("Auction111111111111111111111111111111111111");
+/// Native verifier registry address used by verifier selection instructions.
+pub const AUCTION_VERIFIERS_SYSVAR_ID: [u8; PUBKEY_BYTES] =
+    five8_const::decode_32_const("SysvarAuctionVerifiers111111111111111111111");
 
 /// Protocol-level verifier capacity for auction layouts and instruction payloads.
 pub const MAX_VERIFIERS_PER_AUCTION: usize = 3;
 /// Compatibility alias for one release cycle. Prefer `MAX_VERIFIERS_PER_AUCTION`.
 pub const VERIFIERS_PER_AUCTION: usize = MAX_VERIFIERS_PER_AUCTION;
+
+pub const AUCTION_VERIFIERS_HISTORY_ID: [u8; PUBKEY_BYTES] = ambient_auction_verifiers::history::ID.to_bytes();
