@@ -40,7 +40,8 @@ impl ConfigPolicyV2PatchKind {
     pub const VERIFIER_SETTINGS: Self = Self(2);
     pub const TIER_CONFIG: Self = Self(3);
     pub const MAX_AUCTION_CREDITS_PER_UPDATE: Self = Self(4);
-    pub const DISPUTE_SETTINGS: Self = Self(5);
+    pub const SMALL_CREDIT_SLASH_AUTHORITY: Self = Self(6);
+    pub const SMALL_CREDIT_SETTINGS: Self = Self(7);
 }
 
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -52,6 +53,7 @@ impl ConfigPolicyV2AuthorityKind {
     pub const SERVICE: Self = Self(1);
 }
 
+/// 160-byte configuration payload used by SmallV3 program revision `4f7756b`.
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
 #[repr(C)]
 pub struct SetConfigPolicyV2Args {
@@ -60,14 +62,11 @@ pub struct SetConfigPolicyV2Args {
     pub authority_index: u8,
     pub v2_verifiers_per_auction: u8,
     pub v2_verifier_quorum: u8,
-    pub _reserved0: [u8; 3],
+    pub small_credit_enabled: u8,
+    pub _reserved0: [u8; 2],
     pub tier: u64,
     pub policy_flags: ConfigPolicyV2Flags,
     pub max_auction_credits_per_update: u64,
-    pub missed_verification_dispute_window_slots: u64,
-    pub dispute_verification_window_slots: u64,
-    pub paid_verification_dispute_window_slots: u64,
-    pub paid_verification_dispute_bond_lamports: u64,
     pub authority: Pubkey,
     pub tier_config: RequestTierConfigV2,
 }

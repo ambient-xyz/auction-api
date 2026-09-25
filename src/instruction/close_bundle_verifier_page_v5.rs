@@ -38,6 +38,4 @@ impl<'a, T> InstructionAccounts<'a, T> for CloseBundleVerifierPageV5Accounts<'a,
 #[repr(C)]
 pub struct CloseBundleVerifierPageV5Args {
     pub page_index: u16,
-    pub disputed: u8,
-    pub _reserved: [u8; 5],
 }

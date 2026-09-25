@@ -10,8 +10,6 @@ pub struct PostBundleResultV2Accounts<'a, T> {
     pub bundle_escrow: &'a T,
     pub config_policy: &'a T,
     pub bundle_verifier_page: Option<&'a T>,
-    /// Required when posting authorized replacement evidence during a dispute.
-    pub bundle_verification_dispute: Option<&'a T>,
 }
 
 impl<'a, T> TryFrom<&'a [T]> for PostBundleResultV2Accounts<'a, T> {
@@ -27,7 +25,6 @@ impl<'a, T> TryFrom<&'a [T]> for PostBundleResultV2Accounts<'a, T> {
             bundle_escrow,
             config_policy,
             bundle_verifier_page: rest.first(),
-            bundle_verification_dispute: rest.get(1),
         })
     }
 }
@@ -38,7 +35,6 @@ impl<'a, T> InstructionAccounts<'a, T> for PostBundleResultV2Accounts<'a, T> {
             .chain(std::iter::once(self.bundle_escrow))
             .chain(std::iter::once(self.config_policy))
             .chain(self.bundle_verifier_page.into_iter())
-            .chain(self.bundle_verification_dispute.into_iter())
     }
 }
 
@@ -52,4 +48,12 @@ pub struct PostBundleResultV2Args {
     pub page_entry_count: u16,
     pub _reserved: [u8; 4],
     pub page_entries: [BundleVerifierPageV2Entry; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
+}
+
+#[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug, Pod)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[repr(C)]
+pub struct PostBundleResultV3Args {
+    pub post: PostBundleResultV2Args,
+    pub input_tokens: [u64; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
 }

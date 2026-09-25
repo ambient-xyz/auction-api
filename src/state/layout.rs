@@ -22,7 +22,6 @@ pub enum AccountDiscriminator {
     Metadata = 7,
     BundleEscrowV2 = 8,
     BundleVerifierPageV2 = 9,
-    BundleVerificationDisputeV2 = 10,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive, IntoPrimitive, Zeroable)]
@@ -31,6 +30,7 @@ pub enum AccountLayoutVersion {
     LegacyV0 = 0,
     V1 = 1,
     V2 = 2,
+    V3 = 3,
     // Versions 3 and 4 are used by the separate Small layouts.
     V5 = 5,
 }

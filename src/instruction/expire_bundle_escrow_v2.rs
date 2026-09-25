@@ -8,16 +8,13 @@ pub struct ExpireBundleEscrowV2Accounts<'a, T> {
     pub bundle_escrow: &'a T,
     pub requester_refund_recipient: &'a T,
     pub config_policy: &'a T,
-    pub remaining_accounts: &'a [T],
 }
 
 impl<'a, T> TryFrom<&'a [T]> for ExpireBundleEscrowV2Accounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [bundle_escrow, requester_refund_recipient, config_policy, remaining_accounts @ ..] =
-            accounts
-        else {
+        let [bundle_escrow, requester_refund_recipient, config_policy] = accounts else {
             return Err(AuctionError::NotEnoughAccounts);
         };
 
@@ -25,7 +22,6 @@ impl<'a, T> TryFrom<&'a [T]> for ExpireBundleEscrowV2Accounts<'a, T> {
             bundle_escrow,
             requester_refund_recipient,
             config_policy,
-            remaining_accounts,
         })
     }
 }
@@ -35,7 +31,6 @@ impl<'a, T> InstructionAccounts<'a, T> for ExpireBundleEscrowV2Accounts<'a, T> {
         std::iter::once(self.bundle_escrow)
             .chain(std::iter::once(self.requester_refund_recipient))
             .chain(std::iter::once(self.config_policy))
-            .chain(self.remaining_accounts.iter())
     }
 }
 
