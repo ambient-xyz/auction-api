@@ -112,7 +112,6 @@ fn select_bundle_verifiers_v2_accounts_preserve_optional_dispute_order() {
     );
 }
 
-#[cfg(feature = "global-config")]
 #[test]
 fn init_config_account_keys_round_trip_and_order() {
     let keys = InitConfigAccountKeys {
@@ -128,27 +127,6 @@ fn init_config_account_keys_round_trip_and_order() {
     assert_eq!(keys.as_accounts().to_account_keys(), keys);
 }
 
-#[cfg(not(feature = "global-config"))]
-#[test]
-fn request_job_account_keys_round_trip_and_preserves_pair_order() {
-    let keys = RequestJobAccountKeys {
-        payer: 1_u8,
-        job_request: 2,
-        registry: 3,
-        input_data: 4,
-        system_program: 5,
-        bundle_auction_account_pairs: vec![6, 7, 8, 9, 10, 11],
-        last_bundle: 12,
-    };
-
-    assert_eq!(
-        keys.as_accounts().iter_owned().collect::<Vec<_>>(),
-        vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    );
-    assert_eq!(keys.as_accounts().to_account_keys(), keys);
-}
-
-#[cfg(feature = "global-config")]
 #[test]
 fn request_job_account_keys_round_trip_and_preserves_pair_order() {
     let keys = RequestJobAccountKeys {

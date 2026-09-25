@@ -16,3 +16,9 @@ To build the binary:
 ```shell
 cargo build --release --bin decode-account --features decoder
 ```
+
+Configuration accounts are unconditional. Remove the `global-config` Cargo feature from downstream manifests and build commands.
+`RequestJobAccountKeys` and `RequestJobAccounts` always include `config` after `system_program`.
+Account layouts, instruction numbers, and the `global_config` address seed remain unchanged.
+The current auction program still rejects legacy instruction numbers `0..=11`, including `InitConfig`, before account parsing.
+This Rust build-interface change requires no on-chain account migration.
