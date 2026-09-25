@@ -1,5 +1,5 @@
-use crate::InstructionAccounts;
 use crate::error::AuctionError;
+use crate::InstructionAccounts;
 use bytemuck::{Pod, Zeroable};
 
 #[derive(Debug, Clone)]

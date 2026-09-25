@@ -54,43 +54,32 @@ pub struct BundleEscrowV3SmallData {
 }
 
 pub const VERIFIER_SELECTION_PHASE_INITIAL: u8 = 0;
-pub const VERIFIER_SELECTION_PHASE_REPLACEMENT: u8 = 1;
 
 #[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
 pub struct BundleEscrowV2ReservedData {
-    pub provisional_challenge_deadline_slot: u64,
     pub verifier_selection_slot: u64,
     pub verifier_selection_epoch: u64,
-    pub paid_verification_dispute_bond_lamports: u64,
     pub winner_auction_credits: u64,
     pub max_auction_credits_per_update: u64,
-    pub missed_verification_dispute_window_slots: u32,
-    pub replacement_verification_window_slots: u32,
-    pub paid_verification_dispute_window_slots: u32,
-    pub verifier_selection_phase: u8,
     pub verifier_selection_pending: u8,
     pub verifier_count: u8,
     pub verifier_quorum: u8,
+    pub _reserved: [u8; 5],
 }
 
 impl Default for BundleEscrowV2ReservedData {
     fn default() -> Self {
         Self {
-            provisional_challenge_deadline_slot: 0,
             verifier_selection_slot: 0,
             verifier_selection_epoch: 0,
-            paid_verification_dispute_bond_lamports: 0,
             winner_auction_credits: 0,
             max_auction_credits_per_update: 0,
-            missed_verification_dispute_window_slots: 0,
-            replacement_verification_window_slots: 0,
-            paid_verification_dispute_window_slots: 0,
-            verifier_selection_phase: VERIFIER_SELECTION_PHASE_INITIAL,
             verifier_selection_pending: 0,
             verifier_count: 0,
             verifier_quorum: 0,
+            _reserved: [0; 5],
         }
     }
 }
@@ -112,7 +101,7 @@ impl InvalidBundleEscrowV2Transition {
 #[repr(C)]
 pub struct BundleEscrowV5Data {
     pub expected_page_count: u8,
-    /// Bits 0..3 track canonical pages; bits 3..6 track dispute staging pages.
+    /// Bits 0..3 track canonical pages.
     pub allocated_page_bitmap: u8,
     pub _reserved: [u8; 6],
 }
@@ -133,8 +122,12 @@ pub struct BundleEscrowV2Mut<'a> {
 
 impl<'a> BundleEscrowV2Ref<'a> {
     pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
-        (self.layout().version == AccountLayoutVersion::V5)
-            .then(|| bytemuck::try_from_bytes(&self.tail[64..]).ok())?
+        (self.layout().version == AccountLayoutVersion::V5).then(|| {
+            bytemuck::try_from_bytes(
+                &self.tail[std::mem::size_of::<BundleEscrowV2ReservedData>()..],
+            )
+            .ok()
+        })?
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -154,17 +147,12 @@ impl<'a> BundleEscrowV2Ref<'a> {
     }
 
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
-        (matches!(
-            self.layout().version,
-            AccountLayoutVersion::V2 | AccountLayoutVersion::V5
-        ))
-        .then(|| bytemuck::try_from_bytes(&self.tail[..64]).ok())?
-    }
-
-    pub fn provisional_challenge_deadline_slot(&self) -> u64 {
-        self.reserved_v2()
-            .map(|reserved| reserved.provisional_challenge_deadline_slot)
-            .unwrap_or(0)
+        (self.layout().version == AccountLayoutVersion::V5).then(|| {
+            bytemuck::try_from_bytes(
+                &self.tail[..std::mem::size_of::<BundleEscrowV2ReservedData>()],
+            )
+            .ok()
+        })?
     }
 
     pub fn small_v3(&self) -> Option<&BundleEscrowV3SmallData> {
@@ -183,15 +171,22 @@ impl Deref for BundleEscrowV2Ref<'_> {
 
 impl<'a> BundleEscrowV2Mut<'a> {
     pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
-        (self.layout().version == AccountLayoutVersion::V5)
-            .then(|| bytemuck::try_from_bytes(&self.tail[64..]).ok())?
+        (self.layout().version == AccountLayoutVersion::V5).then(|| {
+            bytemuck::try_from_bytes(
+                &self.tail[std::mem::size_of::<BundleEscrowV2ReservedData>()..],
+            )
+            .ok()
+        })?
     }
 
     pub fn v5_mut(&mut self) -> Option<&mut BundleEscrowV5Data> {
         if self.layout().version != AccountLayoutVersion::V5 {
             return None;
         }
-        bytemuck::try_from_bytes_mut(&mut self.tail[64..]).ok()
+        bytemuck::try_from_bytes_mut(
+            &mut self.tail[std::mem::size_of::<BundleEscrowV2ReservedData>()..],
+        )
+        .ok()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -215,42 +210,28 @@ impl<'a> BundleEscrowV2Mut<'a> {
     }
 
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
-        (matches!(
-            self.layout().version,
-            AccountLayoutVersion::V2 | AccountLayoutVersion::V5
-        ))
-        .then(|| bytemuck::try_from_bytes(&self.tail[..64]).ok())?
+        (self.layout().version == AccountLayoutVersion::V5).then(|| {
+            bytemuck::try_from_bytes(
+                &self.tail[..std::mem::size_of::<BundleEscrowV2ReservedData>()],
+            )
+            .ok()
+        })?
     }
 
     pub fn reserved_v2_mut(&mut self) -> Option<&mut BundleEscrowV2ReservedData> {
-        if !matches!(
-            self.layout().version,
-            AccountLayoutVersion::V2 | AccountLayoutVersion::V5
-        ) {
+        if self.layout().version != AccountLayoutVersion::V5 {
             return None;
         }
-        bytemuck::try_from_bytes_mut(&mut self.tail[..64]).ok()
-    }
-
-    pub fn provisional_challenge_deadline_slot(&self) -> u64 {
-        self.reserved_v2()
-            .map(|reserved| reserved.provisional_challenge_deadline_slot)
-            .unwrap_or(0)
-    }
-
-    pub fn set_provisional_challenge_deadline_slot(&mut self, slot: u64) -> bool {
-        let Some(reserved) = self.reserved_v2_mut() else {
-            return false;
-        };
-        reserved.provisional_challenge_deadline_slot = slot;
-        true
+        bytemuck::try_from_bytes_mut(
+            &mut self.tail[..std::mem::size_of::<BundleEscrowV2ReservedData>()],
+        )
+        .ok()
     }
 
     pub fn begin_verifier_selection(
         &mut self,
         slot: u64,
         epoch: u64,
-        phase: u8,
         verifier_count: u8,
         verifier_quorum: u8,
     ) -> bool {
@@ -262,7 +243,6 @@ impl<'a> BundleEscrowV2Mut<'a> {
         }
         reserved.verifier_selection_slot = slot;
         reserved.verifier_selection_epoch = epoch;
-        reserved.verifier_selection_phase = phase;
         reserved.verifier_selection_pending = 1;
         reserved.verifier_count = verifier_count;
         reserved.verifier_quorum = verifier_quorum;
@@ -316,7 +296,9 @@ impl RawBundleEscrowV2Data {
 
     pub const LEN_V3: usize = Self::LEN_V1 + std::mem::size_of::<BundleEscrowV3SmallData>();
 
-    pub const LEN_V5: usize = Self::LEN_V1 + 64 + std::mem::size_of::<BundleEscrowV5Data>();
+    pub const LEN_V5: usize = Self::LEN_V1
+        + std::mem::size_of::<BundleEscrowV2ReservedData>()
+        + std::mem::size_of::<BundleEscrowV5Data>();
 
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {
@@ -491,32 +473,16 @@ impl RawBundleEscrowV2Data {
         verifier_page_count: u8,
         verifier_reward_remaining: [u64; MAX_VERIFIERS_PER_AUCTION],
     ) -> Result<(), InvalidBundleEscrowV2Transition> {
-        match (self.status, final_status) {
-            (
-                BundleEscrowV2Status::ResultPosted,
-                BundleEscrowV2Status::FinalizedVerified
-                | BundleEscrowV2Status::FinalizedRejected
-                | BundleEscrowV2Status::ProvisionalVerified
-                | BundleEscrowV2Status::ProvisionalRejected,
+        if self.status != BundleEscrowV2Status::ResultPosted
+            || !matches!(
+                final_status,
+                BundleEscrowV2Status::FinalizedVerified | BundleEscrowV2Status::FinalizedRejected
             )
-            | (
-                BundleEscrowV2Status::Disputed,
-                BundleEscrowV2Status::FinalizedVerified | BundleEscrowV2Status::FinalizedRejected,
-            )
-            | (
-                BundleEscrowV2Status::ProvisionalVerified,
-                BundleEscrowV2Status::FinalizedVerified,
-            )
-            | (
-                BundleEscrowV2Status::ProvisionalRejected,
-                BundleEscrowV2Status::FinalizedRejected,
-            ) => {}
-            _ => {
-                return Err(InvalidBundleEscrowV2Transition::new(
-                    self.status,
-                    final_status,
-                ))
-            }
+        {
+            return Err(InvalidBundleEscrowV2Transition::new(
+                self.status,
+                final_status,
+            ));
         }
 
         self.verification_hash = verification_hash;
@@ -546,10 +512,7 @@ impl RawBundleEscrowV2Data {
         match self.status {
             BundleEscrowV2Status::Open
             | BundleEscrowV2Status::Awarded
-            | BundleEscrowV2Status::ResultPosted
-            | BundleEscrowV2Status::ProvisionalVerified
-            | BundleEscrowV2Status::ProvisionalRejected
-            | BundleEscrowV2Status::Disputed => {
+            | BundleEscrowV2Status::ResultPosted => {
                 self.status = BundleEscrowV2Status::Expired;
                 Ok(())
             }
@@ -626,9 +589,6 @@ impl BundleEscrowV2Status {
     pub const FinalizedVerified: Self = Self(3);
     pub const FinalizedRejected: Self = Self(4);
     pub const Expired: Self = Self(5);
-    pub const ProvisionalVerified: Self = Self(6);
-    pub const ProvisionalRejected: Self = Self(7);
-    pub const Disputed: Self = Self(8);
 
     pub const fn into_u64(self) -> u64 {
         self.0
@@ -665,9 +625,6 @@ impl TryFrom<u64> for BundleEscrowV2Status {
             3 => Ok(Self::FinalizedVerified),
             4 => Ok(Self::FinalizedRejected),
             5 => Ok(Self::Expired),
-            6 => Ok(Self::ProvisionalVerified),
-            7 => Ok(Self::ProvisionalRejected),
-            8 => Ok(Self::Disputed),
             _ => Err(value),
         }
     }

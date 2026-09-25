@@ -22,7 +22,6 @@ pub enum AccountDiscriminator {
     Metadata = 7,
     BundleEscrowV2 = 8,
     BundleVerifierPageV2 = 9,
-    BundleVerificationDisputeV2 = 10,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive, IntoPrimitive, Zeroable)]

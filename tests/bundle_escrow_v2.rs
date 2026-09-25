@@ -1,8 +1,7 @@
 use ambient_auction_api::{
     AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, BundleEscrowV2,
     BundleEscrowV2ReservedData, BundleEscrowV2Status, InvalidBundleEscrowV2Transition, Pubkey,
-    RequestTier, VERIFIERS_PER_AUCTION, VERIFIER_SELECTION_PHASE_INITIAL,
-    VERIFIER_SELECTION_PHASE_REPLACEMENT,
+    RequestTier, VERIFIERS_PER_AUCTION,
 };
 use memoffset::offset_of;
 use std::mem::size_of;
@@ -21,18 +20,9 @@ fn bundle_escrow_v2_status_round_trips_through_raw_values() {
         BundleEscrowV2Status::try_from(5),
         Ok(BundleEscrowV2Status::Expired)
     );
-    assert_eq!(
-        BundleEscrowV2Status::try_from(6),
-        Ok(BundleEscrowV2Status::ProvisionalVerified)
-    );
-    assert_eq!(
-        BundleEscrowV2Status::try_from(7),
-        Ok(BundleEscrowV2Status::ProvisionalRejected)
-    );
-    assert_eq!(
-        BundleEscrowV2Status::try_from(8),
-        Ok(BundleEscrowV2Status::Disputed)
-    );
+    assert_eq!(BundleEscrowV2Status::try_from(6), Err(6));
+    assert_eq!(BundleEscrowV2Status::try_from(7), Err(7));
+    assert_eq!(BundleEscrowV2Status::try_from(8), Err(8));
     assert_eq!(u64::from(BundleEscrowV2Status::Awarded), 1);
     assert_eq!(BundleEscrowV2Status::try_from(99), Err(99));
 }
@@ -44,9 +34,6 @@ fn bundle_escrow_v2_status_identifies_terminal_states() {
     assert!(BundleEscrowV2Status::FinalizedVerified.is_terminal());
     assert!(BundleEscrowV2Status::FinalizedRejected.is_terminal());
     assert!(BundleEscrowV2Status::Expired.is_terminal());
-    assert!(!BundleEscrowV2Status::ProvisionalVerified.is_terminal());
-    assert!(!BundleEscrowV2Status::ProvisionalRejected.is_terminal());
-    assert!(!BundleEscrowV2Status::Disputed.is_terminal());
 }
 
 #[test]
@@ -82,69 +69,38 @@ fn bundle_escrow_v2_v2_bytes_round_trip() {
     assert_eq!(parsed.status, BundleEscrowV2Status::Awarded);
     assert_eq!(parsed.bundle_version, 13);
     assert_eq!(parsed.total_input_tokens, 21);
-    assert_eq!(parsed.provisional_challenge_deadline_slot(), 0);
+    assert!(parsed.reserved_v2().is_none());
+    assert!(bytes[BundleEscrowV2::LEN_V1..]
+        .iter()
+        .all(|byte| *byte == 0));
 }
 
 #[test]
-fn bundle_escrow_v2_reserved_metadata_round_trips() {
+fn bundle_escrow_v5_selection_metadata_round_trips() {
     let bundle = BundleEscrowV2::default();
-    let mut bytes = vec![0u8; BundleEscrowV2::LEN_V2];
-    assert!(bundle.write_v2_bytes(&mut bytes));
-
+    let mut bytes = vec![0u8; BundleEscrowV2::LEN_V5];
+    assert!(bundle.write_bytes_with_layout(&mut bytes, AccountLayoutVersion::V5));
     {
         let mut parsed = BundleEscrowV2::from_bytes_mut(&mut bytes).unwrap();
-        assert!(parsed.set_provisional_challenge_deadline_slot(77));
-        assert!(parsed.begin_verifier_selection(
-            88,
-            9,
-            VERIFIER_SELECTION_PHASE_REPLACEMENT,
-            3,
-            2,
-        ));
+        assert!(parsed.begin_verifier_selection(88, 9, 3, 2));
         let reserved = parsed.reserved_v2_mut().unwrap();
-        reserved.paid_verification_dispute_bond_lamports = 11;
         reserved.winner_auction_credits = 22;
         reserved.max_auction_credits_per_update = 33;
-        reserved.missed_verification_dispute_window_slots = 44;
-        reserved.replacement_verification_window_slots = 55;
-        reserved.paid_verification_dispute_window_slots = 66;
-        assert_ne!(
-            parsed
-                .reserved_v2()
-                .unwrap()
-                .verifier_selection_pending,
-            0
-        );
-        assert!(!parsed.begin_verifier_selection(
-            99,
-            10,
-            VERIFIER_SELECTION_PHASE_INITIAL,
-            1,
-            1,
-        ));
+        parsed.v5_mut().unwrap().expected_page_count = 3;
+        assert!(!parsed.begin_verifier_selection(99, 10, 1, 1));
     }
-
     {
         let parsed = BundleEscrowV2::from_bytes(&bytes).unwrap();
         let reserved = parsed.reserved_v2().unwrap();
-        assert_eq!(parsed.provisional_challenge_deadline_slot(), 77);
-        assert_ne!(reserved.verifier_selection_pending, 0);
+        assert_eq!(reserved.verifier_selection_pending, 1);
         assert_eq!(reserved.verifier_selection_slot, 88);
         assert_eq!(reserved.verifier_selection_epoch, 9);
-        assert_eq!(
-            reserved.verifier_selection_phase,
-            VERIFIER_SELECTION_PHASE_REPLACEMENT
-        );
         assert_eq!(reserved.verifier_count, 3);
         assert_eq!(reserved.verifier_quorum, 2);
-        assert_eq!(reserved.paid_verification_dispute_bond_lamports, 11);
         assert_eq!(reserved.winner_auction_credits, 22);
         assert_eq!(reserved.max_auction_credits_per_update, 33);
-        assert_eq!(reserved.missed_verification_dispute_window_slots, 44);
-        assert_eq!(reserved.replacement_verification_window_slots, 55);
-        assert_eq!(reserved.paid_verification_dispute_window_slots, 66);
+        assert_eq!(parsed.v5().unwrap().expected_page_count, 3);
     }
-
     let mut parsed = BundleEscrowV2::from_bytes_mut(&mut bytes).unwrap();
     assert!(parsed.complete_verifier_selection());
     assert!(!parsed.complete_verifier_selection());
@@ -155,33 +111,24 @@ fn bundle_escrow_v2_reserved_metadata_round_trips() {
 }
 
 #[test]
-fn bundle_escrow_v2_reserved_layout_is_typed_and_stable() {
-    assert_eq!(size_of::<BundleEscrowV2ReservedData>(), 64);
+fn bundle_escrow_v5_selection_layout_is_compact() {
+    assert_eq!(size_of::<BundleEscrowV2ReservedData>(), 40);
+    assert_eq!(BundleEscrowV2::LEN_V5, BundleEscrowV2::LEN_V1 + 48);
     assert_eq!(
-        size_of::<BundleEscrowV2ReservedData>(),
-        ambient_auction_api::CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
+        offset_of!(BundleEscrowV2ReservedData, verifier_selection_slot),
+        0
     );
-    macro_rules! assert_offset {
-        ($field:ident, $offset:literal) => {
-            assert_eq!(offset_of!(BundleEscrowV2ReservedData, $field), $offset)
-        };
-    }
-    assert_offset!(provisional_challenge_deadline_slot, 0);
-    assert_offset!(verifier_selection_slot, 8);
-    assert_offset!(verifier_selection_epoch, 16);
-    assert_offset!(paid_verification_dispute_bond_lamports, 24);
-    assert_offset!(winner_auction_credits, 32);
-    assert_offset!(max_auction_credits_per_update, 40);
-    assert_offset!(missed_verification_dispute_window_slots, 48);
-    assert_offset!(replacement_verification_window_slots, 52);
-    assert_offset!(paid_verification_dispute_window_slots, 56);
-    assert_offset!(verifier_selection_phase, 60);
-    assert_offset!(verifier_selection_pending, 61);
-    assert_offset!(verifier_count, 62);
-    assert_offset!(verifier_quorum, 63);
+    assert_eq!(
+        offset_of!(BundleEscrowV2ReservedData, verifier_selection_epoch),
+        8
+    );
+    assert_eq!(
+        offset_of!(BundleEscrowV2ReservedData, verifier_selection_pending),
+        32
+    );
     assert_eq!(
         bytemuck::bytes_of(&BundleEscrowV2ReservedData::default()),
-        &[0u8; 64]
+        &[0u8; 40]
     );
 }
 

@@ -6,27 +6,23 @@ use bytemuck::{Pod, Zeroable};
 #[repr(C)]
 pub struct SelectBundleVerifiersV2Accounts<'a, T> {
     pub bundle_escrow: &'a T,
-    pub bundle_verification_dispute: Option<&'a T>,
 }
 
 impl<'a, T> TryFrom<&'a [T]> for SelectBundleVerifiersV2Accounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [bundle_escrow, remaining_accounts @ ..] = accounts else {
+        let [bundle_escrow] = accounts else {
             return Err(AuctionError::NotEnoughAccounts);
         };
 
-        Ok(Self {
-            bundle_escrow,
-            bundle_verification_dispute: remaining_accounts.first(),
-        })
+        Ok(Self { bundle_escrow })
     }
 }
 
 impl<'a, T> InstructionAccounts<'a, T> for SelectBundleVerifiersV2Accounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
-        std::iter::once(self.bundle_escrow).chain(self.bundle_verification_dispute)
+        std::iter::once(self.bundle_escrow)
     }
 }
 
