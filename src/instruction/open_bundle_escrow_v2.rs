@@ -96,3 +96,20 @@ pub struct OpenBundleEscrowV2Args {
     pub max_output_tokens: u64,
     pub escrow_lamports: u64,
 }
+
+#[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug, Pod)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[repr(C)]
+pub struct OpenBundleEscrowV5Args {
+    pub bundle_version: u32,
+    pub _reserved0: [u8; 4],
+    pub reward_tier: u64,
+    pub bundle_hash: [u8; 32],
+    pub coordinator: [u8; PUBKEY_BYTES],
+    pub requester_refund_recipient: [u8; PUBKEY_BYTES],
+    pub total_input_tokens: u64,
+    pub max_output_tokens: u64,
+    pub escrow_lamports: u64,
+    pub expected_page_count: u8,
+    pub _reserved1: [u8; 7],
+}

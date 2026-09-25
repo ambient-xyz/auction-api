@@ -51,6 +51,6 @@ fn config_policy_v2_round_trips_through_bytes() {
     assert_eq!(decoded, policy);
     assert_eq!(
         decoded.configured_v2_account_layout_version(),
-        Ok(AccountLayoutVersion::V2)
+        Ok(AccountLayoutVersion::V5)
     );
 }

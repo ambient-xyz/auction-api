@@ -10,6 +10,9 @@ use std::ops::{Deref, DerefMut};
 
 /// Protocol-level page entry capacity for `BundleVerifierPageV2`.
 pub const MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES: usize = 6;
+pub const MAX_BUNDLE_VERIFIER_PAGES: u8 = 3;
+pub const MAX_BUNDLE_JOBS: usize =
+    MAX_BUNDLE_VERIFIER_PAGES as usize * MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES;
 /// Compatibility alias for one release cycle. Prefer `MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES`.
 pub const BUNDLE_VERIFIER_PAGE_V2_MAX_ENTRIES: usize = MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES;
 
@@ -40,19 +43,33 @@ pub struct RawBundleVerifierPageV2Data {
 
 pub type BundleVerifierPageV2 = RawBundleVerifierPageV2Data;
 
+#[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[repr(C)]
+pub struct BundleVerifierPageV5Data {
+    pub funder: Pubkey,
+    pub settlement_deadline_slot: u64,
+}
+
 #[derive(Debug)]
 pub struct BundleVerifierPageV2Ref<'a> {
     header: &'a AccountHeaderV1,
     raw: &'a RawBundleVerifierPageV2Data,
+    v5: Option<&'a BundleVerifierPageV5Data>,
 }
 
 #[derive(Debug)]
 pub struct BundleVerifierPageV2Mut<'a> {
     header: &'a mut AccountHeaderV1,
     raw: &'a mut RawBundleVerifierPageV2Data,
+    v5: Option<&'a mut BundleVerifierPageV5Data>,
 }
 
 impl<'a> BundleVerifierPageV2Ref<'a> {
+    pub fn v5(&self) -> Option<&BundleVerifierPageV5Data> {
+        self.v5
+    }
+
     pub fn header(&self) -> &AccountHeaderV1 {
         self.header
     }
@@ -75,6 +92,14 @@ impl Deref for BundleVerifierPageV2Ref<'_> {
 }
 
 impl<'a> BundleVerifierPageV2Mut<'a> {
+    pub fn v5(&self) -> Option<&BundleVerifierPageV5Data> {
+        self.v5.as_deref()
+    }
+
+    pub fn v5_mut(&mut self) -> Option<&mut BundleVerifierPageV5Data> {
+        self.v5.as_deref_mut()
+    }
+
     pub fn header(&self) -> &AccountHeaderV1 {
         self.header
     }
@@ -114,10 +139,13 @@ impl RawBundleVerifierPageV2Data {
         + Self::PAYLOAD_LEN
         + CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES;
 
+    pub const LEN_V5: usize = Self::LEN_V1 + std::mem::size_of::<BundleVerifierPageV5Data>();
+
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {
             AccountLayoutVersion::V1 => Self::LEN_V1,
             AccountLayoutVersion::V2 => Self::LEN_V2,
+            AccountLayoutVersion::V5 => Self::LEN_V5,
             AccountLayoutVersion::LegacyV0 => 0,
         }
     }
@@ -140,7 +168,12 @@ impl RawBundleVerifierPageV2Data {
 
         let (raw_bytes, _reserved) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleVerifierPageV2Data>(raw_bytes).ok()?;
-        Some(BundleVerifierPageV2Ref { header, raw })
+        let v5 = if layout.version == AccountLayoutVersion::V5 {
+            Some(bytemuck::try_from_bytes::<BundleVerifierPageV5Data>(_reserved).ok()?)
+        } else {
+            None
+        };
+        Some(BundleVerifierPageV2Ref { header, raw, v5 })
     }
 
     pub fn from_bytes_mut(bytes: &mut [u8]) -> Option<BundleVerifierPageV2Mut<'_>> {
@@ -162,7 +195,12 @@ impl RawBundleVerifierPageV2Data {
 
         let (raw_bytes, _reserved) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes_mut::<RawBundleVerifierPageV2Data>(raw_bytes).ok()?;
-        Some(BundleVerifierPageV2Mut { header, raw })
+        let v5 = if layout.version == AccountLayoutVersion::V5 {
+            Some(bytemuck::try_from_bytes_mut::<BundleVerifierPageV5Data>(_reserved).ok()?)
+        } else {
+            None
+        };
+        Some(BundleVerifierPageV2Mut { header, raw, v5 })
     }
 
     pub fn read(bytes: &[u8]) -> Option<Self> {
@@ -212,4 +250,15 @@ impl RawBundleVerifierPageV2Data {
         self.entries = entries;
         true
     }
+}
+
+/// Bytes committed by the verifier-page hash. V5 rent metadata is not evidence;
+/// the signed finalization message already binds the escrow lifecycle.
+pub fn bundle_verifier_page_hash_bytes(bytes: &[u8]) -> Option<&[u8]> {
+    let page = BundleVerifierPageV2::from_bytes(bytes)?;
+    Some(if page.layout().version == AccountLayoutVersion::V5 {
+        &bytes[..BundleVerifierPageV2::LEN_V1]
+    } else {
+        bytes
+    })
 }

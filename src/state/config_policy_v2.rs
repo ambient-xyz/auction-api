@@ -194,7 +194,7 @@ impl ConfigPolicyV2 {
             paid_verification_dispute_window_slots: 0,
             paid_verification_dispute_bond_lamports: 0,
             reserved_words: [[0; 32]; CONFIG_POLICY_V2_TYPED_RESERVED_WORDS],
-            v2_account_layout_version: AccountLayoutVersion::V2 as u8,
+            v2_account_layout_version: AccountLayoutVersion::V5 as u8,
             _reserved2: [0; CONFIG_POLICY_V2_TYPED_RESERVED_LAYOUT_PADDING_BYTES],
             reserved_tail: [0; CONFIG_POLICY_V2_TYPED_RESERVED_TAIL_BYTES],
         }
@@ -212,7 +212,11 @@ impl ConfigPolicyV2 {
 
     pub fn configured_v2_account_layout_version(&self) -> Result<AccountLayoutVersion, u8> {
         match AccountLayoutVersion::try_from(self.v2_account_layout_version) {
-            Ok(version @ (AccountLayoutVersion::V1 | AccountLayoutVersion::V2)) => Ok(version),
+            Ok(
+                version @ (AccountLayoutVersion::V1
+                | AccountLayoutVersion::V2
+                | AccountLayoutVersion::V5),
+            ) => Ok(version),
             _ => Err(self.v2_account_layout_version),
         }
     }

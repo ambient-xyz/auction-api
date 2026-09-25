@@ -12,6 +12,7 @@ path = "src/bin/decode-account.rs"
 required-features = ["decoder"]
 
 [dependencies]
+ambient-auction-verifiers = { git = "ssh://git@github.com/AmbientCrypto/auction-verifiers-sysvar.git", rev = "4e705efd03e024f5d5a6c9f6f453aa0722cd6e53" }
 bytemuck = { version = "1", features = ["derive", "const_zeroed"] }
 num_enum = "=0.5.11"
 five8_const = "1.0.0"
@@ -31,5 +32,4 @@ serde_json = "1.0"
 [features]
 decoder = ["dep:base64", "dep:clap", "dep:hex", "dep:serde_json", "serde"]
 serde = ["dep:bs58", "dep:serde", "dep:borsh"]
-global-config = []
 default = []

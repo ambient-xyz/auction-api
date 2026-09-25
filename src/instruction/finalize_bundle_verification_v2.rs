@@ -138,6 +138,9 @@ pub struct FinalizeBundleVerificationV2Message {
     pub _reserved1: [u8; 7],
     pub accepted_output_tokens: u64,
     pub winner_payout_lamports: u64,
+    /// Read from the current escrow; do not recompute from live policy.
+    /// Binds signatures to this lifecycle without changing the escrow layout.
+    pub settlement_deadline_slot: u64,
 }
 
 impl FinalizeBundleVerificationV2Message {
@@ -152,6 +155,7 @@ impl FinalizeBundleVerificationV2Message {
         verdict: VerificationVerdictV2,
         accepted_output_tokens: u64,
         winner_payout_lamports: u64,
+        settlement_deadline_slot: u64,
     ) -> Self {
         Self {
             domain: FINALIZE_BUNDLE_VERIFICATION_V2_DOMAIN,
@@ -166,6 +170,7 @@ impl FinalizeBundleVerificationV2Message {
             _reserved1: [0; 7],
             accepted_output_tokens,
             winner_payout_lamports,
+            settlement_deadline_slot,
         }
     }
 

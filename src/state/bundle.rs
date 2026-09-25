@@ -149,6 +149,7 @@ pub enum BundleDataMut<'a> {
 pub const fn bundle_account_len(version: AccountLayoutVersion) -> usize {
     match version {
         AccountLayoutVersion::LegacyV0 => RawBundleData::LEGACY_LEN,
+        AccountLayoutVersion::V5 => 0,
         AccountLayoutVersion::V1 | AccountLayoutVersion::V2 => {
             RawBundleData::LEGACY_LEN + BundleLayoutTrailerV1::LEN
         }

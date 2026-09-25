@@ -36,7 +36,8 @@ fn new_error_codes_decode_strictly() {
         (76, AuctionError::InvalidBundleVerificationDisputeV2State),
         (77, AuctionError::InvalidBundleVerificationDisputeV2Kind),
         (78, AuctionError::VerificationDisputeWindowClosed),
-        (79, AuctionError::InvalidVerifierSelectionAccounts),
+        (79, AuctionError::VerifierSelectionPending),
+        (80, AuctionError::InvalidVerifierSelectionAccounts),
     ];
 
     for (code, error) in new_errors {

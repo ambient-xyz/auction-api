@@ -17,10 +17,6 @@ pub const BUNDLE_ESCROW_V2_SEED: &[u8] = b"bundle_escrow_v2";
 pub const BUNDLE_VERIFIER_PAGE_V2_SEED: &[u8] = b"bundle_verifier_page_v2";
 pub const BUNDLE_DISPUTE_VERIFIER_PAGE_V2_SEED: &[u8] = b"bundle_dispute_verifier_page_v2";
 pub const BUNDLE_VERIFICATION_DISPUTE_V2_SEED: &[u8] = b"bundle_verification_dispute_v2";
-/// The minimum number of bundle-auction pairs
-/// Eg. if set to 2 means two bundle-auction pairs have to be submitted ie 4 accounts
-#[cfg(not(feature = "global-config"))]
-pub const MINIMUM_BUNDLE_AUCTION_PAIRS: usize = 2;
 /// Auction Program ID
 pub const ID: [u8; PUBKEY_BYTES] =
     five8_const::decode_32_const("Auction111111111111111111111111111111111111");
@@ -32,3 +28,5 @@ pub const AUCTION_VERIFIERS_SYSVAR_ID: [u8; PUBKEY_BYTES] =
 pub const MAX_VERIFIERS_PER_AUCTION: usize = 3;
 /// Compatibility alias for one release cycle. Prefer `MAX_VERIFIERS_PER_AUCTION`.
 pub const VERIFIERS_PER_AUCTION: usize = MAX_VERIFIERS_PER_AUCTION;
+
+pub const AUCTION_VERIFIERS_HISTORY_ID: [u8; PUBKEY_BYTES] = ambient_auction_verifiers::history::ID.to_bytes();
