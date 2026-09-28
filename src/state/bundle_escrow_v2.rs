@@ -115,6 +115,8 @@ pub struct BundleEscrowV5Data {
     /// Bits 0..3 track canonical pages; bits 3..6 track dispute staging pages.
     pub allocated_page_bitmap: u8,
     pub _reserved: [u8; 6],
+    pub small_credit_mint: Pubkey,
+    pub small_credit_amount: u64,
 }
 
 #[derive(Debug)]

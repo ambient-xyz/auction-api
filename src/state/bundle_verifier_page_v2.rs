@@ -54,6 +54,7 @@ pub struct BundleVerifierPageV3SmallData {
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
 pub struct BundleVerifierPageV5Data {
+    pub input_tokens: [u64; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
     pub funder: Pubkey,
     pub settlement_deadline_slot: u64,
 }
@@ -290,7 +291,8 @@ impl RawBundleVerifierPageV2Data {
 pub fn bundle_verifier_page_hash_bytes(bytes: &[u8]) -> Option<&[u8]> {
     let page = BundleVerifierPageV2::from_bytes(bytes)?;
     Some(if page.layout().version == AccountLayoutVersion::V5 {
-        &bytes[..BundleVerifierPageV2::LEN_V1]
+        &bytes[..BundleVerifierPageV2::LEN_V1
+            + std::mem::size_of::<[u64; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES]>()]
     } else {
         bytes
     })

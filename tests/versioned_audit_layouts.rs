@@ -50,11 +50,15 @@ fn new_metadata_round_trips_and_cannot_be_read_as_an_old_layout() {
         state.reserved_v2_mut().unwrap().verifier_quorum = 2;
         state.v5_mut().unwrap().expected_page_count = 3;
         state.v5_mut().unwrap().allocated_page_bitmap = 0b101001;
+        state.v5_mut().unwrap().small_credit_mint = [9; 32].into();
+        state.v5_mut().unwrap().small_credit_amount = 1234;
     }
     let state = BundleEscrowV2::from_bytes(&escrow).unwrap();
     assert_eq!(state.reserved_v2().unwrap().verifier_quorum, 2);
     assert_eq!(state.v5().unwrap().expected_page_count, 3);
     assert_eq!(state.v5().unwrap().allocated_page_bitmap, 0b101001);
+    assert_eq!(state.v5().unwrap().small_credit_mint, [9; 32]);
+    assert_eq!(state.v5().unwrap().small_credit_amount, 1234);
     for version in [1, 2, 3, 4, 255] {
         escrow[1] = version;
         assert!(BundleEscrowV2::from_bytes(&escrow).is_none());
@@ -101,10 +105,33 @@ fn evidence_hash_excludes_only_new_rent_metadata() {
                 .unwrap()
                 .funder = [7; 32].into();
             assert_eq!(bundle_verifier_page_hash_bytes(&bytes).unwrap(), original);
+            BundleVerifierPageV2::from_bytes_mut(&mut bytes)
+                .unwrap()
+                .v5_mut()
+                .unwrap()
+                .input_tokens[0] = 42;
+            assert_ne!(bundle_verifier_page_hash_bytes(&bytes).unwrap(), original);
+            bytes[BundleVerifierPageV2::LEN_V1..BundleVerifierPageV2::LEN_V1 + 8].fill(0);
+            assert_eq!(bundle_verifier_page_hash_bytes(&bytes).unwrap(), original);
             bytes[48] = 1;
             assert_ne!(bundle_verifier_page_hash_bytes(&bytes).unwrap(), original);
         } else {
             assert_eq!(original, bytes);
         }
     }
+}
+
+#[test]
+fn small_credit_claim_has_a_fixed_recipient_account_order_and_empty_payload() {
+    use ambient_auction_api::{ClaimSmallCreditsV5Accounts, ClaimSmallCreditsV5Args, InstructionAccounts};
+    let keys = [1, 2, 3, 4, 5];
+    let accounts = ClaimSmallCreditsV5Accounts::try_from(keys.as_slice()).unwrap();
+    assert_eq!(*accounts.bundle_escrow, 1);
+    assert_eq!(*accounts.config_policy, 2);
+    assert_eq!(*accounts.mint, 3);
+    assert_eq!(*accounts.token_account, 4);
+    assert_eq!(*accounts.token_program, 5);
+    assert_eq!(accounts.iter().copied().collect::<Vec<_>>(), keys);
+    assert_eq!(ClaimSmallCreditsV5Args {}.to_bytes(), [29]);
+    assert!(ClaimSmallCreditsV5Args::try_from(&[1][..]).is_err());
 }
