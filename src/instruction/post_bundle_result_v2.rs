@@ -10,6 +10,8 @@ pub struct PostBundleResultV2Accounts<'a, T> {
     pub bundle_escrow: &'a T,
     pub config_policy: &'a T,
     pub bundle_verifier_page: Option<&'a T>,
+    /// Required when posting authorized replacement evidence during a dispute.
+    pub bundle_verification_dispute: Option<&'a T>,
 }
 
 impl<'a, T> TryFrom<&'a [T]> for PostBundleResultV2Accounts<'a, T> {
@@ -25,6 +27,7 @@ impl<'a, T> TryFrom<&'a [T]> for PostBundleResultV2Accounts<'a, T> {
             bundle_escrow,
             config_policy,
             bundle_verifier_page: rest.first(),
+            bundle_verification_dispute: rest.get(1),
         })
     }
 }
@@ -35,6 +38,7 @@ impl<'a, T> InstructionAccounts<'a, T> for PostBundleResultV2Accounts<'a, T> {
             .chain(std::iter::once(self.bundle_escrow))
             .chain(std::iter::once(self.config_policy))
             .chain(self.bundle_verifier_page.into_iter())
+            .chain(self.bundle_verification_dispute.into_iter())
     }
 }
 
