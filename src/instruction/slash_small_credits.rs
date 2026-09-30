@@ -1,5 +1,5 @@
-use crate::InstructionAccounts;
 use crate::error::AuctionError;
+use crate::InstructionAccounts;
 use bytemuck::{Pod, Zeroable};
 
 #[derive(Debug, Clone)]
@@ -16,14 +16,7 @@ impl<'a, T> TryFrom<&'a [T]> for SlashSmallCreditsAccounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [
-            slash_authority,
-            config_policy,
-            mint,
-            token_account,
-            token_program,
-            ..,
-        ] = accounts
+        let [slash_authority, config_policy, mint, token_account, token_program, ..] = accounts
         else {
             return Err(Self::Error::NotEnoughAccounts);
         };

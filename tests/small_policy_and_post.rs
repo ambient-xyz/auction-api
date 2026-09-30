@@ -46,13 +46,11 @@ fn small_policy_preserves_original_byte_offsets() {
 
     policy.reserved_words[1][1] = 1;
     assert!(!policy.small_credit_settings_word_is_canonical());
-    assert!(
-        !SmallCreditSettings {
-            enabled: true,
-            mint: Pubkey::default(),
-        }
-        .validate()
-    );
+    assert!(!SmallCreditSettings {
+        enabled: true,
+        mint: Pubkey::default(),
+    }
+    .validate());
 }
 
 #[test]
@@ -152,24 +150,20 @@ fn configuration_formats_remain_distinct() {
     assert_eq!(size_of::<InitConfigPolicyV2Args>(), 616);
     assert_eq!(size_of::<SetConfigPolicyV2Args>(), 192);
     assert_eq!(offset_of!(SetConfigPolicyV2Args, authority), 64);
-    assert!(
-        SetConfigPolicyV2Args::try_from(bytemuck::bytes_of(&SetConfigPolicySmallV3Args::zeroed()))
-            .is_err()
-    );
-    assert!(
-        SetConfigPolicySmallV3Args::try_from(bytemuck::bytes_of(&SetConfigPolicyV2Args::zeroed()))
-            .is_err()
-    );
-    assert!(
-        InitConfigPolicyV2Args::try_from(
-            bytemuck::bytes_of(&InitConfigPolicySmallV3Args::zeroed())
-        )
-        .is_err()
-    );
-    assert!(
-        InitConfigPolicySmallV3Args::try_from(
-            bytemuck::bytes_of(&InitConfigPolicyV2Args::zeroed())
-        )
-        .is_err()
-    );
+    assert!(SetConfigPolicyV2Args::try_from(bytemuck::bytes_of(
+        &SetConfigPolicySmallV3Args::zeroed()
+    ))
+    .is_err());
+    assert!(SetConfigPolicySmallV3Args::try_from(bytemuck::bytes_of(
+        &SetConfigPolicyV2Args::zeroed()
+    ))
+    .is_err());
+    assert!(InitConfigPolicyV2Args::try_from(bytemuck::bytes_of(
+        &InitConfigPolicySmallV3Args::zeroed()
+    ))
+    .is_err());
+    assert!(InitConfigPolicySmallV3Args::try_from(bytemuck::bytes_of(
+        &InitConfigPolicyV2Args::zeroed()
+    ))
+    .is_err());
 }

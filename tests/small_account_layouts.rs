@@ -45,33 +45,25 @@ fn v3_small_data_round_trips_separately_from_v2() {
         Pubkey::from([7; 32])
     );
 
-    assert!(
-        BundleEscrowV2::from_bytes(&v3)
-            .unwrap()
-            .reserved_v2()
-            .is_none()
-    );
-    assert!(
-        BundleEscrowV2::from_bytes_mut(&mut v3)
-            .unwrap()
-            .reserved_v2_mut()
-            .is_none()
-    );
+    assert!(BundleEscrowV2::from_bytes(&v3)
+        .unwrap()
+        .reserved_v2()
+        .is_none());
+    assert!(BundleEscrowV2::from_bytes_mut(&mut v3)
+        .unwrap()
+        .reserved_v2_mut()
+        .is_none());
 
     let page_raw = BundleVerifierPageV2::default();
     let mut page_v2 = vec![0; BundleVerifierPageV2::LEN_V2];
     assert!(page_raw.write_v2_bytes(&mut page_v2));
-    assert!(
-        BundleVerifierPageV2::from_bytes(&page_v2)
-            .unwrap()
-            .has_canonical_v2_tail()
-    );
+    assert!(BundleVerifierPageV2::from_bytes(&page_v2)
+        .unwrap()
+        .has_canonical_v2_tail());
     page_v2[BundleVerifierPageV2::LEN_V1] = 1;
-    assert!(
-        !BundleVerifierPageV2::from_bytes(&page_v2)
-            .unwrap()
-            .has_canonical_v2_tail()
-    );
+    assert!(!BundleVerifierPageV2::from_bytes(&page_v2)
+        .unwrap()
+        .has_canonical_v2_tail());
 
     let mut page_v3 = vec![0; BundleVerifierPageV2::LEN_V3];
     assert!(page_raw.write_v3_bytes(&mut page_v3));
