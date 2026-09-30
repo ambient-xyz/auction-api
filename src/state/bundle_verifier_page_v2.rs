@@ -75,8 +75,10 @@ pub struct BundleVerifierPageV2Mut<'a> {
 
 impl<'a> BundleVerifierPageV2Ref<'a> {
     pub fn v5(&self) -> Option<&BundleVerifierPageV5Data> {
-        (self.layout().version == AccountLayoutVersion::V5)
-            .then(|| bytemuck::try_from_bytes(&self.tail[0..]).ok())?
+        if self.layout().version != AccountLayoutVersion::V5 {
+            return None;
+        }
+        bytemuck::try_from_bytes(self.tail).ok()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -96,8 +98,10 @@ impl<'a> BundleVerifierPageV2Ref<'a> {
     }
 
     pub fn small_v3(&self) -> Option<&BundleVerifierPageV3SmallData> {
-        (self.layout().version == AccountLayoutVersion::V3)
-            .then(|| bytemuck::try_from_bytes(self.tail).ok())?
+        if self.layout().version != AccountLayoutVersion::V3 {
+            return None;
+        }
+        bytemuck::try_from_bytes(self.tail).ok()
     }
 }
 
@@ -111,15 +115,17 @@ impl Deref for BundleVerifierPageV2Ref<'_> {
 
 impl<'a> BundleVerifierPageV2Mut<'a> {
     pub fn v5(&self) -> Option<&BundleVerifierPageV5Data> {
-        (self.layout().version == AccountLayoutVersion::V5)
-            .then(|| bytemuck::try_from_bytes(&self.tail[0..]).ok())?
+        if self.layout().version != AccountLayoutVersion::V5 {
+            return None;
+        }
+        bytemuck::try_from_bytes(self.tail).ok()
     }
 
     pub fn v5_mut(&mut self) -> Option<&mut BundleVerifierPageV5Data> {
         if self.layout().version != AccountLayoutVersion::V5 {
             return None;
         }
-        bytemuck::try_from_bytes_mut(&mut self.tail[0..]).ok()
+        bytemuck::try_from_bytes_mut(self.tail).ok()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -143,8 +149,10 @@ impl<'a> BundleVerifierPageV2Mut<'a> {
     }
 
     pub fn small_v3(&self) -> Option<&BundleVerifierPageV3SmallData> {
-        (self.layout().version == AccountLayoutVersion::V3)
-            .then(|| bytemuck::try_from_bytes(&*self.tail).ok())?
+        if self.layout().version != AccountLayoutVersion::V3 {
+            return None;
+        }
+        bytemuck::try_from_bytes(&*self.tail).ok()
     }
 
     pub fn small_v3_mut(&mut self) -> Option<&mut BundleVerifierPageV3SmallData> {
@@ -178,7 +186,7 @@ impl RawBundleVerifierPageV2Data {
         + CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES;
     pub const LEN_V3: usize = Self::LEN_V1 + std::mem::size_of::<BundleVerifierPageV3SmallData>();
 
-    pub const LEN_V5: usize = Self::LEN_V1 + 0 + std::mem::size_of::<BundleVerifierPageV5Data>();
+    pub const LEN_V5: usize = Self::LEN_V1 + std::mem::size_of::<BundleVerifierPageV5Data>();
 
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {

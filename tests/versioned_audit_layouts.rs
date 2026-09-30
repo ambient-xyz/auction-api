@@ -123,7 +123,9 @@ fn evidence_hash_excludes_only_new_rent_metadata() {
 
 #[test]
 fn small_credit_claim_has_a_fixed_recipient_account_order_and_empty_payload() {
-    use ambient_auction_api::{ClaimSmallCreditsV5Accounts, ClaimSmallCreditsV5Args, InstructionAccounts};
+    use ambient_auction_api::{
+        ClaimSmallCreditsV5Accounts, ClaimSmallCreditsV5Args, InstructionAccounts,
+    };
     let keys = [1, 2, 3, 4, 5];
     let accounts = ClaimSmallCreditsV5Accounts::try_from(keys.as_slice()).unwrap();
     assert_eq!(*accounts.bundle_escrow, 1);

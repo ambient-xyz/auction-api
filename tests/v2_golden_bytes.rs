@@ -1,7 +1,7 @@
 use ambient_auction_api::{
     BundleEscrowV2, BundleEscrowV2Status, BundleVerifierPageV2, BundleVerifierPageV2Entry,
-    ConfigPolicyV2, ConfigPolicyV2Flag, ConfigPolicyV2Flags, Pubkey, RequestTier,
-    VerificationVerdictV2, MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES,
+    ConfigPolicyV2, ConfigPolicyV2Flag, ConfigPolicyV2Flags, MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES,
+    Pubkey, RequestTier, VerificationVerdictV2,
 };
 
 fn key(byte: u8) -> Pubkey {

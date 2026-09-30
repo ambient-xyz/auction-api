@@ -135,8 +135,10 @@ pub struct BundleEscrowV2Mut<'a> {
 
 impl<'a> BundleEscrowV2Ref<'a> {
     pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
-        (self.layout().version == AccountLayoutVersion::V5)
-            .then(|| bytemuck::try_from_bytes(&self.tail[64..]).ok())?
+        if self.layout().version != AccountLayoutVersion::V5 {
+            return None;
+        }
+        bytemuck::try_from_bytes(&self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES..]).ok()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -156,11 +158,13 @@ impl<'a> BundleEscrowV2Ref<'a> {
     }
 
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
-        (matches!(
+        if !matches!(
             self.layout().version,
             AccountLayoutVersion::V2 | AccountLayoutVersion::V5
-        ))
-        .then(|| bytemuck::try_from_bytes(&self.tail[..64]).ok())?
+        ) {
+            return None;
+        }
+        bytemuck::try_from_bytes(&self.tail[..CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES]).ok()
     }
 
     pub fn provisional_challenge_deadline_slot(&self) -> u64 {
@@ -170,8 +174,10 @@ impl<'a> BundleEscrowV2Ref<'a> {
     }
 
     pub fn small_v3(&self) -> Option<&BundleEscrowV3SmallData> {
-        (self.layout().version == AccountLayoutVersion::V3)
-            .then(|| bytemuck::try_from_bytes(self.tail).ok())?
+        if self.layout().version != AccountLayoutVersion::V3 {
+            return None;
+        }
+        bytemuck::try_from_bytes(self.tail).ok()
     }
 }
 
@@ -185,15 +191,20 @@ impl Deref for BundleEscrowV2Ref<'_> {
 
 impl<'a> BundleEscrowV2Mut<'a> {
     pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
-        (self.layout().version == AccountLayoutVersion::V5)
-            .then(|| bytemuck::try_from_bytes(&self.tail[64..]).ok())?
+        if self.layout().version != AccountLayoutVersion::V5 {
+            return None;
+        }
+        bytemuck::try_from_bytes(&self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES..]).ok()
     }
 
     pub fn v5_mut(&mut self) -> Option<&mut BundleEscrowV5Data> {
         if self.layout().version != AccountLayoutVersion::V5 {
             return None;
         }
-        bytemuck::try_from_bytes_mut(&mut self.tail[64..]).ok()
+        bytemuck::try_from_bytes_mut(
+            &mut self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES..],
+        )
+        .ok()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -217,11 +228,13 @@ impl<'a> BundleEscrowV2Mut<'a> {
     }
 
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
-        (matches!(
+        if !matches!(
             self.layout().version,
             AccountLayoutVersion::V2 | AccountLayoutVersion::V5
-        ))
-        .then(|| bytemuck::try_from_bytes(&self.tail[..64]).ok())?
+        ) {
+            return None;
+        }
+        bytemuck::try_from_bytes(&self.tail[..CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES]).ok()
     }
 
     pub fn reserved_v2_mut(&mut self) -> Option<&mut BundleEscrowV2ReservedData> {
@@ -231,7 +244,10 @@ impl<'a> BundleEscrowV2Mut<'a> {
         ) {
             return None;
         }
-        bytemuck::try_from_bytes_mut(&mut self.tail[..64]).ok()
+        bytemuck::try_from_bytes_mut(
+            &mut self.tail[..CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES],
+        )
+        .ok()
     }
 
     pub fn provisional_challenge_deadline_slot(&self) -> u64 {
@@ -283,8 +299,10 @@ impl<'a> BundleEscrowV2Mut<'a> {
     }
 
     pub fn small_v3(&self) -> Option<&BundleEscrowV3SmallData> {
-        (self.layout().version == AccountLayoutVersion::V3)
-            .then(|| bytemuck::try_from_bytes(&*self.tail).ok())?
+        if self.layout().version != AccountLayoutVersion::V3 {
+            return None;
+        }
+        bytemuck::try_from_bytes(&*self.tail).ok()
     }
 
     pub fn small_v3_mut(&mut self) -> Option<&mut BundleEscrowV3SmallData> {
@@ -318,7 +336,7 @@ impl RawBundleEscrowV2Data {
 
     pub const LEN_V3: usize = Self::LEN_V1 + std::mem::size_of::<BundleEscrowV3SmallData>();
 
-    pub const LEN_V5: usize = Self::LEN_V1 + 64 + std::mem::size_of::<BundleEscrowV5Data>();
+    pub const LEN_V5: usize = Self::LEN_V2 + std::mem::size_of::<BundleEscrowV5Data>();
 
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {
