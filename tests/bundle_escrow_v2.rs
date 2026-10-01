@@ -256,6 +256,7 @@ fn bundle_escrow_v6_round_trips_all_prefixes_and_mutable_tail() {
 
     // A V6 header must not accept storage that only has room for the V5 prefix.
     assert!(BundleEscrowV2::from_bytes(&bytes[..BundleEscrowV2::LEN_V5]).is_none());
+    assert!(BundleEscrowV2::from_bytes_mut(&mut bytes[..BundleEscrowV2::LEN_V5]).is_none());
 }
 
 #[test]

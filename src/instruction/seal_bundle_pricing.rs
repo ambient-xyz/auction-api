@@ -1,13 +1,13 @@
 use crate::{error::AuctionError, InstructionAccounts};
 use bytemuck::{Pod, Zeroable};
 
-pub struct SealBundlePricingV6Accounts<'a, T> {
+pub struct SealBundlePricingAccounts<'a, T> {
     pub coordinator: &'a T,
     pub bundle_escrow: &'a T,
     pub bundle_verifier_pages: &'a [T],
 }
 
-impl<'a, T> TryFrom<&'a [T]> for SealBundlePricingV6Accounts<'a, T> {
+impl<'a, T> TryFrom<&'a [T]> for SealBundlePricingAccounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
@@ -27,7 +27,7 @@ impl<'a, T> TryFrom<&'a [T]> for SealBundlePricingV6Accounts<'a, T> {
     }
 }
 
-impl<'a, T> InstructionAccounts<'a, T> for SealBundlePricingV6Accounts<'a, T> {
+impl<'a, T> InstructionAccounts<'a, T> for SealBundlePricingAccounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.coordinator)
             .chain(std::iter::once(self.bundle_escrow))
@@ -38,6 +38,6 @@ impl<'a, T> InstructionAccounts<'a, T> for SealBundlePricingV6Accounts<'a, T> {
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug, Pod)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[repr(C)]
-pub struct SealBundlePricingV6Args {
+pub struct SealBundlePricingArgs {
     pub _reserved: [u8; 8],
 }

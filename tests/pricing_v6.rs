@@ -2,8 +2,8 @@ use ambient_auction_api::{
     bundle_account_len, AccountLayoutVersion, AuctionInstruction, BundleJobPricingV6,
     BundlePricingCommitmentV6Message, CommitAuctionSettlementV2Args,
     CommitAuctionSettlementV3Accounts, CommitAuctionSettlementV3Args, InstructionAccounts,
-    InstructionBytes, OpenBundleEscrowV5Args, OpenBundleEscrowV6Args, PostBundlePricingV6Accounts,
-    PostBundlePricingV6Args, SealBundlePricingV6Accounts, SealBundlePricingV6Args,
+    InstructionBytes, OpenBundleEscrowV5Args, OpenBundleEscrowV6Args, PostBundlePricingAccounts,
+    PostBundlePricingArgs, SealBundlePricingAccounts, SealBundlePricingArgs,
     BUNDLE_PRICING_V6_DOMAIN, MAX_BUNDLE_JOBS, MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES,
 };
 use bytemuck::Zeroable;
@@ -131,31 +131,31 @@ fn v6_instruction_discriminators_sizes_and_round_trips_are_stable() {
     );
     assert!(OpenBundleEscrowV5Args::try_from(&open_bytes[1..]).is_err());
 
-    let mut post = PostBundlePricingV6Args::zeroed();
+    let mut post = PostBundlePricingArgs::zeroed();
     post.page_index = 2;
     post.pricing_entry_count = 1;
     post.pricing_entries[0] = pricing(5, 300, 13);
     let post_bytes = post.to_bytes();
-    assert_eq!(size_of::<PostBundlePricingV6Args>(), 296);
-    assert_eq!(offset_of!(PostBundlePricingV6Args, page_index), 0);
-    assert_eq!(offset_of!(PostBundlePricingV6Args, pricing_entry_count), 2);
-    assert_eq!(offset_of!(PostBundlePricingV6Args, pricing_entries), 8);
+    assert_eq!(size_of::<PostBundlePricingArgs>(), 296);
+    assert_eq!(offset_of!(PostBundlePricingArgs, page_index), 0);
+    assert_eq!(offset_of!(PostBundlePricingArgs, pricing_entry_count), 2);
+    assert_eq!(offset_of!(PostBundlePricingArgs, pricing_entries), 8);
     assert_eq!(post_bytes.len(), 297);
     assert_eq!(post_bytes[0], 31);
-    assert_eq!(post_bytes[0], AuctionInstruction::PostBundlePricingV6 as u8);
+    assert_eq!(post_bytes[0], AuctionInstruction::PostBundlePricing as u8);
     assert_eq!(
-        PostBundlePricingV6Args::try_from(&post_bytes[1..]).unwrap(),
+        PostBundlePricingArgs::try_from(&post_bytes[1..]).unwrap(),
         post
     );
 
-    let seal = SealBundlePricingV6Args::zeroed();
+    let seal = SealBundlePricingArgs::zeroed();
     let seal_bytes = seal.to_bytes();
-    assert_eq!(size_of::<SealBundlePricingV6Args>(), 8);
+    assert_eq!(size_of::<SealBundlePricingArgs>(), 8);
     assert_eq!(seal_bytes.len(), 9);
     assert_eq!(seal_bytes[0], 32);
-    assert_eq!(seal_bytes[0], AuctionInstruction::SealBundlePricingV6 as u8);
+    assert_eq!(seal_bytes[0], AuctionInstruction::SealBundlePricing as u8);
     assert_eq!(
-        SealBundlePricingV6Args::try_from(&seal_bytes[1..]).unwrap(),
+        SealBundlePricingArgs::try_from(&seal_bytes[1..]).unwrap(),
         seal
     );
 
@@ -189,15 +189,15 @@ fn v6_instruction_discriminators_sizes_and_round_trips_are_stable() {
 #[test]
 fn v6_instruction_account_parsers_preserve_program_account_order() {
     let post_accounts = [1_u8, 2, 3];
-    let parsed_post = PostBundlePricingV6Accounts::try_from(&post_accounts[..]).unwrap();
+    let parsed_post = PostBundlePricingAccounts::try_from(&post_accounts[..]).unwrap();
     assert_eq!(parsed_post.iter_owned().collect::<Vec<_>>(), post_accounts);
-    assert!(PostBundlePricingV6Accounts::try_from(&post_accounts[..2]).is_err());
+    assert!(PostBundlePricingAccounts::try_from(&post_accounts[..2]).is_err());
 
     let seal_accounts = [1_u8, 2, 3, 4, 5];
-    let parsed_seal = SealBundlePricingV6Accounts::try_from(&seal_accounts[..]).unwrap();
+    let parsed_seal = SealBundlePricingAccounts::try_from(&seal_accounts[..]).unwrap();
     assert_eq!(parsed_seal.iter_owned().collect::<Vec<_>>(), seal_accounts);
     assert_eq!(parsed_seal.bundle_verifier_pages, &[3, 4, 5]);
-    assert!(SealBundlePricingV6Accounts::try_from(&seal_accounts[..2]).is_err());
+    assert!(SealBundlePricingAccounts::try_from(&seal_accounts[..2]).is_err());
 
     let commit_accounts = [1_u8, 2, 3, 4];
     let parsed_commit = CommitAuctionSettlementV3Accounts::try_from(&commit_accounts[..]).unwrap();

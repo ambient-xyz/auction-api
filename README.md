@@ -7,36 +7,21 @@ ordering, or account layouts are therefore protocol changes.
 
 ## Versioned bundle pricing
 
-`AccountLayoutVersion::V6` adds per-job pricing to the bundle escrow flow. The
-configured account-layout version accepts V6, while the production default
-remains V5 so that deployment can be performed explicitly.
+`AccountLayoutVersion::V6` appends pricing metadata to the V5 escrow and
+verifier-page layouts. Existing layouts and instruction encodings stay unchanged.
+The production default remains V5 until an explicit rollout. Instruction versions
+change when their inputs, accounts, or meaning change. An account layout change
+alone does not require another instruction.
 
-A V6 `BundleEscrowV2` account contains the complete V5 layout followed by a V6
-tail. The tail stores a bitmap of pages whose pricing has been posted, whether
-pricing has been sealed, and the pricing commitment supplied when the escrow was
-opened.
+A pricing commitment is a hash of the agreed job prices.
+Hash the exact bytes from `BundlePricingCommitmentV6Message::as_bytes()`.
+The message contains the zero-padded `ambient.bundle.pricing.v6` domain, bundle
+hash, entry count, and ordered pricing entries. Unused entries and reserved bytes
+are zero-filled.
 
-A V6 `BundleVerifierPageV2` account likewise contains its complete V5 layout
-followed by a V6 tail. Each pricing entry contains the job public key, the job's
-maximum output-token count, and its price per output token. A page contains up to
-six entries, and a bundle contains up to three pages or eighteen jobs.
-
-`BundlePricingCommitmentV6Message` defines the canonical bytes committed by the
-requester. It binds the bundle hash, ordered pricing entries, entry count, and the
-zero-padded `ambient.bundle.pricing.v6` domain. Unused entries and reserved bytes
-are zero-filled. Producers and consumers must preserve entry order and hash these
-exact bytes.
-
-The V6 flow introduces `OpenBundleEscrowV6` (30), `PostBundlePricingV6` (31), and
-`SealBundlePricingV6` (32). Pricing is posted one verifier page at a time and
-then sealed after all expected pages have been supplied and checked against the
-commitment. `CommitAuctionSettlementV3` (33) commits the auction hash and winner,
-but does not carry the single bundle-wide clearing price used by V2 settlement.
-
-Verifier-page evidence hashing continues to cover only the original V1 page
-prefix for V5 and V6 accounts. V5 rent metadata and V6 pricing metadata are not
-part of those evidence bytes. V6 pricing is authenticated separately by the
-pricing commitment.
+For V5 and V6 pages, evidence hashes cover only the first
+`BundleVerifierPageV2::LEN_V1` bytes. They exclude V5 rent metadata and V6 pricing
+metadata. The pricing commitment authenticates pricing separately.
 
 ## Building
 
