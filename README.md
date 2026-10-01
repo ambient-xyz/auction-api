@@ -1,6 +1,27 @@
 # Ambient Auction
 
 This repo contains the datastructures that make up the Ambient auction program.
+It is the shared wire-format crate used by the on-chain program, clients, and
+services. Changes to instruction discriminators, instruction payloads, account
+ordering, or account layouts are therefore protocol changes.
+
+## Versioned bundle pricing
+
+`AccountLayoutVersion::V6` appends pricing metadata to the V5 escrow and
+verifier-page layouts. Existing layouts and instruction encodings stay unchanged.
+The production default remains V5 until an explicit rollout. Instruction versions
+change when their inputs, accounts, or meaning change. An account layout change
+alone does not require another instruction.
+
+A pricing commitment is a hash of the agreed job prices.
+Hash the exact bytes from `BundlePricingCommitmentV6Message::as_bytes()`.
+The message contains the zero-padded `ambient.bundle.pricing.v6` domain, bundle
+hash, entry count, and ordered pricing entries. Unused entries and reserved bytes
+are zero-filled.
+
+For V5 and V6 pages, evidence hashes cover only the first
+`BundleVerifierPageV2::LEN_V1` bytes. They exclude V5 rent metadata and V6 pricing
+metadata. The pricing commitment authenticates pricing separately.
 
 ## Building
 
@@ -19,6 +40,6 @@ cargo build --release --bin decode-account --features decoder
 
 Configuration accounts are unconditional. Remove the `global-config` Cargo feature from downstream manifests and build commands.
 `RequestJobAccountKeys` and `RequestJobAccounts` always include `config` after `system_program`.
-Account layouts, instruction numbers, and the `global_config` address seed remain unchanged.
+That build-interface change did not renumber existing instructions, alter existing account layouts, or change the `global_config` address seed.
 The current auction program still rejects legacy instruction numbers `0..=11`, including `InitConfig`, before account parsing.
 This Rust build-interface change requires no on-chain account migration.
