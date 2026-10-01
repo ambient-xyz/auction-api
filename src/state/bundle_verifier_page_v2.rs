@@ -203,23 +203,21 @@ impl RawBundleVerifierPageV2Data {
         let (raw_bytes, tail_bytes) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleVerifierPageV2Data>(raw_bytes).ok()?;
 
-        let (v5, v6) = match layout.version {
-            AccountLayoutVersion::V5 => {
-                let v5 = bytemuck::try_from_bytes::<BundleVerifierPageV5Data>(tail_bytes).ok()?;
-                (Some(v5), None)
-            }
-
-            AccountLayoutVersion::V6 => {
-                let (v5_bytes, v6_bytes) =
-                    tail_bytes.split_at(std::mem::size_of::<BundleVerifierPageV5Data>());
-
-                let v5 = bytemuck::try_from_bytes::<BundleVerifierPageV5Data>(v5_bytes).ok()?;
-                let v6 = bytemuck::try_from_bytes::<BundleVerifierPageV6Data>(v6_bytes).ok()?;
-
-                (Some(v5), Some(v6))
-            }
-
-            _ => (None, None),
+        let (v5, v6) = if matches!(
+            layout.version,
+            AccountLayoutVersion::V5 | AccountLayoutVersion::V6
+        ) {
+            let (v5_bytes, v6_bytes) =
+                tail_bytes.split_at(std::mem::size_of::<BundleVerifierPageV5Data>());
+            let v5 = bytemuck::try_from_bytes::<BundleVerifierPageV5Data>(v5_bytes).ok()?;
+            let v6 = if layout.version == AccountLayoutVersion::V6 {
+                Some(bytemuck::try_from_bytes::<BundleVerifierPageV6Data>(v6_bytes).ok()?)
+            } else {
+                None
+            };
+            (Some(v5), v6)
+        } else {
+            (None, None)
         };
 
         Some(BundleVerifierPageV2Ref {
@@ -250,24 +248,21 @@ impl RawBundleVerifierPageV2Data {
         let (raw_bytes, tail_bytes) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes_mut::<RawBundleVerifierPageV2Data>(raw_bytes).ok()?;
 
-        let (v5, v6) = match layout.version {
-            AccountLayoutVersion::V5 => {
-                let v5 =
-                    bytemuck::try_from_bytes_mut::<BundleVerifierPageV5Data>(tail_bytes).ok()?;
-                (Some(v5), None)
-            }
-
-            AccountLayoutVersion::V6 => {
-                let (v5_bytes, v6_bytes) =
-                    tail_bytes.split_at_mut(std::mem::size_of::<BundleVerifierPageV5Data>());
-
-                let v5 = bytemuck::try_from_bytes_mut::<BundleVerifierPageV5Data>(v5_bytes).ok()?;
-                let v6 = bytemuck::try_from_bytes_mut::<BundleVerifierPageV6Data>(v6_bytes).ok()?;
-
-                (Some(v5), Some(v6))
-            }
-
-            _ => (None, None),
+        let (v5, v6) = if matches!(
+            layout.version,
+            AccountLayoutVersion::V5 | AccountLayoutVersion::V6
+        ) {
+            let (v5_bytes, v6_bytes) =
+                tail_bytes.split_at_mut(std::mem::size_of::<BundleVerifierPageV5Data>());
+            let v5 = bytemuck::try_from_bytes_mut::<BundleVerifierPageV5Data>(v5_bytes).ok()?;
+            let v6 = if layout.version == AccountLayoutVersion::V6 {
+                Some(bytemuck::try_from_bytes_mut::<BundleVerifierPageV6Data>(v6_bytes).ok()?)
+            } else {
+                None
+            };
+            (Some(v5), v6)
+        } else {
+            (None, None)
         };
 
         Some(BundleVerifierPageV2Mut {

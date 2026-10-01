@@ -24,11 +24,11 @@ mod init_config;
 mod init_config_policy_v2;
 mod open_bundle_escrow_v2;
 mod place_bid;
-mod post_bundle_pricing_v6;
+mod post_bundle_pricing;
 mod post_bundle_result_v2;
 mod request_job;
 mod reveal_bid;
-mod seal_bundle_pricing_v6;
+mod seal_bundle_pricing;
 mod select_bundle_verifiers_v2;
 mod set_config_policy_v2;
 mod submit_job_output;
@@ -55,11 +55,11 @@ pub use init_config::*;
 pub use init_config_policy_v2::*;
 pub use open_bundle_escrow_v2::*;
 pub use place_bid::*;
-pub use post_bundle_pricing_v6::*;
+pub use post_bundle_pricing::*;
 pub use post_bundle_result_v2::*;
 pub use request_job::*;
 pub use reveal_bid::*;
-pub use seal_bundle_pricing_v6::*;
+pub use seal_bundle_pricing::*;
 pub use select_bundle_verifiers_v2::*;
 pub use set_config_policy_v2::*;
 pub use submit_job_output::*;
@@ -98,8 +98,8 @@ pub enum AuctionInstruction {
     AuthorizeBundleDisputeEvidenceV5 = 28,
     // 29 is reserved for ClaimSmallCredits (another branch)
     OpenBundleEscrowV6 = 30,
-    PostBundlePricingV6 = 31,
-    SealBundlePricingV6 = 32,
+    PostBundlePricing = 31,
+    SealBundlePricing = 32,
     CommitAuctionSettlementV3 = 33,
 }
 
@@ -190,8 +190,8 @@ impl_instruction_data!(
     DisputeBundleVerificationV2Args => DisputeBundleVerificationV2,
     SelectBundleVerifiersV2Args => SelectBundleVerifiersV2,
     OpenBundleEscrowV6Args => OpenBundleEscrowV6,
-    PostBundlePricingV6Args => PostBundlePricingV6,
-    SealBundlePricingV6Args => SealBundlePricingV6,
+    PostBundlePricingArgs => PostBundlePricing,
+    SealBundlePricingArgs => SealBundlePricing,
     CommitAuctionSettlementV3Args => CommitAuctionSettlementV3
 );
 

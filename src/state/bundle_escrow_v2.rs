@@ -343,23 +343,21 @@ impl RawBundleEscrowV2Data {
             let reserved =
                 Some(bytemuck::try_from_bytes::<BundleEscrowV2ReservedData>(policy_bytes).ok()?);
 
-            let (v5, v6) = match layout.version {
-                AccountLayoutVersion::V5 => {
-                    let v5 = bytemuck::try_from_bytes::<BundleEscrowV5Data>(tail_bytes).ok()?;
-                    (Some(v5), None)
-                }
-
-                AccountLayoutVersion::V6 => {
-                    let (v5_bytes, v6_bytes) =
-                        tail_bytes.split_at(std::mem::size_of::<BundleEscrowV5Data>());
-
-                    let v5 = bytemuck::try_from_bytes::<BundleEscrowV5Data>(v5_bytes).ok()?;
-                    let v6 = bytemuck::try_from_bytes::<BundleEscrowV6Data>(v6_bytes).ok()?;
-
-                    (Some(v5), Some(v6))
-                }
-
-                _ => (None, None),
+            let (v5, v6) = if matches!(
+                layout.version,
+                AccountLayoutVersion::V5 | AccountLayoutVersion::V6
+            ) {
+                let (v5_bytes, v6_bytes) =
+                    tail_bytes.split_at(std::mem::size_of::<BundleEscrowV5Data>());
+                let v5 = bytemuck::try_from_bytes::<BundleEscrowV5Data>(v5_bytes).ok()?;
+                let v6 = if layout.version == AccountLayoutVersion::V6 {
+                    Some(bytemuck::try_from_bytes::<BundleEscrowV6Data>(v6_bytes).ok()?)
+                } else {
+                    None
+                };
+                (Some(v5), v6)
+            } else {
+                (None, None)
             };
 
             (reserved, v5, v6)
@@ -405,23 +403,21 @@ impl RawBundleEscrowV2Data {
                 bytemuck::try_from_bytes_mut::<BundleEscrowV2ReservedData>(policy_bytes).ok()?,
             );
 
-            let (v5, v6) = match layout.version {
-                AccountLayoutVersion::V5 => {
-                    let v5 = bytemuck::try_from_bytes_mut::<BundleEscrowV5Data>(tail_bytes).ok()?;
-                    (Some(v5), None)
-                }
-
-                AccountLayoutVersion::V6 => {
-                    let (v5_bytes, v6_bytes) =
-                        tail_bytes.split_at_mut(std::mem::size_of::<BundleEscrowV5Data>());
-
-                    let v5 = bytemuck::try_from_bytes_mut::<BundleEscrowV5Data>(v5_bytes).ok()?;
-                    let v6 = bytemuck::try_from_bytes_mut::<BundleEscrowV6Data>(v6_bytes).ok()?;
-
-                    (Some(v5), Some(v6))
-                }
-
-                _ => (None, None),
+            let (v5, v6) = if matches!(
+                layout.version,
+                AccountLayoutVersion::V5 | AccountLayoutVersion::V6
+            ) {
+                let (v5_bytes, v6_bytes) =
+                    tail_bytes.split_at_mut(std::mem::size_of::<BundleEscrowV5Data>());
+                let v5 = bytemuck::try_from_bytes_mut::<BundleEscrowV5Data>(v5_bytes).ok()?;
+                let v6 = if layout.version == AccountLayoutVersion::V6 {
+                    Some(bytemuck::try_from_bytes_mut::<BundleEscrowV6Data>(v6_bytes).ok()?)
+                } else {
+                    None
+                };
+                (Some(v5), v6)
+            } else {
+                (None, None)
             };
 
             (reserved, v5, v6)

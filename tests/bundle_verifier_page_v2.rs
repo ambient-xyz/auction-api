@@ -167,4 +167,7 @@ fn bundle_verifier_page_v6_round_trips_v5_and_pricing_tails() {
 
     // This catches a parser that accidentally treats the V6 tail as the V5 prefix.
     assert!(BundleVerifierPageV2::from_bytes(&bytes[..BundleVerifierPageV2::LEN_V5]).is_none());
+    assert!(
+        BundleVerifierPageV2::from_bytes_mut(&mut bytes[..BundleVerifierPageV2::LEN_V5]).is_none()
+    );
 }
