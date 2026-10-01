@@ -109,6 +109,7 @@ fn display_bundle_escrow_v2(buffer: Vec<u8>) -> Result<(), String> {
             "state": data.as_raw(),
             "policy": data.reserved_v2(),
             "pages": data.v5(),
+            "pricing": data.v6(),
         }))
         .unwrap()
     );
