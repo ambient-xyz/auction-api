@@ -13,6 +13,7 @@ mod close_bid;
 mod close_bundle_verifier_page_v5;
 mod close_request;
 mod commit_auction_settlement_v2;
+mod commit_auction_settlement_v3;
 mod dispute_bundle_verification_v2;
 mod end_auction;
 mod expire_bundle_escrow_v2;
@@ -23,9 +24,11 @@ mod init_config;
 mod init_config_policy_v2;
 mod open_bundle_escrow_v2;
 mod place_bid;
+mod post_bundle_pricing_v6;
 mod post_bundle_result_v2;
 mod request_job;
 mod reveal_bid;
+mod seal_bundle_pricing_v6;
 mod select_bundle_verifiers_v2;
 mod set_config_policy_v2;
 mod submit_job_output;
@@ -41,6 +44,7 @@ pub use close_bid::*;
 pub use close_bundle_verifier_page_v5::*;
 pub use close_request::*;
 pub use commit_auction_settlement_v2::*;
+pub use commit_auction_settlement_v3::*;
 pub use dispute_bundle_verification_v2::*;
 pub use end_auction::*;
 pub use expire_bundle_escrow_v2::*;
@@ -51,9 +55,11 @@ pub use init_config::*;
 pub use init_config_policy_v2::*;
 pub use open_bundle_escrow_v2::*;
 pub use place_bid::*;
+pub use post_bundle_pricing_v6::*;
 pub use post_bundle_result_v2::*;
 pub use request_job::*;
 pub use reveal_bid::*;
+pub use seal_bundle_pricing_v6::*;
 pub use select_bundle_verifiers_v2::*;
 pub use set_config_policy_v2::*;
 pub use submit_job_output::*;
@@ -90,6 +96,11 @@ pub enum AuctionInstruction {
     OpenBundleEscrowV5 = 26,
     CloseBundleVerifierPageV5 = 27,
     AuthorizeBundleDisputeEvidenceV5 = 28,
+    // 29 is reserved for ClaimSmallCredits (another branch)
+    OpenBundleEscrowV6 = 30,
+    PostBundlePricingV6 = 31,
+    SealBundlePricingV6 = 32,
+    CommitAuctionSettlementV3 = 33,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -178,6 +189,10 @@ impl_instruction_data!(
     InitBundleVerifierPageV2Args => InitBundleVerifierPageV2,
     DisputeBundleVerificationV2Args => DisputeBundleVerificationV2,
     SelectBundleVerifiersV2Args => SelectBundleVerifiersV2,
+    OpenBundleEscrowV6Args => OpenBundleEscrowV6,
+    PostBundlePricingV6Args => PostBundlePricingV6,
+    SealBundlePricingV6Args => SealBundlePricingV6,
+    CommitAuctionSettlementV3Args => CommitAuctionSettlementV3
 );
 
 impl_instruction_data!(InitConfigArgs => InitConfig);

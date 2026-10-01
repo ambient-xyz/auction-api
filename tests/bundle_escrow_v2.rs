@@ -1,8 +1,8 @@
 use ambient_auction_api::{
     AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, BundleEscrowV2,
-    BundleEscrowV2ReservedData, BundleEscrowV2Status, InvalidBundleEscrowV2Transition, Pubkey,
-    RequestTier, VERIFIERS_PER_AUCTION, VERIFIER_SELECTION_PHASE_INITIAL,
-    VERIFIER_SELECTION_PHASE_REPLACEMENT,
+    BundleEscrowV2ReservedData, BundleEscrowV2Status, BundleEscrowV5Data, BundleEscrowV6Data,
+    InvalidBundleEscrowV2Transition, Pubkey, RequestTier, VERIFIERS_PER_AUCTION,
+    VERIFIER_SELECTION_PHASE_INITIAL, VERIFIER_SELECTION_PHASE_REPLACEMENT,
 };
 use memoffset::offset_of;
 use std::mem::size_of;
@@ -183,6 +183,79 @@ fn bundle_escrow_v2_reserved_layout_is_typed_and_stable() {
         bytemuck::bytes_of(&BundleEscrowV2ReservedData::default()),
         &[0u8; 64]
     );
+}
+
+#[test]
+fn bundle_escrow_v6_layout_is_append_only_and_stable() {
+    assert_eq!(size_of::<BundleEscrowV5Data>(), 8);
+    assert_eq!(size_of::<BundleEscrowV6Data>(), 40);
+    assert_eq!(
+        offset_of!(BundleEscrowV6Data, pricing_posted_page_bitmap),
+        0
+    );
+    assert_eq!(offset_of!(BundleEscrowV6Data, pricing_sealed), 1);
+    assert_eq!(offset_of!(BundleEscrowV6Data, _reserved0), 2);
+    assert_eq!(offset_of!(BundleEscrowV6Data, pricing_commitment), 8);
+    assert_eq!(BundleEscrowV2::LEN_V5, 576);
+    assert_eq!(BundleEscrowV2::LEN_V6, 616);
+    assert_eq!(
+        BundleEscrowV2::LEN_V6,
+        BundleEscrowV2::LEN_V5 + size_of::<BundleEscrowV6Data>()
+    );
+    assert_eq!(
+        BundleEscrowV2::account_len(AccountLayoutVersion::V6),
+        BundleEscrowV2::LEN_V6
+    );
+}
+
+#[test]
+fn bundle_escrow_v6_round_trips_all_prefixes_and_mutable_tail() {
+    let bundle = BundleEscrowV2 {
+        bundle_version: 17,
+        bundle_hash: [4; 32],
+        max_output_tokens: 1_000,
+        ..Default::default()
+    };
+    let mut bytes = vec![0xFF; BundleEscrowV2::LEN_V6];
+
+    assert!(bundle.write_bytes_with_layout(&mut bytes, AccountLayoutVersion::V6));
+
+    // Writing a fresh V6 account initializes every appended prefix/tail byte.
+    {
+        let state = BundleEscrowV2::from_bytes(&bytes).unwrap();
+        assert_eq!(state.layout().version, AccountLayoutVersion::V6);
+        assert_eq!(state.bundle_version, 17);
+        assert_eq!(state.bundle_hash, [4; 32]);
+        assert_eq!(state.max_output_tokens, 1_000);
+        assert_eq!(
+            state.reserved_v2().unwrap(),
+            &BundleEscrowV2ReservedData::default()
+        );
+        assert_eq!(state.v5().unwrap(), &BundleEscrowV5Data::default());
+        assert_eq!(state.v6().unwrap(), &BundleEscrowV6Data::default());
+    }
+
+    {
+        let mut state = BundleEscrowV2::from_bytes_mut(&mut bytes).unwrap();
+        state.reserved_v2_mut().unwrap().verifier_quorum = 2;
+        state.v5_mut().unwrap().expected_page_count = 3;
+        state.v5_mut().unwrap().allocated_page_bitmap = 0b0000_0111;
+        let pricing = state.v6_mut().unwrap();
+        pricing.pricing_posted_page_bitmap = 0b0000_0101;
+        pricing.pricing_sealed = 1;
+        pricing.pricing_commitment = [9; 32];
+    }
+
+    let state = BundleEscrowV2::from_bytes(&bytes).unwrap();
+    assert_eq!(state.reserved_v2().unwrap().verifier_quorum, 2);
+    assert_eq!(state.v5().unwrap().expected_page_count, 3);
+    assert_eq!(state.v5().unwrap().allocated_page_bitmap, 0b0000_0111);
+    assert_eq!(state.v6().unwrap().pricing_posted_page_bitmap, 0b0000_0101);
+    assert_eq!(state.v6().unwrap().pricing_sealed, 1);
+    assert_eq!(state.v6().unwrap().pricing_commitment, [9; 32]);
+
+    // A V6 header must not accept storage that only has room for the V5 prefix.
+    assert!(BundleEscrowV2::from_bytes(&bytes[..BundleEscrowV2::LEN_V5]).is_none());
 }
 
 #[test]

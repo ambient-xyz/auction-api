@@ -51,11 +51,30 @@ pub struct BundleVerifierPageV5Data {
     pub settlement_deadline_slot: u64,
 }
 
+#[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[repr(C)]
+pub struct BundleJobPricingV6 {
+    pub job_id: Pubkey,
+    pub max_output_tokens: u64,
+    pub price_per_output_token: u64,
+}
+
+#[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[repr(C)]
+pub struct BundleVerifierPageV6Data {
+    pub pricing_entry_count: u8,
+    pub _reserved0: [u8; 7],
+    pub pricing_entries: [BundleJobPricingV6; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
+}
+
 #[derive(Debug)]
 pub struct BundleVerifierPageV2Ref<'a> {
     header: &'a AccountHeaderV1,
     raw: &'a RawBundleVerifierPageV2Data,
     v5: Option<&'a BundleVerifierPageV5Data>,
+    v6: Option<&'a BundleVerifierPageV6Data>,
 }
 
 #[derive(Debug)]
@@ -63,11 +82,16 @@ pub struct BundleVerifierPageV2Mut<'a> {
     header: &'a mut AccountHeaderV1,
     raw: &'a mut RawBundleVerifierPageV2Data,
     v5: Option<&'a mut BundleVerifierPageV5Data>,
+    v6: Option<&'a mut BundleVerifierPageV6Data>,
 }
 
 impl<'a> BundleVerifierPageV2Ref<'a> {
     pub fn v5(&self) -> Option<&BundleVerifierPageV5Data> {
         self.v5
+    }
+
+    pub fn v6(&self) -> Option<&BundleVerifierPageV6Data> {
+        self.v6
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -98,6 +122,14 @@ impl<'a> BundleVerifierPageV2Mut<'a> {
 
     pub fn v5_mut(&mut self) -> Option<&mut BundleVerifierPageV5Data> {
         self.v5.as_deref_mut()
+    }
+
+    pub fn v6(&self) -> Option<&BundleVerifierPageV6Data> {
+        self.v6.as_deref()
+    }
+
+    pub fn v6_mut(&mut self) -> Option<&mut BundleVerifierPageV6Data> {
+        self.v6.as_deref_mut()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -140,12 +172,14 @@ impl RawBundleVerifierPageV2Data {
         + CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES;
 
     pub const LEN_V5: usize = Self::LEN_V1 + std::mem::size_of::<BundleVerifierPageV5Data>();
+    pub const LEN_V6: usize = Self::LEN_V5 + std::mem::size_of::<BundleVerifierPageV6Data>();
 
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {
             AccountLayoutVersion::V1 => Self::LEN_V1,
             AccountLayoutVersion::V2 => Self::LEN_V2,
             AccountLayoutVersion::V5 => Self::LEN_V5,
+            AccountLayoutVersion::V6 => Self::LEN_V6,
             AccountLayoutVersion::LegacyV0 => 0,
         }
     }
@@ -166,14 +200,34 @@ impl RawBundleVerifierPageV2Data {
             return None;
         }
 
-        let (raw_bytes, _reserved) = raw_bytes.split_at(Self::PAYLOAD_LEN);
+        let (raw_bytes, tail_bytes) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleVerifierPageV2Data>(raw_bytes).ok()?;
-        let v5 = if layout.version == AccountLayoutVersion::V5 {
-            Some(bytemuck::try_from_bytes::<BundleVerifierPageV5Data>(_reserved).ok()?)
-        } else {
-            None
+
+        let (v5, v6) = match layout.version {
+            AccountLayoutVersion::V5 => {
+                let v5 = bytemuck::try_from_bytes::<BundleVerifierPageV5Data>(tail_bytes).ok()?;
+                (Some(v5), None)
+            }
+
+            AccountLayoutVersion::V6 => {
+                let (v5_bytes, v6_bytes) =
+                    tail_bytes.split_at(std::mem::size_of::<BundleVerifierPageV5Data>());
+
+                let v5 = bytemuck::try_from_bytes::<BundleVerifierPageV5Data>(v5_bytes).ok()?;
+                let v6 = bytemuck::try_from_bytes::<BundleVerifierPageV6Data>(v6_bytes).ok()?;
+
+                (Some(v5), Some(v6))
+            }
+
+            _ => (None, None),
         };
-        Some(BundleVerifierPageV2Ref { header, raw, v5 })
+
+        Some(BundleVerifierPageV2Ref {
+            header,
+            raw,
+            v5,
+            v6,
+        })
     }
 
     pub fn from_bytes_mut(bytes: &mut [u8]) -> Option<BundleVerifierPageV2Mut<'_>> {
@@ -193,14 +247,35 @@ impl RawBundleVerifierPageV2Data {
             return None;
         }
 
-        let (raw_bytes, _reserved) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
+        let (raw_bytes, tail_bytes) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes_mut::<RawBundleVerifierPageV2Data>(raw_bytes).ok()?;
-        let v5 = if layout.version == AccountLayoutVersion::V5 {
-            Some(bytemuck::try_from_bytes_mut::<BundleVerifierPageV5Data>(_reserved).ok()?)
-        } else {
-            None
+
+        let (v5, v6) = match layout.version {
+            AccountLayoutVersion::V5 => {
+                let v5 =
+                    bytemuck::try_from_bytes_mut::<BundleVerifierPageV5Data>(tail_bytes).ok()?;
+                (Some(v5), None)
+            }
+
+            AccountLayoutVersion::V6 => {
+                let (v5_bytes, v6_bytes) =
+                    tail_bytes.split_at_mut(std::mem::size_of::<BundleVerifierPageV5Data>());
+
+                let v5 = bytemuck::try_from_bytes_mut::<BundleVerifierPageV5Data>(v5_bytes).ok()?;
+                let v6 = bytemuck::try_from_bytes_mut::<BundleVerifierPageV6Data>(v6_bytes).ok()?;
+
+                (Some(v5), Some(v6))
+            }
+
+            _ => (None, None),
         };
-        Some(BundleVerifierPageV2Mut { header, raw, v5 })
+
+        Some(BundleVerifierPageV2Mut {
+            header,
+            raw,
+            v5,
+            v6,
+        })
     }
 
     pub fn read(bytes: &[u8]) -> Option<Self> {
@@ -227,9 +302,9 @@ impl RawBundleVerifierPageV2Data {
             version: version as u8,
             reserved: [0; 6],
         }));
-        let (raw_bytes, reserved_bytes) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
+        let (raw_bytes, tail_bytes) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         raw_bytes.copy_from_slice(bytemuck::bytes_of(self));
-        reserved_bytes.fill(0);
+        tail_bytes.fill(0);
         true
     }
 
@@ -256,9 +331,14 @@ impl RawBundleVerifierPageV2Data {
 /// the signed finalization message already binds the escrow lifecycle.
 pub fn bundle_verifier_page_hash_bytes(bytes: &[u8]) -> Option<&[u8]> {
     let page = BundleVerifierPageV2::from_bytes(bytes)?;
-    Some(if page.layout().version == AccountLayoutVersion::V5 {
-        &bytes[..BundleVerifierPageV2::LEN_V1]
-    } else {
-        bytes
-    })
+    Some(
+        if matches!(
+            page.layout().version,
+            AccountLayoutVersion::V5 | AccountLayoutVersion::V6
+        ) {
+            &bytes[..BundleVerifierPageV2::LEN_V1]
+        } else {
+            bytes
+        },
+    )
 }
