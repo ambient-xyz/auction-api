@@ -233,7 +233,8 @@ impl ConfigPolicyV2 {
             Ok(
                 version @ (AccountLayoutVersion::V1
                 | AccountLayoutVersion::V2
-                | AccountLayoutVersion::V5),
+                | AccountLayoutVersion::V5
+                | AccountLayoutVersion::V6),
             ) => Ok(version),
             _ => Err(self.v2_account_layout_version),
         }

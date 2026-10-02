@@ -119,6 +119,20 @@ pub struct BundleEscrowV5Data {
     pub small_credit_amount: u64,
 }
 
+/// Additional lifecycle metadata present only in layout version 6.
+#[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[repr(C)]
+pub struct BundleEscrowV6Data {
+    /// Bits 0..3 track which canonical pages had pricing information filled in
+    pub pricing_posted_page_bitmap: u8,
+    pub pricing_sealed: u8,
+    pub _reserved0: [u8; 6],
+
+    /// Hash of agreed pricing table
+    pub pricing_commitment: [u8; 32],
+}
+
 #[derive(Debug)]
 pub struct BundleEscrowV2Ref<'a> {
     header: &'a AccountHeaderV1,
@@ -135,10 +149,24 @@ pub struct BundleEscrowV2Mut<'a> {
 
 impl<'a> BundleEscrowV2Ref<'a> {
     pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
-        if self.layout().version != AccountLayoutVersion::V5 {
+        if !matches!(
+            self.layout().version,
+            AccountLayoutVersion::V5 | AccountLayoutVersion::V6
+        ) {
             return None;
         }
-        bytemuck::try_from_bytes(&self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES..]).ok()
+        bytemuck::try_from_bytes(
+            &self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
+                ..BundleEscrowV2::LEN_V5 - BundleEscrowV2::LEN_V1],
+        )
+        .ok()
+    }
+
+    pub fn v6(&self) -> Option<&BundleEscrowV6Data> {
+        if self.layout().version != AccountLayoutVersion::V6 {
+            return None;
+        }
+        bytemuck::try_from_bytes(&self.tail[BundleEscrowV2::LEN_V5 - BundleEscrowV2::LEN_V1..]).ok()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -160,7 +188,7 @@ impl<'a> BundleEscrowV2Ref<'a> {
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
         if !matches!(
             self.layout().version,
-            AccountLayoutVersion::V2 | AccountLayoutVersion::V5
+            AccountLayoutVersion::V2 | AccountLayoutVersion::V5 | AccountLayoutVersion::V6
         ) {
             return None;
         }
@@ -191,18 +219,46 @@ impl Deref for BundleEscrowV2Ref<'_> {
 
 impl<'a> BundleEscrowV2Mut<'a> {
     pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
-        if self.layout().version != AccountLayoutVersion::V5 {
+        if !matches!(
+            self.layout().version,
+            AccountLayoutVersion::V5 | AccountLayoutVersion::V6
+        ) {
             return None;
         }
-        bytemuck::try_from_bytes(&self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES..]).ok()
+        bytemuck::try_from_bytes(
+            &self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
+                ..BundleEscrowV2::LEN_V5 - BundleEscrowV2::LEN_V1],
+        )
+        .ok()
     }
 
     pub fn v5_mut(&mut self) -> Option<&mut BundleEscrowV5Data> {
-        if self.layout().version != AccountLayoutVersion::V5 {
+        if !matches!(
+            self.layout().version,
+            AccountLayoutVersion::V5 | AccountLayoutVersion::V6
+        ) {
             return None;
         }
         bytemuck::try_from_bytes_mut(
-            &mut self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES..],
+            &mut self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
+                ..BundleEscrowV2::LEN_V5 - BundleEscrowV2::LEN_V1],
+        )
+        .ok()
+    }
+
+    pub fn v6(&self) -> Option<&BundleEscrowV6Data> {
+        if self.layout().version != AccountLayoutVersion::V6 {
+            return None;
+        }
+        bytemuck::try_from_bytes(&self.tail[BundleEscrowV2::LEN_V5 - BundleEscrowV2::LEN_V1..]).ok()
+    }
+
+    pub fn v6_mut(&mut self) -> Option<&mut BundleEscrowV6Data> {
+        if self.layout().version != AccountLayoutVersion::V6 {
+            return None;
+        }
+        bytemuck::try_from_bytes_mut(
+            &mut self.tail[BundleEscrowV2::LEN_V5 - BundleEscrowV2::LEN_V1..],
         )
         .ok()
     }
@@ -230,7 +286,7 @@ impl<'a> BundleEscrowV2Mut<'a> {
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
         if !matches!(
             self.layout().version,
-            AccountLayoutVersion::V2 | AccountLayoutVersion::V5
+            AccountLayoutVersion::V2 | AccountLayoutVersion::V5 | AccountLayoutVersion::V6
         ) {
             return None;
         }
@@ -240,7 +296,7 @@ impl<'a> BundleEscrowV2Mut<'a> {
     pub fn reserved_v2_mut(&mut self) -> Option<&mut BundleEscrowV2ReservedData> {
         if !matches!(
             self.layout().version,
-            AccountLayoutVersion::V2 | AccountLayoutVersion::V5
+            AccountLayoutVersion::V2 | AccountLayoutVersion::V5 | AccountLayoutVersion::V6
         ) {
             return None;
         }
@@ -337,6 +393,7 @@ impl RawBundleEscrowV2Data {
     pub const LEN_V3: usize = Self::LEN_V1 + std::mem::size_of::<BundleEscrowV3SmallData>();
 
     pub const LEN_V5: usize = Self::LEN_V2 + std::mem::size_of::<BundleEscrowV5Data>();
+    pub const LEN_V6: usize = Self::LEN_V5 + std::mem::size_of::<BundleEscrowV6Data>();
 
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {
@@ -344,6 +401,7 @@ impl RawBundleEscrowV2Data {
             AccountLayoutVersion::V2 => Self::LEN_V2,
             AccountLayoutVersion::V3 => Self::LEN_V3,
             AccountLayoutVersion::V5 => Self::LEN_V5,
+            AccountLayoutVersion::V6 => Self::LEN_V6,
             AccountLayoutVersion::LegacyV0 => 0,
         }
     }

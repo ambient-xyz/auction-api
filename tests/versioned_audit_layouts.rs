@@ -94,16 +94,19 @@ fn evidence_hash_excludes_only_new_rent_metadata() {
         AccountLayoutVersion::V1,
         AccountLayoutVersion::V2,
         AccountLayoutVersion::V5,
+        AccountLayoutVersion::V6,
     ] {
         let mut bytes = vec![0; BundleVerifierPageV2::account_len(version)];
         assert!(BundleVerifierPageV2::default().write_bytes_with_layout(&mut bytes, version));
         let original = bundle_verifier_page_hash_bytes(&bytes).unwrap().to_vec();
-        if version == AccountLayoutVersion::V5 {
-            BundleVerifierPageV2::from_bytes_mut(&mut bytes)
-                .unwrap()
-                .v5_mut()
-                .unwrap()
-                .funder = [7; 32].into();
+        if matches!(version, AccountLayoutVersion::V5 | AccountLayoutVersion::V6) {
+            let mut page = BundleVerifierPageV2::from_bytes_mut(&mut bytes).unwrap();
+            page.v5_mut().unwrap().funder = [7; 32].into();
+            if version == AccountLayoutVersion::V6 {
+                page.v6_mut().unwrap().pricing_entry_count = 1;
+                page.v6_mut().unwrap().pricing_entries[0].price_per_output_token = 9;
+            }
+            drop(page);
             assert_eq!(bundle_verifier_page_hash_bytes(&bytes).unwrap(), original);
             BundleVerifierPageV2::from_bytes_mut(&mut bytes)
                 .unwrap()
