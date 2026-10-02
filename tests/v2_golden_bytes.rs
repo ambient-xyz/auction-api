@@ -75,8 +75,8 @@ fn v2_account_bytes_remain_stable() {
     let mut service_authorities = [Pubkey::default(); 16];
     service_authorities[0] = key(55);
     service_authorities[15] = key(56);
-    let mut reserved_words = [[0; 32]; 7];
-    reserved_words[6] = [59; 32];
+    let mut reserved_words = [[0; 32]; 3];
+    reserved_words[2] = [59; 32];
     let policy = ConfigPolicyV2 {
         bump: 51,
         v2_account_layout_version: 2,

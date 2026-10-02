@@ -44,7 +44,11 @@ fn small_policy_preserves_original_byte_offsets() {
     assert_eq!(bytes[1_352], 1);
     assert!(bytes[1_353..1_384].iter().all(|byte| *byte == 0));
 
-    policy.reserved_words[1][1] = 1;
+    policy._small_credit_enabled_padding[0] = 1;
+    assert!(!policy.small_credit_settings_word_is_canonical());
+    policy._small_credit_enabled_padding[0] = 0;
+    policy.small_credit_enabled = 2;
+    assert!(!policy.small_credit_enabled());
     assert!(!policy.small_credit_settings_word_is_canonical());
     assert!(!SmallCreditSettings {
         enabled: true,
@@ -77,7 +81,7 @@ fn slash_settings_preserve_original_byte_offsets() {
     assert_eq!(policy.small_credit_slash_sequence(), 5);
     assert_eq!(&after[1_416..1_424], &5_u64.to_le_bytes());
     assert!(after[1_424..1_448].iter().all(|byte| *byte == 0));
-    policy.reserved_words[3][8] = 1;
+    policy._small_credit_slash_sequence_padding[0] = 1;
     assert!(!policy.small_credit_slash_sequence_word_is_canonical());
 
     let mut patch = SetConfigPolicySmallV3Args::zeroed();
@@ -142,6 +146,47 @@ fn small_configuration_writes_preserve_v2_dispute_terms() {
     policy.set_small_credit_slash_sequence(9);
     assert_eq!(&bytemuck::bytes_of(&policy)[..1320], &before[..1320]);
     assert_eq!(&bytemuck::bytes_of(&policy)[1448..], &before[1448..]);
+}
+
+#[test]
+fn existing_policy_bytes_and_updates_preserve_unrelated_bytes() {
+    let mut bytes = [0; 1_568];
+    bytes[1_320..1_352].fill(5);
+    bytes[1_352] = 1;
+    bytes[1_353..1_384].fill(17);
+    bytes[1_384..1_416].fill(7);
+    bytes[1_416..1_424].copy_from_slice(&0x0102_0304_0506_0708_u64.to_le_bytes());
+    bytes[1_424..1_448].fill(18);
+    bytes[1_448..1_544].fill(19);
+    bytes[1_544] = 2;
+    bytes[1_545..].fill(20);
+    let mut policy = bytemuck::try_pod_read_unaligned::<ConfigPolicyV2>(&bytes).unwrap();
+    assert_eq!(policy.small_credit_mint(), Pubkey::from([5; 32]));
+    assert!(policy.small_credit_enabled());
+    assert_eq!(policy.small_credit_slash_authority(), Pubkey::from([7; 32]));
+    assert_eq!(policy.small_credit_slash_sequence(), 0x0102_0304_0506_0708);
+    assert!(!policy.small_credit_settings_word_is_canonical());
+    assert!(!policy.small_credit_slash_sequence_word_is_canonical());
+    assert_eq!(bytemuck::bytes_of(&policy), bytes);
+
+    policy.set_small_credit_settings(SmallCreditSettings {
+        enabled: false,
+        mint: Pubkey::from([8; 32]),
+    });
+    bytes[1_320..1_352].fill(8);
+    bytes[1_352..1_384].fill(0);
+    assert_eq!(bytemuck::bytes_of(&policy), bytes);
+    assert!(policy.small_credit_settings_word_is_canonical());
+
+    policy.set_small_credit_slash_authority(Pubkey::from([9; 32]));
+    bytes[1_384..1_416].fill(9);
+    assert_eq!(bytemuck::bytes_of(&policy), bytes);
+
+    policy.set_small_credit_slash_sequence(42);
+    bytes[1_416..1_424].copy_from_slice(&42_u64.to_le_bytes());
+    bytes[1_424..1_448].fill(0);
+    assert_eq!(bytemuck::bytes_of(&policy), bytes);
+    assert!(policy.small_credit_slash_sequence_word_is_canonical());
 }
 
 #[test]
