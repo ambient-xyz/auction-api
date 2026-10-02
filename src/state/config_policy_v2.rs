@@ -261,7 +261,7 @@ impl ConfigPolicyV2 {
     }
 
     pub fn small_credit_slash_sequence(&self) -> u64 {
-        u64::from_le(self.small_credit_slash_sequence)
+        self.small_credit_slash_sequence
     }
 
     pub fn small_credit_slash_sequence_word_is_canonical(&self) -> bool {
@@ -296,7 +296,7 @@ impl ConfigPolicyV2 {
     }
 
     pub fn set_small_credit_slash_sequence(&mut self, sequence: u64) {
-        self.small_credit_slash_sequence = sequence.to_le();
+        self.small_credit_slash_sequence = sequence;
         self._reserved_small_credit_slash_sequence.fill(0);
     }
 }
