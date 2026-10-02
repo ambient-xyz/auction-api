@@ -9,9 +9,10 @@ ordering, or account layouts are therefore protocol changes.
 
 `AccountLayoutVersion::V6` appends pricing metadata to the V5 escrow and
 verifier-page layouts. Existing layouts and instruction encodings stay unchanged.
-The production default remains V5 until an explicit rollout. Instruction versions
-change when their inputs, accounts, or meaning change. An account layout change
-alone does not require another instruction.
+The production default remains V5 until an explicit rollout. Shared readers expose
+lifecycle, pricing, and dispute evidence through named accessors. Instruction
+versions change when their inputs, accounts, or meaning change. A compatible
+account layout change alone does not require another instruction.
 
 A pricing commitment is a hash of the agreed job prices.
 Hash the exact bytes from `BundlePricingCommitmentV6Message::as_bytes()`.

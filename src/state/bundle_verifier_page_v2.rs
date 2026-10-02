@@ -86,12 +86,20 @@ pub struct BundleVerifierPageV2Mut<'a> {
 }
 
 impl<'a> BundleVerifierPageV2Ref<'a> {
-    pub fn v5(&self) -> Option<&BundleVerifierPageV5Data> {
+    pub fn lifecycle(&self) -> Option<&BundleVerifierPageV5Data> {
         self.v5
     }
 
-    pub fn v6(&self) -> Option<&BundleVerifierPageV6Data> {
+    pub fn pricing(&self) -> Option<&BundleVerifierPageV6Data> {
         self.v6
+    }
+
+    pub fn v5(&self) -> Option<&BundleVerifierPageV5Data> {
+        self.lifecycle()
+    }
+
+    pub fn v6(&self) -> Option<&BundleVerifierPageV6Data> {
+        self.pricing()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -116,20 +124,36 @@ impl Deref for BundleVerifierPageV2Ref<'_> {
 }
 
 impl<'a> BundleVerifierPageV2Mut<'a> {
-    pub fn v5(&self) -> Option<&BundleVerifierPageV5Data> {
+    pub fn lifecycle(&self) -> Option<&BundleVerifierPageV5Data> {
         self.v5.as_deref()
     }
 
-    pub fn v5_mut(&mut self) -> Option<&mut BundleVerifierPageV5Data> {
+    pub fn lifecycle_mut(&mut self) -> Option<&mut BundleVerifierPageV5Data> {
         self.v5.as_deref_mut()
     }
 
-    pub fn v6(&self) -> Option<&BundleVerifierPageV6Data> {
+    pub fn pricing(&self) -> Option<&BundleVerifierPageV6Data> {
         self.v6.as_deref()
     }
 
-    pub fn v6_mut(&mut self) -> Option<&mut BundleVerifierPageV6Data> {
+    pub fn pricing_mut(&mut self) -> Option<&mut BundleVerifierPageV6Data> {
         self.v6.as_deref_mut()
+    }
+
+    pub fn v5(&self) -> Option<&BundleVerifierPageV5Data> {
+        self.lifecycle()
+    }
+
+    pub fn v5_mut(&mut self) -> Option<&mut BundleVerifierPageV5Data> {
+        self.lifecycle_mut()
+    }
+
+    pub fn v6(&self) -> Option<&BundleVerifierPageV6Data> {
+        self.pricing()
+    }
+
+    pub fn v6_mut(&mut self) -> Option<&mut BundleVerifierPageV6Data> {
+        self.pricing_mut()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -184,6 +208,14 @@ impl RawBundleVerifierPageV2Data {
         }
     }
 
+    const fn has_lifecycle_metadata(version: AccountLayoutVersion) -> bool {
+        matches!(version, AccountLayoutVersion::V5 | AccountLayoutVersion::V6)
+    }
+
+    const fn has_pricing_metadata(version: AccountLayoutVersion) -> bool {
+        matches!(version, AccountLayoutVersion::V6)
+    }
+
     pub fn from_bytes(bytes: &[u8]) -> Option<BundleVerifierPageV2Ref<'_>> {
         if bytes.len() < AccountHeaderV1::LEN + Self::PAYLOAD_LEN {
             return None;
@@ -203,14 +235,11 @@ impl RawBundleVerifierPageV2Data {
         let (raw_bytes, tail_bytes) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleVerifierPageV2Data>(raw_bytes).ok()?;
 
-        let (v5, v6) = if matches!(
-            layout.version,
-            AccountLayoutVersion::V5 | AccountLayoutVersion::V6
-        ) {
+        let (v5, v6) = if Self::has_lifecycle_metadata(layout.version) {
             let (v5_bytes, v6_bytes) =
                 tail_bytes.split_at(std::mem::size_of::<BundleVerifierPageV5Data>());
             let v5 = bytemuck::try_from_bytes::<BundleVerifierPageV5Data>(v5_bytes).ok()?;
-            let v6 = if layout.version == AccountLayoutVersion::V6 {
+            let v6 = if Self::has_pricing_metadata(layout.version) {
                 Some(bytemuck::try_from_bytes::<BundleVerifierPageV6Data>(v6_bytes).ok()?)
             } else {
                 None
@@ -248,14 +277,11 @@ impl RawBundleVerifierPageV2Data {
         let (raw_bytes, tail_bytes) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes_mut::<RawBundleVerifierPageV2Data>(raw_bytes).ok()?;
 
-        let (v5, v6) = if matches!(
-            layout.version,
-            AccountLayoutVersion::V5 | AccountLayoutVersion::V6
-        ) {
+        let (v5, v6) = if Self::has_lifecycle_metadata(layout.version) {
             let (v5_bytes, v6_bytes) =
                 tail_bytes.split_at_mut(std::mem::size_of::<BundleVerifierPageV5Data>());
             let v5 = bytemuck::try_from_bytes_mut::<BundleVerifierPageV5Data>(v5_bytes).ok()?;
-            let v6 = if layout.version == AccountLayoutVersion::V6 {
+            let v6 = if Self::has_pricing_metadata(layout.version) {
                 Some(bytemuck::try_from_bytes_mut::<BundleVerifierPageV6Data>(v6_bytes).ok()?)
             } else {
                 None
@@ -322,15 +348,12 @@ impl RawBundleVerifierPageV2Data {
     }
 }
 
-/// Bytes committed by the verifier-page hash. V5 rent metadata is not evidence;
-/// the signed finalization message already binds the escrow lifecycle.
+/// Bytes committed by the verifier-page hash. Lifecycle and pricing metadata
+/// are authenticated separately from page evidence.
 pub fn bundle_verifier_page_hash_bytes(bytes: &[u8]) -> Option<&[u8]> {
     let page = BundleVerifierPageV2::from_bytes(bytes)?;
     Some(
-        if matches!(
-            page.layout().version,
-            AccountLayoutVersion::V5 | AccountLayoutVersion::V6
-        ) {
+        if BundleVerifierPageV2::has_lifecycle_metadata(page.layout().version) {
             &bytes[..BundleVerifierPageV2::LEN_V1]
         } else {
             bytes

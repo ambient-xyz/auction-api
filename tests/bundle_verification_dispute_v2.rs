@@ -93,14 +93,16 @@ fn dispute_v5_preserves_the_historical_payload_and_checks_exact_layouts() {
     assert!(dispute.write_bytes_with_layout(&mut bytes, AccountLayoutVersion::V5));
     {
         let mut parsed = BundleVerificationDisputeV2::from_bytes_mut(&mut bytes).unwrap();
-        let evidence = parsed.v5_mut().unwrap();
-        evidence.authorized = 1;
+        let evidence = parsed.evidence_mut().unwrap();
         evidence.verification_hash = [3; 32];
         evidence.page_hashes[0] = [4; 32];
+        parsed.v5_mut().unwrap().authorized = 1;
+        assert_eq!(parsed.evidence(), parsed.v5());
     }
     let parsed = BundleVerificationDisputeV2::from_bytes(&bytes).unwrap();
     assert_eq!(*parsed.as_raw(), dispute);
     assert_eq!(parsed.v5().unwrap().page_hashes[0], [4; 32]);
+    assert_eq!(parsed.evidence(), parsed.v5());
     assert!(
         BundleVerificationDisputeV2::from_bytes(&bytes[..BundleVerificationDisputeV2::LEN])
             .is_none()
@@ -112,6 +114,12 @@ fn dispute_v5_preserves_the_historical_payload_and_checks_exact_layouts() {
             .unwrap();
     assert_eq!(*historical.as_raw(), dispute);
     assert!(historical.v5().is_none());
+    assert!(historical.evidence().is_none());
+    let mut historical =
+        BundleVerificationDisputeV2::from_bytes_mut(&mut bytes[..BundleVerificationDisputeV2::LEN])
+            .unwrap();
+    assert!(historical.evidence().is_none());
+    assert!(historical.evidence_mut().is_none());
 }
 
 #[test]

@@ -238,12 +238,14 @@ fn bundle_escrow_v6_round_trips_all_prefixes_and_mutable_tail() {
     {
         let mut state = BundleEscrowV2::from_bytes_mut(&mut bytes).unwrap();
         state.reserved_v2_mut().unwrap().verifier_quorum = 2;
-        state.v5_mut().unwrap().expected_page_count = 3;
+        state.lifecycle_mut().unwrap().expected_page_count = 3;
         state.v5_mut().unwrap().allocated_page_bitmap = 0b0000_0111;
-        let pricing = state.v6_mut().unwrap();
+        let pricing = state.pricing_mut().unwrap();
         pricing.pricing_posted_page_bitmap = 0b0000_0101;
-        pricing.pricing_sealed = 1;
         pricing.pricing_commitment = [9; 32];
+        state.v6_mut().unwrap().pricing_sealed = 1;
+        assert_eq!(state.lifecycle(), state.v5());
+        assert_eq!(state.pricing(), state.v6());
     }
 
     let state = BundleEscrowV2::from_bytes(&bytes).unwrap();
@@ -253,6 +255,12 @@ fn bundle_escrow_v6_round_trips_all_prefixes_and_mutable_tail() {
     assert_eq!(state.v6().unwrap().pricing_posted_page_bitmap, 0b0000_0101);
     assert_eq!(state.v6().unwrap().pricing_sealed, 1);
     assert_eq!(state.v6().unwrap().pricing_commitment, [9; 32]);
+    assert_eq!(state.lifecycle(), state.v5());
+    assert_eq!(state.pricing(), state.v6());
+    assert!(BundleEscrowV2::has_lifecycle_metadata(
+        state.layout().version
+    ));
+    assert!(BundleEscrowV2::has_pricing_metadata(state.layout().version));
 
     // A V6 header must not accept storage that only has room for the V5 prefix.
     assert!(BundleEscrowV2::from_bytes(&bytes[..BundleEscrowV2::LEN_V5]).is_none());

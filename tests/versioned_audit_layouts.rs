@@ -15,9 +15,22 @@ fn historical_account_bytes_and_open_payload_remain_unchanged() {
         let decoded = BundleEscrowV2::from_bytes(&escrow).unwrap();
         assert_eq!(decoded.bundle_version, 17);
         assert!(decoded.v5().is_none());
+        assert!(decoded.lifecycle().is_none());
+        assert!(decoded.pricing().is_none());
+        assert!(!BundleEscrowV2::has_lifecycle_metadata(
+            decoded.layout().version
+        ));
+        assert!(!BundleEscrowV2::has_pricing_metadata(
+            decoded.layout().version
+        ));
         let mut encoded = vec![0; escrow_len];
         assert!(decoded.write_bytes_with_layout(&mut encoded, decoded.layout().version));
         assert_eq!(encoded, escrow);
+        let mut decoded = BundleEscrowV2::from_bytes_mut(&mut escrow).unwrap();
+        assert!(decoded.lifecycle().is_none());
+        assert!(decoded.lifecycle_mut().is_none());
+        assert!(decoded.pricing().is_none());
+        assert!(decoded.pricing_mut().is_none());
 
         let mut page = vec![0; page_len];
         page[0] = 9;
@@ -26,9 +39,16 @@ fn historical_account_bytes_and_open_payload_remain_unchanged() {
         let decoded = BundleVerifierPageV2::from_bytes(&page).unwrap();
         assert_eq!(decoded.page_index, 2);
         assert!(decoded.v5().is_none());
+        assert!(decoded.lifecycle().is_none());
+        assert!(decoded.pricing().is_none());
         let mut encoded = vec![0; page_len];
         assert!(decoded.write_bytes_with_layout(&mut encoded, decoded.layout().version));
         assert_eq!(encoded, page);
+        let mut decoded = BundleVerifierPageV2::from_bytes_mut(&mut page).unwrap();
+        assert!(decoded.lifecycle().is_none());
+        assert!(decoded.lifecycle_mut().is_none());
+        assert!(decoded.pricing().is_none());
+        assert!(decoded.pricing_mut().is_none());
     }
     let mut old_open = vec![0; 137];
     old_open[0] = 12;
@@ -48,13 +68,23 @@ fn new_metadata_round_trips_and_cannot_be_read_as_an_old_layout() {
     {
         let mut state = BundleEscrowV2::from_bytes_mut(&mut escrow).unwrap();
         state.reserved_v2_mut().unwrap().verifier_quorum = 2;
-        state.v5_mut().unwrap().expected_page_count = 3;
+        state.lifecycle_mut().unwrap().expected_page_count = 3;
         state.v5_mut().unwrap().allocated_page_bitmap = 0b101001;
+        assert_eq!(state.lifecycle(), state.v5());
+        assert!(state.pricing_mut().is_none());
     }
     let state = BundleEscrowV2::from_bytes(&escrow).unwrap();
     assert_eq!(state.reserved_v2().unwrap().verifier_quorum, 2);
     assert_eq!(state.v5().unwrap().expected_page_count, 3);
     assert_eq!(state.v5().unwrap().allocated_page_bitmap, 0b101001);
+    assert_eq!(state.lifecycle(), state.v5());
+    assert!(state.pricing().is_none());
+    assert!(BundleEscrowV2::has_lifecycle_metadata(
+        state.layout().version
+    ));
+    assert!(!BundleEscrowV2::has_pricing_metadata(
+        state.layout().version
+    ));
     for version in [1, 2, 3, 4, 255] {
         escrow[1] = version;
         assert!(BundleEscrowV2::from_bytes(&escrow).is_none());
@@ -64,13 +94,17 @@ fn new_metadata_round_trips_and_cannot_be_read_as_an_old_layout() {
         .write_bytes_with_layout(&mut page, AccountLayoutVersion::V5));
     {
         let mut state = BundleVerifierPageV2::from_bytes_mut(&mut page).unwrap();
-        let metadata = state.v5_mut().unwrap();
+        let metadata = state.lifecycle_mut().unwrap();
         metadata.funder = [7; 32].into();
-        metadata.settlement_deadline_slot = 123;
+        state.v5_mut().unwrap().settlement_deadline_slot = 123;
+        assert_eq!(state.lifecycle(), state.v5());
+        assert!(state.pricing_mut().is_none());
     }
     let state = BundleVerifierPageV2::from_bytes(&page).unwrap();
     assert_eq!(state.v5().unwrap().funder, [7; 32]);
     assert_eq!(state.v5().unwrap().settlement_deadline_slot, 123);
+    assert_eq!(state.lifecycle(), state.v5());
+    assert!(state.pricing().is_none());
     for version in [1, 2, 3, 4, 255] {
         page[1] = version;
         assert!(BundleVerifierPageV2::from_bytes(&page).is_none());

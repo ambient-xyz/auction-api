@@ -97,8 +97,12 @@ pub struct BundleVerificationDisputeV2Mut<'a> {
 }
 
 impl<'a> BundleVerificationDisputeV2Ref<'a> {
-    pub fn v5(&self) -> Option<&BundleDisputeEvidenceV5Data> {
+    pub fn evidence(&self) -> Option<&BundleDisputeEvidenceV5Data> {
         self.v5
+    }
+
+    pub fn v5(&self) -> Option<&BundleDisputeEvidenceV5Data> {
+        self.evidence()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -123,11 +127,20 @@ impl Deref for BundleVerificationDisputeV2Ref<'_> {
 }
 
 impl<'a> BundleVerificationDisputeV2Mut<'a> {
-    pub fn v5(&self) -> Option<&BundleDisputeEvidenceV5Data> {
+    pub fn evidence(&self) -> Option<&BundleDisputeEvidenceV5Data> {
         self.v5.as_deref()
     }
-    pub fn v5_mut(&mut self) -> Option<&mut BundleDisputeEvidenceV5Data> {
+
+    pub fn evidence_mut(&mut self) -> Option<&mut BundleDisputeEvidenceV5Data> {
         self.v5.as_deref_mut()
+    }
+
+    pub fn v5(&self) -> Option<&BundleDisputeEvidenceV5Data> {
+        self.evidence()
+    }
+
+    pub fn v5_mut(&mut self) -> Option<&mut BundleDisputeEvidenceV5Data> {
+        self.evidence_mut()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -174,6 +187,10 @@ impl RawBundleVerificationDisputeV2Data {
         }
     }
 
+    const fn has_evidence_metadata(version: AccountLayoutVersion) -> bool {
+        matches!(version, AccountLayoutVersion::V5)
+    }
+
     pub fn from_bytes(bytes: &[u8]) -> Option<BundleVerificationDisputeV2Ref<'_>> {
         if bytes.len() < Self::LEN {
             return None;
@@ -190,7 +207,7 @@ impl RawBundleVerificationDisputeV2Data {
 
         let (raw_bytes, extension) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleVerificationDisputeV2Data>(raw_bytes).ok()?;
-        let v5 = if layout.version == AccountLayoutVersion::V5 {
+        let v5 = if Self::has_evidence_metadata(layout.version) {
             Some(bytemuck::try_from_bytes::<BundleDisputeEvidenceV5Data>(extension).ok()?)
         } else {
             None
@@ -216,7 +233,7 @@ impl RawBundleVerificationDisputeV2Data {
         let (raw_bytes, extension) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw =
             bytemuck::try_from_bytes_mut::<RawBundleVerificationDisputeV2Data>(raw_bytes).ok()?;
-        let v5 = if layout.version == AccountLayoutVersion::V5 {
+        let v5 = if Self::has_evidence_metadata(layout.version) {
             Some(bytemuck::try_from_bytes_mut::<BundleDisputeEvidenceV5Data>(extension).ok()?)
         } else {
             None
