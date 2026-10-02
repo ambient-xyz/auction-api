@@ -88,7 +88,7 @@ impl Default for BundleEscrowV2ReservedData {
     }
 }
 
-/// Additional lifecycle metadata present only in layout version 5.
+/// Page lifecycle metadata present in layouts V5 and V6.
 #[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
@@ -99,7 +99,7 @@ pub struct BundleEscrowV5Data {
     pub _reserved: [u8; 6],
 }
 
-/// Additional lifecycle metadata present only in layout version 6.
+/// Pricing metadata present in layout V6.
 #[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
@@ -160,12 +160,20 @@ impl<'a> BundleEscrowV2Ref<'a> {
         self.raw
     }
 
-    pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
+    pub fn lifecycle(&self) -> Option<&BundleEscrowV5Data> {
         self.v5
     }
 
-    pub fn v6(&self) -> Option<&BundleEscrowV6Data> {
+    pub fn pricing(&self) -> Option<&BundleEscrowV6Data> {
         self.v6
+    }
+
+    pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
+        self.lifecycle()
+    }
+
+    pub fn v6(&self) -> Option<&BundleEscrowV6Data> {
+        self.pricing()
     }
 
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
@@ -208,20 +216,36 @@ impl<'a> BundleEscrowV2Mut<'a> {
         self.raw
     }
 
-    pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
+    pub fn lifecycle(&self) -> Option<&BundleEscrowV5Data> {
         self.v5.as_deref()
     }
 
-    pub fn v5_mut(&mut self) -> Option<&mut BundleEscrowV5Data> {
+    pub fn lifecycle_mut(&mut self) -> Option<&mut BundleEscrowV5Data> {
         self.v5.as_deref_mut()
     }
 
-    pub fn v6(&self) -> Option<&BundleEscrowV6Data> {
+    pub fn pricing(&self) -> Option<&BundleEscrowV6Data> {
         self.v6.as_deref()
     }
 
-    pub fn v6_mut(&mut self) -> Option<&mut BundleEscrowV6Data> {
+    pub fn pricing_mut(&mut self) -> Option<&mut BundleEscrowV6Data> {
         self.v6.as_deref_mut()
+    }
+
+    pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
+        self.lifecycle()
+    }
+
+    pub fn v5_mut(&mut self) -> Option<&mut BundleEscrowV5Data> {
+        self.lifecycle_mut()
+    }
+
+    pub fn v6(&self) -> Option<&BundleEscrowV6Data> {
+        self.pricing()
+    }
+
+    pub fn v6_mut(&mut self) -> Option<&mut BundleEscrowV6Data> {
+        self.pricing_mut()
     }
 
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
@@ -316,6 +340,23 @@ impl RawBundleEscrowV2Data {
         }
     }
 
+    const fn has_reserved_metadata(version: AccountLayoutVersion) -> bool {
+        matches!(
+            version,
+            AccountLayoutVersion::V2 | AccountLayoutVersion::V5 | AccountLayoutVersion::V6
+        )
+    }
+
+    /// Whether the layout includes page lifecycle metadata.
+    pub const fn has_lifecycle_metadata(version: AccountLayoutVersion) -> bool {
+        matches!(version, AccountLayoutVersion::V5 | AccountLayoutVersion::V6)
+    }
+
+    /// Whether the layout includes a pricing commitment.
+    pub const fn has_pricing_metadata(version: AccountLayoutVersion) -> bool {
+        matches!(version, AccountLayoutVersion::V6)
+    }
+
     pub fn from_bytes(bytes: &[u8]) -> Option<BundleEscrowV2Ref<'_>> {
         if bytes.len() < AccountHeaderV1::LEN + Self::PAYLOAD_LEN {
             return None;
@@ -334,23 +375,17 @@ impl RawBundleEscrowV2Data {
 
         let (raw_bytes, reserved_bytes) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
-        let (reserved, v5, v6) = if matches!(
-            layout.version,
-            AccountLayoutVersion::V2 | AccountLayoutVersion::V5 | AccountLayoutVersion::V6
-        ) {
+        let (reserved, v5, v6) = if Self::has_reserved_metadata(layout.version) {
             let (policy_bytes, tail_bytes) =
                 reserved_bytes.split_at(CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES);
             let reserved =
                 Some(bytemuck::try_from_bytes::<BundleEscrowV2ReservedData>(policy_bytes).ok()?);
 
-            let (v5, v6) = if matches!(
-                layout.version,
-                AccountLayoutVersion::V5 | AccountLayoutVersion::V6
-            ) {
+            let (v5, v6) = if Self::has_lifecycle_metadata(layout.version) {
                 let (v5_bytes, v6_bytes) =
                     tail_bytes.split_at(std::mem::size_of::<BundleEscrowV5Data>());
                 let v5 = bytemuck::try_from_bytes::<BundleEscrowV5Data>(v5_bytes).ok()?;
-                let v6 = if layout.version == AccountLayoutVersion::V6 {
+                let v6 = if Self::has_pricing_metadata(layout.version) {
                     Some(bytemuck::try_from_bytes::<BundleEscrowV6Data>(v6_bytes).ok()?)
                 } else {
                     None
@@ -393,24 +428,18 @@ impl RawBundleEscrowV2Data {
 
         let (raw_bytes, reserved_bytes) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes_mut::<RawBundleEscrowV2Data>(raw_bytes).ok()?;
-        let (reserved, v5, v6) = if matches!(
-            layout.version,
-            AccountLayoutVersion::V2 | AccountLayoutVersion::V5 | AccountLayoutVersion::V6
-        ) {
+        let (reserved, v5, v6) = if Self::has_reserved_metadata(layout.version) {
             let (policy_bytes, tail_bytes) =
                 reserved_bytes.split_at_mut(CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES);
             let reserved = Some(
                 bytemuck::try_from_bytes_mut::<BundleEscrowV2ReservedData>(policy_bytes).ok()?,
             );
 
-            let (v5, v6) = if matches!(
-                layout.version,
-                AccountLayoutVersion::V5 | AccountLayoutVersion::V6
-            ) {
+            let (v5, v6) = if Self::has_lifecycle_metadata(layout.version) {
                 let (v5_bytes, v6_bytes) =
                     tail_bytes.split_at_mut(std::mem::size_of::<BundleEscrowV5Data>());
                 let v5 = bytemuck::try_from_bytes_mut::<BundleEscrowV5Data>(v5_bytes).ok()?;
-                let v6 = if layout.version == AccountLayoutVersion::V6 {
+                let v6 = if Self::has_pricing_metadata(layout.version) {
                     Some(bytemuck::try_from_bytes_mut::<BundleEscrowV6Data>(v6_bytes).ok()?)
                 } else {
                     None
