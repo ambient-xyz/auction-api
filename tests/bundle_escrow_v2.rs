@@ -240,6 +240,8 @@ fn bundle_escrow_v6_round_trips_all_prefixes_and_mutable_tail() {
         state.reserved_v2_mut().unwrap().verifier_quorum = 2;
         state.v5_mut().unwrap().expected_page_count = 3;
         state.v5_mut().unwrap().allocated_page_bitmap = 0b0000_0111;
+        state.v5_mut().unwrap().small_credit_mint = [5; 32].into();
+        state.v5_mut().unwrap().small_credit_amount = 1234;
         let pricing = state.v6_mut().unwrap();
         pricing.pricing_posted_page_bitmap = 0b0000_0101;
         pricing.pricing_sealed = 1;
@@ -250,9 +252,14 @@ fn bundle_escrow_v6_round_trips_all_prefixes_and_mutable_tail() {
     assert_eq!(state.reserved_v2().unwrap().verifier_quorum, 2);
     assert_eq!(state.v5().unwrap().expected_page_count, 3);
     assert_eq!(state.v5().unwrap().allocated_page_bitmap, 0b0000_0111);
+    assert_eq!(state.v5().unwrap().small_credit_mint, [5; 32]);
+    assert_eq!(state.v5().unwrap().small_credit_amount, 1234);
     assert_eq!(state.v6().unwrap().pricing_posted_page_bitmap, 0b0000_0101);
     assert_eq!(state.v6().unwrap().pricing_sealed, 1);
     assert_eq!(state.v6().unwrap().pricing_commitment, [9; 32]);
+    assert_eq!(&bytes[576..608], &[5; 32]);
+    assert_eq!(&bytes[608..616], &1234_u64.to_le_bytes());
+    assert_eq!(&bytes[624..656], &[9; 32]);
 
     // A V6 header must not accept storage that only has room for the V5 prefix.
     assert!(BundleEscrowV2::from_bytes(&bytes[..BundleEscrowV2::LEN_V5]).is_none());

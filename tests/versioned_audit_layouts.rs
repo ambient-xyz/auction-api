@@ -102,6 +102,7 @@ fn evidence_hash_excludes_only_new_rent_metadata() {
         if matches!(version, AccountLayoutVersion::V5 | AccountLayoutVersion::V6) {
             let mut page = BundleVerifierPageV2::from_bytes_mut(&mut bytes).unwrap();
             page.v5_mut().unwrap().funder = [7; 32].into();
+            page.v5_mut().unwrap().settlement_deadline_slot = 123;
             if version == AccountLayoutVersion::V6 {
                 page.v6_mut().unwrap().pricing_entry_count = 1;
                 page.v6_mut().unwrap().pricing_entries[0].price_per_output_token = 9;
@@ -120,6 +121,50 @@ fn evidence_hash_excludes_only_new_rent_metadata() {
             assert_ne!(bundle_verifier_page_hash_bytes(&bytes).unwrap(), original);
         } else {
             assert_eq!(original, bytes);
+        }
+    }
+}
+
+#[test]
+fn v5_and_v6_readers_reject_incompatible_versions_and_lengths() {
+    for (version, escrow_len, page_len) in [
+        (AccountLayoutVersion::V5, 616, 904),
+        (AccountLayoutVersion::V6, 656, 1_200),
+    ] {
+        let mut escrow = vec![0; escrow_len];
+        let mut page = vec![0; page_len];
+        assert!(BundleEscrowV2::default().write_bytes_with_layout(&mut escrow, version));
+        assert!(BundleVerifierPageV2::default().write_bytes_with_layout(&mut page, version));
+        assert!(BundleEscrowV2::from_bytes(&escrow).is_some());
+        assert!(BundleEscrowV2::from_bytes_mut(&mut escrow).is_some());
+        assert!(BundleVerifierPageV2::from_bytes(&page).is_some());
+        assert!(BundleVerifierPageV2::from_bytes_mut(&mut page).is_some());
+
+        for other_version in [0, 1, 2, 3, 4, 5, 6, 255] {
+            if other_version == version as u8 {
+                continue;
+            }
+            escrow[1] = other_version;
+            page[1] = other_version;
+            assert!(BundleEscrowV2::from_bytes(&escrow).is_none());
+            assert!(BundleEscrowV2::from_bytes_mut(&mut escrow).is_none());
+            assert!(BundleVerifierPageV2::from_bytes(&page).is_none());
+            assert!(BundleVerifierPageV2::from_bytes_mut(&mut page).is_none());
+        }
+        escrow[1] = version as u8;
+        page[1] = version as u8;
+
+        for length in [0, escrow_len - 1, escrow_len + 1] {
+            let mut malformed = escrow.clone();
+            malformed.resize(length, 0);
+            assert!(BundleEscrowV2::from_bytes(&malformed).is_none());
+            assert!(BundleEscrowV2::from_bytes_mut(&mut malformed).is_none());
+        }
+        for length in [0, page_len - 1, page_len + 1] {
+            let mut malformed = page.clone();
+            malformed.resize(length, 0);
+            assert!(BundleVerifierPageV2::from_bytes(&malformed).is_none());
+            assert!(BundleVerifierPageV2::from_bytes_mut(&mut malformed).is_none());
         }
     }
 }

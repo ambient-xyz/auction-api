@@ -145,6 +145,7 @@ fn bundle_verifier_page_v6_round_trips_v5_and_pricing_tails() {
     {
         let mut state = BundleVerifierPageV2::from_bytes_mut(&mut bytes).unwrap();
         let rent = state.v5_mut().unwrap();
+        rent.input_tokens = [1, 2, 3, 4, 5, 6];
         rent.funder = [6; 32].into();
         rent.settlement_deadline_slot = 123;
 
@@ -155,11 +156,15 @@ fn bundle_verifier_page_v6_round_trips_v5_and_pricing_tails() {
     }
 
     let state = BundleVerifierPageV2::from_bytes(&bytes).unwrap();
+    assert_eq!(state.v5().unwrap().input_tokens, [1, 2, 3, 4, 5, 6]);
     assert_eq!(state.v5().unwrap().funder, [6; 32]);
     assert_eq!(state.v5().unwrap().settlement_deadline_slot, 123);
     assert_eq!(state.v6().unwrap().pricing_entry_count, 2);
     assert_eq!(state.v6().unwrap().pricing_entries[0], first_price);
     assert_eq!(state.v6().unwrap().pricing_entries[1], second_price);
+    assert_eq!(&bytes[816..824], &1_u64.to_le_bytes());
+    assert_eq!(&bytes[864..896], &[6; 32]);
+    assert_eq!(bytes[904], 2);
     assert_eq!(
         state.v6().unwrap().pricing_entries[2..],
         [BundleJobPricingV6::default(); MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES - 2]
