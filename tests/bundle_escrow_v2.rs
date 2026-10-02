@@ -187,7 +187,7 @@ fn bundle_escrow_v2_reserved_layout_is_typed_and_stable() {
 
 #[test]
 fn bundle_escrow_v6_layout_is_append_only_and_stable() {
-    assert_eq!(size_of::<BundleEscrowV5Data>(), 8);
+    assert_eq!(size_of::<BundleEscrowV5Data>(), 48);
     assert_eq!(size_of::<BundleEscrowV6Data>(), 40);
     assert_eq!(
         offset_of!(BundleEscrowV6Data, pricing_posted_page_bitmap),
@@ -196,8 +196,8 @@ fn bundle_escrow_v6_layout_is_append_only_and_stable() {
     assert_eq!(offset_of!(BundleEscrowV6Data, pricing_sealed), 1);
     assert_eq!(offset_of!(BundleEscrowV6Data, _reserved0), 2);
     assert_eq!(offset_of!(BundleEscrowV6Data, pricing_commitment), 8);
-    assert_eq!(BundleEscrowV2::LEN_V5, 576);
-    assert_eq!(BundleEscrowV2::LEN_V6, 616);
+    assert_eq!(BundleEscrowV2::LEN_V5, 616);
+    assert_eq!(BundleEscrowV2::LEN_V6, 656);
     assert_eq!(
         BundleEscrowV2::LEN_V6,
         BundleEscrowV2::LEN_V5 + size_of::<BundleEscrowV6Data>()
@@ -240,6 +240,8 @@ fn bundle_escrow_v6_round_trips_all_prefixes_and_mutable_tail() {
         state.reserved_v2_mut().unwrap().verifier_quorum = 2;
         state.v5_mut().unwrap().expected_page_count = 3;
         state.v5_mut().unwrap().allocated_page_bitmap = 0b0000_0111;
+        state.v5_mut().unwrap().small_credit_mint = [5; 32].into();
+        state.v5_mut().unwrap().small_credit_amount = 1234;
         let pricing = state.v6_mut().unwrap();
         pricing.pricing_posted_page_bitmap = 0b0000_0101;
         pricing.pricing_sealed = 1;
@@ -250,9 +252,14 @@ fn bundle_escrow_v6_round_trips_all_prefixes_and_mutable_tail() {
     assert_eq!(state.reserved_v2().unwrap().verifier_quorum, 2);
     assert_eq!(state.v5().unwrap().expected_page_count, 3);
     assert_eq!(state.v5().unwrap().allocated_page_bitmap, 0b0000_0111);
+    assert_eq!(state.v5().unwrap().small_credit_mint, [5; 32]);
+    assert_eq!(state.v5().unwrap().small_credit_amount, 1234);
     assert_eq!(state.v6().unwrap().pricing_posted_page_bitmap, 0b0000_0101);
     assert_eq!(state.v6().unwrap().pricing_sealed, 1);
     assert_eq!(state.v6().unwrap().pricing_commitment, [9; 32]);
+    assert_eq!(&bytes[576..608], &[5; 32]);
+    assert_eq!(&bytes[608..616], &1234_u64.to_le_bytes());
+    assert_eq!(&bytes[624..656], &[9; 32]);
 
     // A V6 header must not accept storage that only has room for the V5 prefix.
     assert!(BundleEscrowV2::from_bytes(&bytes[..BundleEscrowV2::LEN_V5]).is_none());
