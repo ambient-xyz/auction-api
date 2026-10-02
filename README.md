@@ -24,6 +24,15 @@ For V5 and V6 pages, evidence hashes cover the V1 prefix and V5 input tokens.
 They exclude V5 rent metadata and V6 pricing
 metadata. The pricing commitment authenticates pricing separately.
 
+`ConfigPolicyV2` exposes `small_credit_mint`, `small_credit_enabled`,
+`small_credit_slash_authority`, and `small_credit_slash_sequence` in Rust and JSON.
+Their byte offsets remain 1320, 1352, 1384, and 1416.
+The `_reserved_small_credit_enabled` and `_reserved_small_credit_slash_sequence`
+fields preserve padding in the former 32-byte slots.
+Three unused `reserved_words` remain at offset 1448.
+The layout byte remains at 1544, and the account remains 1,568 bytes.
+Existing policy bytes and helper signatures stay unchanged.
+
 ## Building
 
 This crate is largely intended to be a library. However, there is a debugging utiltity
