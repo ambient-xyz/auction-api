@@ -44,9 +44,9 @@ fn small_policy_preserves_original_byte_offsets() {
     assert_eq!(bytes[1_352], 1);
     assert!(bytes[1_353..1_384].iter().all(|byte| *byte == 0));
 
-    policy._small_credit_enabled_padding[0] = 1;
+    policy._reserved_small_credit_enabled[0] = 1;
     assert!(!policy.small_credit_settings_word_is_canonical());
-    policy._small_credit_enabled_padding[0] = 0;
+    policy._reserved_small_credit_enabled[0] = 0;
     policy.small_credit_enabled = 2;
     assert!(!policy.small_credit_enabled());
     assert!(!policy.small_credit_settings_word_is_canonical());
@@ -81,7 +81,7 @@ fn slash_settings_preserve_original_byte_offsets() {
     assert_eq!(policy.small_credit_slash_sequence(), 5);
     assert_eq!(&after[1_416..1_424], &5_u64.to_le_bytes());
     assert!(after[1_424..1_448].iter().all(|byte| *byte == 0));
-    policy._small_credit_slash_sequence_padding[0] = 1;
+    policy._reserved_small_credit_slash_sequence[0] = 1;
     assert!(!policy.small_credit_slash_sequence_word_is_canonical());
 
     let mut patch = SetConfigPolicySmallV3Args::zeroed();
@@ -211,4 +211,36 @@ fn configuration_formats_remain_distinct() {
         &InitConfigPolicyV2Args::zeroed()
     ))
     .is_err());
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn small_policy_json_names_credit_fields_and_retains_unused_storage() {
+    let mut policy = ConfigPolicyV2::production_default();
+    policy.set_small_credit_settings(SmallCreditSettings {
+        enabled: true,
+        mint: Pubkey::from([5; 32]),
+    });
+    policy.set_small_credit_slash_authority(Pubkey::from([7; 32]));
+    policy.set_small_credit_slash_sequence(0x0102_0304_0506_0708);
+    policy.reserved_words[2] = [9; 32];
+
+    let json = serde_json::to_value(&policy).unwrap();
+    assert_eq!(
+        json["small_credit_mint"],
+        bs58::encode([5; 32]).into_string()
+    );
+    assert_eq!(json["small_credit_enabled"], 1);
+    assert_eq!(
+        json["small_credit_slash_authority"],
+        bs58::encode([7; 32]).into_string()
+    );
+    assert_eq!(
+        json["small_credit_slash_sequence"],
+        0x0102_0304_0506_0708_u64
+    );
+    assert_eq!(
+        json["reserved_words"],
+        serde_json::to_value([[0_u8; 32], [0; 32], [9; 32]]).unwrap()
+    );
 }
