@@ -92,21 +92,26 @@ pub struct BundleVerifierPageV2Mut<'a> {
 }
 
 impl<'a> BundleVerifierPageV2Ref<'a> {
-    pub fn v5(&self) -> Option<&BundleVerifierPageV5Data> {
-        if !matches!(
-            self.layout().version,
-            AccountLayoutVersion::V5 | AccountLayoutVersion::V6
-        ) {
+    pub fn lifecycle(&self) -> Option<&BundleVerifierPageV5Data> {
+        if self.layout().version != AccountLayoutVersion::V5 {
             return None;
         }
         bytemuck::try_from_bytes(&self.tail[..std::mem::size_of::<BundleVerifierPageV5Data>()]).ok()
     }
 
-    pub fn v6(&self) -> Option<&BundleVerifierPageV6Data> {
-        if self.layout().version != AccountLayoutVersion::V6 {
+    pub fn pricing(&self) -> Option<&BundleVerifierPageV6Data> {
+        if self.layout().version != AccountLayoutVersion::V5 {
             return None;
         }
         bytemuck::try_from_bytes(&self.tail[std::mem::size_of::<BundleVerifierPageV5Data>()..]).ok()
+    }
+
+    pub fn v5(&self) -> Option<&BundleVerifierPageV5Data> {
+        self.lifecycle()
+    }
+
+    pub fn v6(&self) -> Option<&BundleVerifierPageV6Data> {
+        self.pricing()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -142,21 +147,15 @@ impl Deref for BundleVerifierPageV2Ref<'_> {
 }
 
 impl<'a> BundleVerifierPageV2Mut<'a> {
-    pub fn v5(&self) -> Option<&BundleVerifierPageV5Data> {
-        if !matches!(
-            self.layout().version,
-            AccountLayoutVersion::V5 | AccountLayoutVersion::V6
-        ) {
+    pub fn lifecycle(&self) -> Option<&BundleVerifierPageV5Data> {
+        if self.layout().version != AccountLayoutVersion::V5 {
             return None;
         }
         bytemuck::try_from_bytes(&self.tail[..std::mem::size_of::<BundleVerifierPageV5Data>()]).ok()
     }
 
-    pub fn v5_mut(&mut self) -> Option<&mut BundleVerifierPageV5Data> {
-        if !matches!(
-            self.layout().version,
-            AccountLayoutVersion::V5 | AccountLayoutVersion::V6
-        ) {
+    pub fn lifecycle_mut(&mut self) -> Option<&mut BundleVerifierPageV5Data> {
+        if self.layout().version != AccountLayoutVersion::V5 {
             return None;
         }
         bytemuck::try_from_bytes_mut(
@@ -165,21 +164,37 @@ impl<'a> BundleVerifierPageV2Mut<'a> {
         .ok()
     }
 
-    pub fn v6(&self) -> Option<&BundleVerifierPageV6Data> {
-        if self.layout().version != AccountLayoutVersion::V6 {
+    pub fn pricing(&self) -> Option<&BundleVerifierPageV6Data> {
+        if self.layout().version != AccountLayoutVersion::V5 {
             return None;
         }
         bytemuck::try_from_bytes(&self.tail[std::mem::size_of::<BundleVerifierPageV5Data>()..]).ok()
     }
 
-    pub fn v6_mut(&mut self) -> Option<&mut BundleVerifierPageV6Data> {
-        if self.layout().version != AccountLayoutVersion::V6 {
+    pub fn pricing_mut(&mut self) -> Option<&mut BundleVerifierPageV6Data> {
+        if self.layout().version != AccountLayoutVersion::V5 {
             return None;
         }
         bytemuck::try_from_bytes_mut(
             &mut self.tail[std::mem::size_of::<BundleVerifierPageV5Data>()..],
         )
         .ok()
+    }
+
+    pub fn v5(&self) -> Option<&BundleVerifierPageV5Data> {
+        self.lifecycle()
+    }
+
+    pub fn v5_mut(&mut self) -> Option<&mut BundleVerifierPageV5Data> {
+        self.lifecycle_mut()
+    }
+
+    pub fn v6(&self) -> Option<&BundleVerifierPageV6Data> {
+        self.pricing()
+    }
+
+    pub fn v6_mut(&mut self) -> Option<&mut BundleVerifierPageV6Data> {
+        self.pricing_mut()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -240,8 +255,9 @@ impl RawBundleVerifierPageV2Data {
         + CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES;
     pub const LEN_V3: usize = Self::LEN_V1 + std::mem::size_of::<BundleVerifierPageV3SmallData>();
 
-    pub const LEN_V5: usize = Self::LEN_V1 + std::mem::size_of::<BundleVerifierPageV5Data>();
-    pub const LEN_V6: usize = Self::LEN_V5 + std::mem::size_of::<BundleVerifierPageV6Data>();
+    pub const LEN_V5: usize = Self::LEN_V1
+        + std::mem::size_of::<BundleVerifierPageV5Data>()
+        + std::mem::size_of::<BundleVerifierPageV6Data>();
 
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {
@@ -249,7 +265,6 @@ impl RawBundleVerifierPageV2Data {
             AccountLayoutVersion::V2 => Self::LEN_V2,
             AccountLayoutVersion::V3 => Self::LEN_V3,
             AccountLayoutVersion::V5 => Self::LEN_V5,
-            AccountLayoutVersion::V6 => Self::LEN_V6,
             AccountLayoutVersion::LegacyV0 => 0,
         }
     }
@@ -350,19 +365,14 @@ impl RawBundleVerifierPageV2Data {
     }
 }
 
-/// Bytes committed by the verifier-page hash. V5 rent metadata is not evidence;
+/// Bytes committed by the verifier-page hash. V5 rent and pricing metadata are not evidence;
 /// the signed finalization message already binds the escrow lifecycle.
 pub fn bundle_verifier_page_hash_bytes(bytes: &[u8]) -> Option<&[u8]> {
     let page = BundleVerifierPageV2::from_bytes(bytes)?;
-    Some(
-        if matches!(
-            page.layout().version,
-            AccountLayoutVersion::V5 | AccountLayoutVersion::V6
-        ) {
-            &bytes[..BundleVerifierPageV2::LEN_V1
-                + std::mem::size_of::<[u64; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES]>()]
-        } else {
-            bytes
-        },
-    )
+    Some(if page.layout().version == AccountLayoutVersion::V5 {
+        &bytes[..BundleVerifierPageV2::LEN_V1
+            + std::mem::size_of::<[u64; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES]>()]
+    } else {
+        bytes
+    })
 }

@@ -7,10 +7,13 @@ ordering, or account layouts are therefore protocol changes.
 
 ## Versioned bundle pricing
 
-`AccountLayoutVersion::V6` appends pricing metadata to the V5 escrow and
-verifier-page layouts. V5 includes Small credit metadata and input tokens.
+`AccountLayoutVersion::V5` combines lifecycle, Small credit, and pricing metadata.
+V5 escrows use 656 bytes, and V5 verifier pages use 1,200 bytes.
+Both readers reject header 6 and the former V5 lengths of 616 and 904 bytes.
+Version number 6 remains reserved without an account format.
 Existing V1, V2, and SmallV3 layouts and instruction encodings stay unchanged.
-The production default remains V5 until an explicit rollout. Instruction versions
+The policy default remains V5. Pricing instructions 30 through 33 remain disabled
+in the program until their handlers are complete. Instruction versions
 change when their inputs, accounts, or meaning change. An account layout change
 alone does not require another instruction.
 
@@ -20,9 +23,11 @@ The message contains the zero-padded `ambient.bundle.pricing.v6` domain, bundle
 hash, entry count, and ordered pricing entries. Unused entries and reserved bytes
 are zero-filled.
 
-For V5 and V6 pages, evidence hashes cover the V1 prefix and V5 input tokens.
-They exclude V5 rent metadata and V6 pricing
-metadata. The pricing commitment authenticates pricing separately.
+For V5 pages, evidence hashes cover the V1 prefix and all six input-token values.
+They exclude rent and pricing metadata. The pricing commitment authenticates pricing separately.
+The `lifecycle()` and `pricing()` accessors read separate metadata slices.
+The existing `v5()` and `v6()` getters remain compatibility wrappers.
+The pricing types and signature domain keep their existing V6 names and bytes.
 
 `ConfigPolicyV2` exposes `small_credit_mint`, `small_credit_enabled`,
 `small_credit_slash_authority`, and `small_credit_slash_sequence` in Rust and JSON.

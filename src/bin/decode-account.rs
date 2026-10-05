@@ -92,11 +92,10 @@ encryption node public key: {encryption_node_publickey:?}"
 
 fn display_bundle_escrow_v2(buffer: Vec<u8>) -> Result<(), String> {
     eprintln!(
-        "Expected len: {} (V1), {} (V2), {} (V5), or {} (V6)",
+        "Expected len: {} (V1), {} (V2), or {} (V5)",
         BundleEscrowV2::LEN_V1,
         BundleEscrowV2::LEN_V2,
-        BundleEscrowV2::LEN_V5,
-        BundleEscrowV2::LEN_V6
+        BundleEscrowV2::LEN_V5
     );
     let data = BundleEscrowV2::from_bytes(&buffer).ok_or_else(|| {
         "To decode BundleEscrowV2 from account bytes. Is it the right versioned account type?"
@@ -108,8 +107,8 @@ fn display_bundle_escrow_v2(buffer: Vec<u8>) -> Result<(), String> {
             "layout_version": data.header().version,
             "state": data.as_raw(),
             "policy": data.reserved_v2(),
-            "pages": data.v5(),
-            "pricing": data.v6(),
+            "pages": data.lifecycle(),
+            "pricing": data.pricing(),
         }))
         .unwrap()
     );

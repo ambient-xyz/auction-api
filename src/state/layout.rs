@@ -34,7 +34,7 @@ pub enum AccountLayoutVersion {
     V3 = 3,
     // Versions 3 and 4 are used by the separate Small layouts.
     V5 = 5,
-    V6 = 6,
+    // Version 6 is reserved and has no account format.
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

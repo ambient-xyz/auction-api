@@ -69,18 +69,15 @@ fn config_policy_v2_round_trips_through_bytes() {
 }
 
 #[test]
-fn config_policy_v2_accepts_v6_without_changing_the_production_default() {
+fn config_policy_v2_rejects_reserved_v6_and_keeps_the_v5_default() {
     let mut policy = ConfigPolicyV2::default();
     assert_eq!(
         policy.configured_v2_account_layout_version(),
         Ok(AccountLayoutVersion::V5)
     );
 
-    policy.v2_account_layout_version = AccountLayoutVersion::V6 as u8;
-    assert_eq!(
-        policy.configured_v2_account_layout_version(),
-        Ok(AccountLayoutVersion::V6)
-    );
+    policy.v2_account_layout_version = 6;
+    assert_eq!(policy.configured_v2_account_layout_version(), Err(6));
 
     policy.v2_account_layout_version = 3;
     assert_eq!(policy.configured_v2_account_layout_version(), Err(3));

@@ -86,7 +86,7 @@ fn bundle_verifier_page_v2_entry_capacity_is_a_protocol_cap() {
 }
 
 #[test]
-fn bundle_verifier_page_v6_layout_is_append_only_and_stable() {
+fn bundle_verifier_page_v5_combined_layout_is_stable() {
     assert_eq!(size_of::<BundleJobPricingV6>(), 48);
     assert_eq!(offset_of!(BundleJobPricingV6, job_id), 0);
     assert_eq!(offset_of!(BundleJobPricingV6, max_output_tokens), 32);
@@ -97,20 +97,21 @@ fn bundle_verifier_page_v6_layout_is_append_only_and_stable() {
     assert_eq!(offset_of!(BundleVerifierPageV6Data, pricing_entry_count), 0);
     assert_eq!(offset_of!(BundleVerifierPageV6Data, pricing_entries), 8);
 
-    assert_eq!(BundleVerifierPageV2::LEN_V5, 904);
-    assert_eq!(BundleVerifierPageV2::LEN_V6, 1_200);
+    assert_eq!(BundleVerifierPageV2::LEN_V5, 1_200);
     assert_eq!(
-        BundleVerifierPageV2::LEN_V6,
-        BundleVerifierPageV2::LEN_V5 + size_of::<BundleVerifierPageV6Data>()
+        BundleVerifierPageV2::LEN_V5,
+        BundleVerifierPageV2::LEN_V1
+            + size_of::<BundleVerifierPageV5Data>()
+            + size_of::<BundleVerifierPageV6Data>()
     );
     assert_eq!(
-        BundleVerifierPageV2::account_len(AccountLayoutVersion::V6),
-        BundleVerifierPageV2::LEN_V6
+        BundleVerifierPageV2::account_len(AccountLayoutVersion::V5),
+        BundleVerifierPageV2::LEN_V5
     );
 }
 
 #[test]
-fn bundle_verifier_page_v6_round_trips_v5_and_pricing_tails() {
+fn bundle_verifier_page_v5_round_trips_lifecycle_and_pricing() {
     let mut page = BundleVerifierPageV2::zeroed();
     assert!(page.write_entries(
         [3; 32].into(),
@@ -118,18 +119,24 @@ fn bundle_verifier_page_v6_round_trips_v5_and_pricing_tails() {
         2,
         [BundleVerifierPageV2Entry::default(); MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
     ));
-    let mut bytes = vec![0xFF; BundleVerifierPageV2::LEN_V6];
-    assert!(page.write_bytes_with_layout(&mut bytes, AccountLayoutVersion::V6));
+    let mut bytes = vec![0xFF; BundleVerifierPageV2::LEN_V5];
+    assert!(page.write_bytes_with_layout(&mut bytes, AccountLayoutVersion::V5));
 
-    // The writer must initialize both the inherited V5 prefix and new V6 tail.
+    // A fresh V5 page clears both metadata slices.
     {
         let state = BundleVerifierPageV2::from_bytes(&bytes).unwrap();
-        assert_eq!(state.layout().version, AccountLayoutVersion::V6);
+        assert_eq!(state.layout().version, AccountLayoutVersion::V5);
         assert_eq!(state.bundle_escrow, Pubkey::from([3; 32]));
         assert_eq!(state.page_index, 1);
         assert_eq!(state.entry_count, 2);
-        assert_eq!(state.v5().unwrap(), &BundleVerifierPageV5Data::default());
-        assert_eq!(state.v6().unwrap(), &BundleVerifierPageV6Data::default());
+        assert_eq!(
+            state.lifecycle().unwrap(),
+            &BundleVerifierPageV5Data::default()
+        );
+        assert_eq!(
+            state.pricing().unwrap(),
+            &BundleVerifierPageV6Data::default()
+        );
     }
 
     let first_price = BundleJobPricingV6 {
@@ -144,15 +151,17 @@ fn bundle_verifier_page_v6_round_trips_v5_and_pricing_tails() {
     };
     {
         let mut state = BundleVerifierPageV2::from_bytes_mut(&mut bytes).unwrap();
-        let rent = state.v5_mut().unwrap();
+        let rent = state.lifecycle_mut().unwrap();
         rent.input_tokens = [1, 2, 3, 4, 5, 6];
         rent.funder = [6; 32].into();
         rent.settlement_deadline_slot = 123;
 
-        let pricing = state.v6_mut().unwrap();
+        let pricing = state.pricing_mut().unwrap();
         pricing.pricing_entry_count = 2;
         pricing.pricing_entries[0] = first_price;
         pricing.pricing_entries[1] = second_price;
+        assert_eq!(state.lifecycle(), state.v5());
+        assert_eq!(state.pricing(), state.v6());
     }
 
     let state = BundleVerifierPageV2::from_bytes(&bytes).unwrap();
@@ -164,15 +173,16 @@ fn bundle_verifier_page_v6_round_trips_v5_and_pricing_tails() {
     assert_eq!(state.v6().unwrap().pricing_entries[1], second_price);
     assert_eq!(&bytes[816..824], &1_u64.to_le_bytes());
     assert_eq!(&bytes[864..896], &[6; 32]);
+    assert_eq!(&bytes[896..904], &123_u64.to_le_bytes());
     assert_eq!(bytes[904], 2);
+    assert_eq!(&bytes[912..944], &[7; 32]);
+    assert_eq!(&bytes[944..952], &100_u64.to_le_bytes());
+    assert_eq!(&bytes[952..960], &11_u64.to_le_bytes());
     assert_eq!(
         state.v6().unwrap().pricing_entries[2..],
         [BundleJobPricingV6::default(); MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES - 2]
     );
 
-    // This catches a parser that accidentally treats the V6 tail as the V5 prefix.
-    assert!(BundleVerifierPageV2::from_bytes(&bytes[..BundleVerifierPageV2::LEN_V5]).is_none());
-    assert!(
-        BundleVerifierPageV2::from_bytes_mut(&mut bytes[..BundleVerifierPageV2::LEN_V5]).is_none()
-    );
+    assert_eq!(state.lifecycle(), state.v5());
+    assert_eq!(state.pricing(), state.v6());
 }
