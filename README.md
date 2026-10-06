@@ -11,7 +11,6 @@ ordering, or account layouts are therefore protocol changes.
 Lifecycle metadata records page allocation, deadlines, and credit amounts.
 V4 escrows use 656 bytes, and V4 verifier pages use 1,200 bytes.
 Both readers reject headers 5 and 6 and retired lengths of 616 and 904 bytes.
-Version numbers 5 and 6 remain reserved without account formats.
 Existing V1, V2, and SmallV3 layouts and instruction encodings stay unchanged.
 The policy default selects V4. `OpenBundleEscrowV4` keeps instruction number 26.
 `OpenPricedBundleEscrowV4` keeps instruction number 30.

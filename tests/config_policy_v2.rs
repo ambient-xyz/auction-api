@@ -69,7 +69,7 @@ fn config_policy_v2_round_trips_through_bytes() {
 }
 
 #[test]
-fn config_policy_v2_rejects_reserved_versions_and_keeps_the_v4_default() {
+fn config_policy_v2_rejects_unsupported_versions_and_keeps_the_v4_default() {
     let mut policy = ConfigPolicyV2::default();
     assert_eq!(
         policy.configured_v2_account_layout_version(),
