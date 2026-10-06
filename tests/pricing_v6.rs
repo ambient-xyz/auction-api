@@ -182,8 +182,8 @@ fn v6_instruction_discriminators_sizes_and_round_trips_are_stable() {
     );
     assert!(CommitAuctionSettlementV2Args::try_from(&commit_bytes[1..]).is_err());
 
-    // V6 applies to the escrow/page family, not to the legacy Bundle account.
-    assert_eq!(bundle_account_len(AccountLayoutVersion::V6), 0);
+    // Combined V5 applies to escrow/pages, not to the legacy Bundle account.
+    assert_eq!(bundle_account_len(AccountLayoutVersion::V5), 0);
 }
 
 #[test]

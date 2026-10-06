@@ -15,6 +15,8 @@ fn historical_account_bytes_and_open_payload_remain_unchanged() {
         let decoded = BundleEscrowV2::from_bytes(&escrow).unwrap();
         assert_eq!(decoded.bundle_version, 17);
         assert!(decoded.v5().is_none());
+        assert!(decoded.lifecycle().is_none());
+        assert!(decoded.pricing().is_none());
         let mut encoded = vec![0; escrow_len];
         assert!(decoded.write_bytes_with_layout(&mut encoded, decoded.layout().version));
         assert_eq!(encoded, escrow);
@@ -26,6 +28,8 @@ fn historical_account_bytes_and_open_payload_remain_unchanged() {
         let decoded = BundleVerifierPageV2::from_bytes(&page).unwrap();
         assert_eq!(decoded.page_index, 2);
         assert!(decoded.v5().is_none());
+        assert!(decoded.lifecycle().is_none());
+        assert!(decoded.pricing().is_none());
         let mut encoded = vec![0; page_len];
         assert!(decoded.write_bytes_with_layout(&mut encoded, decoded.layout().version));
         assert_eq!(encoded, page);
@@ -50,11 +54,15 @@ fn new_metadata_round_trips_and_cannot_be_read_as_an_old_layout() {
         state.reserved_v2_mut().unwrap().verifier_quorum = 2;
         state.v5_mut().unwrap().expected_page_count = 3;
         state.v5_mut().unwrap().allocated_page_bitmap = 0b101001;
+        state.v5_mut().unwrap().small_credit_mint = [9; 32].into();
+        state.v5_mut().unwrap().small_credit_amount = 1234;
     }
     let state = BundleEscrowV2::from_bytes(&escrow).unwrap();
     assert_eq!(state.reserved_v2().unwrap().verifier_quorum, 2);
     assert_eq!(state.v5().unwrap().expected_page_count, 3);
     assert_eq!(state.v5().unwrap().allocated_page_bitmap, 0b101001);
+    assert_eq!(state.v5().unwrap().small_credit_mint, [9; 32]);
+    assert_eq!(state.v5().unwrap().small_credit_amount, 1234);
     for version in [1, 2, 3, 4, 255] {
         escrow[1] = version;
         assert!(BundleEscrowV2::from_bytes(&escrow).is_none());
@@ -84,30 +92,94 @@ fn new_metadata_round_trips_and_cannot_be_read_as_an_old_layout() {
 }
 
 #[test]
-fn evidence_hash_excludes_only_new_rent_metadata() {
+fn evidence_hash_excludes_rent_and_pricing_metadata() {
     use ambient_auction_api::bundle_verifier_page_hash_bytes;
     for version in [
         AccountLayoutVersion::V1,
         AccountLayoutVersion::V2,
         AccountLayoutVersion::V5,
-        AccountLayoutVersion::V6,
     ] {
         let mut bytes = vec![0; BundleVerifierPageV2::account_len(version)];
         assert!(BundleVerifierPageV2::default().write_bytes_with_layout(&mut bytes, version));
         let original = bundle_verifier_page_hash_bytes(&bytes).unwrap().to_vec();
-        if matches!(version, AccountLayoutVersion::V5 | AccountLayoutVersion::V6) {
+        if version == AccountLayoutVersion::V5 {
             let mut page = BundleVerifierPageV2::from_bytes_mut(&mut bytes).unwrap();
             page.v5_mut().unwrap().funder = [7; 32].into();
-            if version == AccountLayoutVersion::V6 {
-                page.v6_mut().unwrap().pricing_entry_count = 1;
-                page.v6_mut().unwrap().pricing_entries[0].price_per_output_token = 9;
-            }
+            page.v5_mut().unwrap().settlement_deadline_slot = 123;
+            page.pricing_mut().unwrap().pricing_entry_count = 1;
+            page.pricing_mut().unwrap().pricing_entries[0].price_per_output_token = 9;
             drop(page);
             assert_eq!(bundle_verifier_page_hash_bytes(&bytes).unwrap(), original);
+            for index in 0..6 {
+                BundleVerifierPageV2::from_bytes_mut(&mut bytes)
+                    .unwrap()
+                    .lifecycle_mut()
+                    .unwrap()
+                    .input_tokens[index] = 42;
+                assert_ne!(bundle_verifier_page_hash_bytes(&bytes).unwrap(), original);
+                bytes[816 + index * 8..824 + index * 8].fill(0);
+                assert_eq!(bundle_verifier_page_hash_bytes(&bytes).unwrap(), original);
+            }
             bytes[48] = 1;
             assert_ne!(bundle_verifier_page_hash_bytes(&bytes).unwrap(), original);
         } else {
             assert_eq!(original, bytes);
         }
     }
+}
+
+#[test]
+fn v5_readers_reject_retired_formats_and_malformed_lengths() {
+    let mut escrow = vec![0; 656];
+    let mut page = vec![0; 1_200];
+    assert!(
+        BundleEscrowV2::default().write_bytes_with_layout(&mut escrow, AccountLayoutVersion::V5)
+    );
+    assert!(BundleVerifierPageV2::default()
+        .write_bytes_with_layout(&mut page, AccountLayoutVersion::V5));
+    assert!(BundleEscrowV2::from_bytes(&escrow).is_some());
+    assert!(BundleEscrowV2::from_bytes_mut(&mut escrow).is_some());
+    assert!(BundleVerifierPageV2::from_bytes(&page).is_some());
+    assert!(BundleVerifierPageV2::from_bytes_mut(&mut page).is_some());
+
+    for other_version in [0, 1, 2, 3, 4, 6, 255] {
+        escrow[1] = other_version;
+        page[1] = other_version;
+        assert!(BundleEscrowV2::from_bytes(&escrow).is_none());
+        assert!(BundleEscrowV2::from_bytes_mut(&mut escrow).is_none());
+        assert!(BundleVerifierPageV2::from_bytes(&page).is_none());
+        assert!(BundleVerifierPageV2::from_bytes_mut(&mut page).is_none());
+    }
+    escrow[1] = 5;
+    page[1] = 5;
+
+    for length in [0, 616, 655, 657] {
+        let mut malformed = escrow.clone();
+        malformed.resize(length, 0);
+        assert!(BundleEscrowV2::from_bytes(&malformed).is_none());
+        assert!(BundleEscrowV2::from_bytes_mut(&mut malformed).is_none());
+    }
+    for length in [0, 904, 1_199, 1_201] {
+        let mut malformed = page.clone();
+        malformed.resize(length, 0);
+        assert!(BundleVerifierPageV2::from_bytes(&malformed).is_none());
+        assert!(BundleVerifierPageV2::from_bytes_mut(&mut malformed).is_none());
+    }
+}
+
+#[test]
+fn small_credit_claim_has_a_fixed_recipient_account_order_and_empty_payload() {
+    use ambient_auction_api::{
+        ClaimSmallCreditsV5Accounts, ClaimSmallCreditsV5Args, InstructionAccounts,
+    };
+    let keys = [1, 2, 3, 4, 5];
+    let accounts = ClaimSmallCreditsV5Accounts::try_from(keys.as_slice()).unwrap();
+    assert_eq!(*accounts.bundle_escrow, 1);
+    assert_eq!(*accounts.config_policy, 2);
+    assert_eq!(*accounts.mint, 3);
+    assert_eq!(*accounts.token_account, 4);
+    assert_eq!(*accounts.token_program, 5);
+    assert_eq!(accounts.iter().copied().collect::<Vec<_>>(), keys);
+    assert_eq!(ClaimSmallCreditsV5Args {}.to_bytes(), [29]);
+    assert!(ClaimSmallCreditsV5Args::try_from(&[1][..]).is_err());
 }

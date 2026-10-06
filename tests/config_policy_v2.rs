@@ -26,6 +26,19 @@ fn config_policy_v2_default_windows_are_production_stage_windows() {
 fn config_policy_v2_layout_size_stays_stable() {
     assert_eq!(ConfigPolicyV2::LEN, 1_568);
     assert_eq!(size_of::<ConfigPolicyV2>(), ConfigPolicyV2::LEN);
+    assert_eq!(std::mem::align_of::<ConfigPolicyV2>(), 8);
+    assert_eq!(offset_of!(ConfigPolicyV2, small_credit_mint), 1_320);
+    assert_eq!(offset_of!(ConfigPolicyV2, small_credit_enabled), 1_352);
+    assert_eq!(
+        offset_of!(ConfigPolicyV2, small_credit_slash_authority),
+        1_384
+    );
+    assert_eq!(
+        offset_of!(ConfigPolicyV2, small_credit_slash_sequence),
+        1_416
+    );
+    assert_eq!(offset_of!(ConfigPolicyV2, reserved_words), 1_448);
+    assert_eq!(offset_of!(ConfigPolicyV2, v2_account_layout_version), 1_544);
     assert_eq!(
         offset_of!(ConfigPolicyV2, max_auction_credits_per_update),
         24
@@ -56,18 +69,15 @@ fn config_policy_v2_round_trips_through_bytes() {
 }
 
 #[test]
-fn config_policy_v2_accepts_v6_without_changing_the_production_default() {
+fn config_policy_v2_rejects_reserved_v6_and_keeps_the_v5_default() {
     let mut policy = ConfigPolicyV2::default();
     assert_eq!(
         policy.configured_v2_account_layout_version(),
         Ok(AccountLayoutVersion::V5)
     );
 
-    policy.v2_account_layout_version = AccountLayoutVersion::V6 as u8;
-    assert_eq!(
-        policy.configured_v2_account_layout_version(),
-        Ok(AccountLayoutVersion::V6)
-    );
+    policy.v2_account_layout_version = 6;
+    assert_eq!(policy.configured_v2_account_layout_version(), Err(6));
 
     policy.v2_account_layout_version = 3;
     assert_eq!(policy.configured_v2_account_layout_version(), Err(3));

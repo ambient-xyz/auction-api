@@ -62,9 +62,22 @@ impl ConfigPolicyV2Flags {
 
 pub const CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES: usize = 64;
 pub const CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES: usize = 64;
-pub const CONFIG_POLICY_V2_TYPED_RESERVED_WORDS: usize = 7;
+pub const CONFIG_POLICY_V2_TYPED_RESERVED_WORDS: usize = 3;
 pub const CONFIG_POLICY_V2_TYPED_RESERVED_LAYOUT_PADDING_BYTES: usize = 7;
 pub const CONFIG_POLICY_V2_TYPED_RESERVED_TAIL_BYTES: usize = 16;
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+pub struct SmallCreditSettings {
+    pub enabled: bool,
+    pub mint: Pubkey,
+}
+
+impl SmallCreditSettings {
+    pub fn validate(&self) -> bool {
+        !self.enabled || self.mint != Pubkey::default()
+    }
+}
 
 #[derive(Pod, Clone, Copy, Zeroable, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -156,6 +169,13 @@ pub struct ConfigPolicyV2 {
     pub dispute_verification_window_slots: u64,
     pub paid_verification_dispute_window_slots: u64,
     pub paid_verification_dispute_bond_lamports: u64,
+    // Padding preserves the deployed policy size and Small credit byte positions.
+    pub small_credit_mint: Pubkey,
+    pub small_credit_enabled: u8,
+    pub _reserved_small_credit_enabled: [u8; 31],
+    pub small_credit_slash_authority: Pubkey,
+    pub small_credit_slash_sequence: u64,
+    pub _reserved_small_credit_slash_sequence: [u8; 24],
     pub reserved_words: [[u8; 32]; CONFIG_POLICY_V2_TYPED_RESERVED_WORDS],
     pub v2_account_layout_version: u8,
     pub _reserved2: [u8; CONFIG_POLICY_V2_TYPED_RESERVED_LAYOUT_PADDING_BYTES],
@@ -193,6 +213,12 @@ impl ConfigPolicyV2 {
             dispute_verification_window_slots: 0,
             paid_verification_dispute_window_slots: 0,
             paid_verification_dispute_bond_lamports: 0,
+            small_credit_mint: Pubkey::default(),
+            small_credit_enabled: 0,
+            _reserved_small_credit_enabled: [0; 31],
+            small_credit_slash_authority: Pubkey::default(),
+            small_credit_slash_sequence: 0,
+            _reserved_small_credit_slash_sequence: [0; 24],
             reserved_words: [[0; 32]; CONFIG_POLICY_V2_TYPED_RESERVED_WORDS],
             v2_account_layout_version: AccountLayoutVersion::V5 as u8,
             _reserved2: [0; CONFIG_POLICY_V2_TYPED_RESERVED_LAYOUT_PADDING_BYTES],
@@ -215,10 +241,61 @@ impl ConfigPolicyV2 {
             Ok(
                 version @ (AccountLayoutVersion::V1
                 | AccountLayoutVersion::V2
-                | AccountLayoutVersion::V5
-                | AccountLayoutVersion::V6),
+                | AccountLayoutVersion::V5),
             ) => Ok(version),
             _ => Err(self.v2_account_layout_version),
         }
+    }
+
+    pub fn small_credit_enabled(&self) -> bool {
+        self.small_credit_enabled == 1
+    }
+
+    pub fn small_credit_mint(&self) -> Pubkey {
+        self.small_credit_mint
+    }
+
+    pub fn small_credit_slash_authority(&self) -> Pubkey {
+        self.small_credit_slash_authority
+    }
+
+    pub fn small_credit_slash_sequence(&self) -> u64 {
+        self.small_credit_slash_sequence
+    }
+
+    pub fn small_credit_slash_sequence_word_is_canonical(&self) -> bool {
+        self._reserved_small_credit_slash_sequence
+            .iter()
+            .all(|byte| *byte == 0)
+    }
+
+    pub fn small_credit_settings_word_is_canonical(&self) -> bool {
+        self.small_credit_enabled <= 1
+            && self
+                ._reserved_small_credit_enabled
+                .iter()
+                .all(|byte| *byte == 0)
+    }
+
+    pub fn small_credit_settings(&self) -> SmallCreditSettings {
+        SmallCreditSettings {
+            enabled: self.small_credit_enabled(),
+            mint: self.small_credit_mint(),
+        }
+    }
+
+    pub fn set_small_credit_settings(&mut self, settings: SmallCreditSettings) {
+        self.small_credit_mint = settings.mint;
+        self.small_credit_enabled = u8::from(settings.enabled);
+        self._reserved_small_credit_enabled.fill(0);
+    }
+
+    pub fn set_small_credit_slash_authority(&mut self, authority: Pubkey) {
+        self.small_credit_slash_authority = authority;
+    }
+
+    pub fn set_small_credit_slash_sequence(&mut self, sequence: u64) {
+        self.small_credit_slash_sequence = sequence;
+        self._reserved_small_credit_slash_sequence.fill(0);
     }
 }
