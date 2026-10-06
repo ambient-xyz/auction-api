@@ -220,7 +220,7 @@ impl ConfigPolicyV2 {
             small_credit_slash_sequence: 0,
             _reserved_small_credit_slash_sequence: [0; 24],
             reserved_words: [[0; 32]; CONFIG_POLICY_V2_TYPED_RESERVED_WORDS],
-            v2_account_layout_version: AccountLayoutVersion::V5 as u8,
+            v2_account_layout_version: AccountLayoutVersion::V4 as u8,
             _reserved2: [0; CONFIG_POLICY_V2_TYPED_RESERVED_LAYOUT_PADDING_BYTES],
             reserved_tail: [0; CONFIG_POLICY_V2_TYPED_RESERVED_TAIL_BYTES],
         }
@@ -241,7 +241,7 @@ impl ConfigPolicyV2 {
             Ok(
                 version @ (AccountLayoutVersion::V1
                 | AccountLayoutVersion::V2
-                | AccountLayoutVersion::V5),
+                | AccountLayoutVersion::V4),
             ) => Ok(version),
             _ => Err(self.v2_account_layout_version),
         }

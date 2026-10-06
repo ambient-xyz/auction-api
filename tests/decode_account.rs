@@ -9,8 +9,8 @@ use std::{
 #[test]
 fn bundle_escrow_decoder_includes_versioned_pricing() {
     for (version, has_prices) in [
-        (AccountLayoutVersion::V5, true),
-        (AccountLayoutVersion::V5, false),
+        (AccountLayoutVersion::V4, true),
+        (AccountLayoutVersion::V4, false),
         (AccountLayoutVersion::V2, false),
     ] {
         let mut bytes = vec![0; BundleEscrowV2::account_len(version)];
@@ -38,7 +38,7 @@ fn bundle_escrow_decoder_includes_versioned_pricing() {
             String::from_utf8_lossy(&output.stderr)
         );
         let decoded: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-        let expected = if version == AccountLayoutVersion::V5 {
+        let expected = if version == AccountLayoutVersion::V4 {
             serde_json::json!({
                 "pricing_posted_page_bitmap": if has_prices { 5 } else { 0 },
                 "pricing_sealed": u8::from(has_prices),

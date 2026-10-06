@@ -2,7 +2,7 @@ pub mod auction;
 pub mod bid;
 pub mod bundle;
 pub mod bundle_escrow_v2;
-pub mod bundle_pricing_v6;
+pub mod bundle_pricing_v4;
 pub mod bundle_registry;
 pub mod bundle_verification_dispute_v2;
 pub mod bundle_verifier_page_v2;
@@ -18,7 +18,7 @@ mod verification;
 
 pub use bundle::*;
 pub use bundle_escrow_v2::*;
-pub use bundle_pricing_v6::*;
+pub use bundle_pricing_v4::*;
 pub use bundle_registry::*;
 pub use bundle_verification_dispute_v2::*;
 pub use bundle_verifier_page_v2::*;

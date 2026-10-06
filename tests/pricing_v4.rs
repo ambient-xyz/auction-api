@@ -1,10 +1,11 @@
 use ambient_auction_api::{
-    bundle_account_len, AccountLayoutVersion, AuctionInstruction, BundleJobPricingV6,
-    BundlePricingCommitmentV6Message, CommitAuctionSettlementV2Args,
+    bundle_account_len, AccountLayoutVersion, AuctionInstruction, BundleJobPricingV4,
+    BundlePricingCommitmentV4Message, CommitAuctionSettlementV2Args,
     CommitAuctionSettlementV3Accounts, CommitAuctionSettlementV3Args, InstructionAccounts,
-    InstructionBytes, OpenBundleEscrowV5Args, OpenBundleEscrowV6Args, PostBundlePricingAccounts,
-    PostBundlePricingArgs, SealBundlePricingAccounts, SealBundlePricingArgs,
-    BUNDLE_PRICING_V6_DOMAIN, MAX_BUNDLE_JOBS, MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES,
+    InstructionBytes, OpenBundleEscrowV4Args, OpenPricedBundleEscrowV4Args,
+    PostBundlePricingAccounts, PostBundlePricingArgs, SealBundlePricingAccounts,
+    SealBundlePricingArgs, BUNDLE_PRICING_V4_DOMAIN, MAX_BUNDLE_JOBS,
+    MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES,
 };
 use bytemuck::Zeroable;
 use memoffset::offset_of;
@@ -14,8 +15,8 @@ fn pricing(
     job_byte: u8,
     max_output_tokens: u64,
     price_per_output_token: u64,
-) -> BundleJobPricingV6 {
-    BundleJobPricingV6 {
+) -> BundleJobPricingV4 {
+    BundleJobPricingV4 {
         job_id: [job_byte; 32].into(),
         max_output_tokens,
         price_per_output_token,
@@ -25,11 +26,11 @@ fn pricing(
 #[test]
 fn pricing_commitment_has_a_fixed_canonical_layout_and_zero_padding() {
     let entries = [pricing(1, 100, 7), pricing(2, 200, 11)];
-    let message = BundlePricingCommitmentV6Message::new([9; 32], &entries).unwrap();
+    let message = BundlePricingCommitmentV4Message::new([9; 32], &entries).unwrap();
 
-    assert_eq!(size_of::<BundlePricingCommitmentV6Message>(), 936);
+    assert_eq!(size_of::<BundlePricingCommitmentV4Message>(), 936);
     assert_eq!(message.as_bytes().len(), 936);
-    assert_eq!(message.domain, BUNDLE_PRICING_V6_DOMAIN);
+    assert_eq!(message.domain, BUNDLE_PRICING_V4_DOMAIN);
     assert_eq!(&message.domain[..25], b"ambient.bundle.pricing.v6");
     assert_eq!(&message.domain[25..], &[0; 7]);
     assert_eq!(message.bundle_hash, [9; 32]);
@@ -38,12 +39,12 @@ fn pricing_commitment_has_a_fixed_canonical_layout_and_zero_padding() {
     assert_eq!(&message.pricing_entries[..2], &entries);
     assert_eq!(
         message.pricing_entries[2..],
-        [BundleJobPricingV6::default(); MAX_BUNDLE_JOBS - 2]
+        [BundleJobPricingV4::default(); MAX_BUNDLE_JOBS - 2]
     );
 
     // These offsets define the exact bytes all hash producers must agree on.
     let bytes = message.as_bytes();
-    assert_eq!(&bytes[0..32], &BUNDLE_PRICING_V6_DOMAIN);
+    assert_eq!(&bytes[0..32], &BUNDLE_PRICING_V4_DOMAIN);
     assert_eq!(&bytes[32..64], &[9; 32]);
     assert_eq!(bytes[64], 2);
     assert_eq!(&bytes[65..72], &[0; 7]);
@@ -54,21 +55,21 @@ fn pricing_commitment_has_a_fixed_canonical_layout_and_zero_padding() {
 
 #[test]
 fn pricing_commitment_rejects_invalid_counts_and_binds_every_pricing_field() {
-    assert!(BundlePricingCommitmentV6Message::new([1; 32], &[]).is_none());
-    let maximum_entries = [BundleJobPricingV6::default(); MAX_BUNDLE_JOBS];
-    let maximum_message = BundlePricingCommitmentV6Message::new([1; 32], &maximum_entries).unwrap();
+    assert!(BundlePricingCommitmentV4Message::new([1; 32], &[]).is_none());
+    let maximum_entries = [BundleJobPricingV4::default(); MAX_BUNDLE_JOBS];
+    let maximum_message = BundlePricingCommitmentV4Message::new([1; 32], &maximum_entries).unwrap();
     assert_eq!(
         usize::from(maximum_message.pricing_entry_count),
         MAX_BUNDLE_JOBS
     );
-    assert!(BundlePricingCommitmentV6Message::new(
+    assert!(BundlePricingCommitmentV4Message::new(
         [1; 32],
-        &[BundleJobPricingV6::default(); MAX_BUNDLE_JOBS + 1],
+        &[BundleJobPricingV4::default(); MAX_BUNDLE_JOBS + 1],
     )
     .is_none());
 
     let entries = [pricing(1, 100, 7), pricing(2, 200, 11)];
-    let baseline = BundlePricingCommitmentV6Message::new([9; 32], &entries)
+    let baseline = BundlePricingCommitmentV4Message::new([9; 32], &entries)
         .unwrap()
         .as_bytes()
         .to_vec();
@@ -76,7 +77,7 @@ fn pricing_commitment_rejects_invalid_counts_and_binds_every_pricing_field() {
     let mut changed = entries;
     changed[0].job_id = [3; 32].into();
     assert_ne!(
-        BundlePricingCommitmentV6Message::new([9; 32], &changed)
+        BundlePricingCommitmentV4Message::new([9; 32], &changed)
             .unwrap()
             .as_bytes(),
         baseline
@@ -84,7 +85,7 @@ fn pricing_commitment_rejects_invalid_counts_and_binds_every_pricing_field() {
     changed = entries;
     changed[0].max_output_tokens += 1;
     assert_ne!(
-        BundlePricingCommitmentV6Message::new([9; 32], &changed)
+        BundlePricingCommitmentV4Message::new([9; 32], &changed)
             .unwrap()
             .as_bytes(),
         baseline
@@ -92,20 +93,20 @@ fn pricing_commitment_rejects_invalid_counts_and_binds_every_pricing_field() {
     changed = entries;
     changed[0].price_per_output_token += 1;
     assert_ne!(
-        BundlePricingCommitmentV6Message::new([9; 32], &changed)
+        BundlePricingCommitmentV4Message::new([9; 32], &changed)
             .unwrap()
             .as_bytes(),
         baseline
     );
     changed.swap(0, 1);
     assert_ne!(
-        BundlePricingCommitmentV6Message::new([9; 32], &changed)
+        BundlePricingCommitmentV4Message::new([9; 32], &changed)
             .unwrap()
             .as_bytes(),
         baseline
     );
     assert_ne!(
-        BundlePricingCommitmentV6Message::new([8; 32], &entries)
+        BundlePricingCommitmentV4Message::new([8; 32], &entries)
             .unwrap()
             .as_bytes(),
         baseline
@@ -113,23 +114,32 @@ fn pricing_commitment_rejects_invalid_counts_and_binds_every_pricing_field() {
 }
 
 #[test]
-fn v6_instruction_discriminators_sizes_and_round_trips_are_stable() {
-    let mut open = OpenBundleEscrowV6Args::zeroed();
+fn v4_instruction_discriminators_sizes_and_round_trips_are_stable() {
+    let mut open = OpenPricedBundleEscrowV4Args::zeroed();
     open.bundle_version = 17;
     open.expected_page_count = 3;
     open.pricing_commitment = [4; 32];
     let open_bytes = open.to_bytes();
-    assert_eq!(size_of::<OpenBundleEscrowV6Args>(), 176);
-    assert_eq!(offset_of!(OpenBundleEscrowV6Args, expected_page_count), 136);
-    assert_eq!(offset_of!(OpenBundleEscrowV6Args, pricing_commitment), 144);
+    assert_eq!(size_of::<OpenPricedBundleEscrowV4Args>(), 176);
+    assert_eq!(
+        offset_of!(OpenPricedBundleEscrowV4Args, expected_page_count),
+        136
+    );
+    assert_eq!(
+        offset_of!(OpenPricedBundleEscrowV4Args, pricing_commitment),
+        144
+    );
     assert_eq!(open_bytes.len(), 177);
     assert_eq!(open_bytes[0], 30);
-    assert_eq!(open_bytes[0], AuctionInstruction::OpenBundleEscrowV6 as u8);
     assert_eq!(
-        OpenBundleEscrowV6Args::try_from(&open_bytes[1..]).unwrap(),
+        open_bytes[0],
+        AuctionInstruction::OpenPricedBundleEscrowV4 as u8
+    );
+    assert_eq!(
+        OpenPricedBundleEscrowV4Args::try_from(&open_bytes[1..]).unwrap(),
         open
     );
-    assert!(OpenBundleEscrowV5Args::try_from(&open_bytes[1..]).is_err());
+    assert!(OpenBundleEscrowV4Args::try_from(&open_bytes[1..]).is_err());
 
     let mut post = PostBundlePricingArgs::zeroed();
     post.page_index = 2;
@@ -182,12 +192,12 @@ fn v6_instruction_discriminators_sizes_and_round_trips_are_stable() {
     );
     assert!(CommitAuctionSettlementV2Args::try_from(&commit_bytes[1..]).is_err());
 
-    // Combined V5 applies to escrow/pages, not to the legacy Bundle account.
-    assert_eq!(bundle_account_len(AccountLayoutVersion::V5), 0);
+    // Combined V4 applies to escrow/pages, not to the legacy Bundle account.
+    assert_eq!(bundle_account_len(AccountLayoutVersion::V4), 0);
 }
 
 #[test]
-fn v6_instruction_account_parsers_preserve_program_account_order() {
+fn v4_instruction_account_parsers_preserve_program_account_order() {
     let post_accounts = [1_u8, 2, 3];
     let parsed_post = PostBundlePricingAccounts::try_from(&post_accounts[..]).unwrap();
     assert_eq!(parsed_post.iter_owned().collect::<Vec<_>>(), post_accounts);

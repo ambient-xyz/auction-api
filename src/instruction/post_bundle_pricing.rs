@@ -1,5 +1,5 @@
 use crate::{error::AuctionError, InstructionAccounts};
-use crate::{BundleJobPricingV6, MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES};
+use crate::{BundleJobPricingV4, MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES};
 use bytemuck::{Pod, Zeroable};
 
 pub struct PostBundlePricingAccounts<'a, T> {
@@ -39,5 +39,5 @@ pub struct PostBundlePricingArgs {
     pub page_index: u16,
     pub pricing_entry_count: u8,
     pub _reserved: [u8; 5],
-    pub pricing_entries: [BundleJobPricingV6; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
+    pub pricing_entries: [BundleJobPricingV4; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
 }

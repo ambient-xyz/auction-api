@@ -100,7 +100,7 @@ pub struct OpenBundleEscrowV2Args {
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug, Pod)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[repr(C)]
-pub struct OpenBundleEscrowV5Args {
+pub struct OpenBundleEscrowV4Args {
     pub bundle_version: u32,
     pub _reserved0: [u8; 4],
     pub reward_tier: u64,
@@ -117,7 +117,7 @@ pub struct OpenBundleEscrowV5Args {
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug, Pod)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[repr(C)]
-pub struct OpenBundleEscrowV6Args {
+pub struct OpenPricedBundleEscrowV4Args {
     pub bundle_version: u32,
     pub _reserved0: [u8; 4],
     pub reward_tier: u64,

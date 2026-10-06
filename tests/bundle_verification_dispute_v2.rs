@@ -83,24 +83,41 @@ fn bundle_verification_dispute_v2_rejects_wrong_header() {
 }
 
 #[test]
-fn dispute_v5_preserves_the_historical_payload_and_checks_exact_layouts() {
+fn dispute_v4_preserves_the_historical_payload_and_checks_exact_layouts() {
     let dispute = BundleVerificationDisputeV2 {
         bond_lamports: 89,
         replacement_deadline_slot: 55,
         ..Default::default()
     };
-    let mut bytes = vec![0; BundleVerificationDisputeV2::LEN_V5];
-    assert!(dispute.write_bytes_with_layout(&mut bytes, AccountLayoutVersion::V5));
+    let mut bytes = vec![0; BundleVerificationDisputeV2::LEN_V4];
+    assert_eq!(bytes.len(), 328);
+    assert!(dispute.write_bytes_with_layout(&mut bytes, AccountLayoutVersion::V4));
+    assert_eq!(bytes[1], 4);
     {
         let mut parsed = BundleVerificationDisputeV2::from_bytes_mut(&mut bytes).unwrap();
-        let evidence = parsed.v5_mut().unwrap();
+        let evidence = parsed.evidence_mut().unwrap();
         evidence.authorized = 1;
         evidence.verification_hash = [3; 32];
         evidence.page_hashes[0] = [4; 32];
     }
     let parsed = BundleVerificationDisputeV2::from_bytes(&bytes).unwrap();
     assert_eq!(*parsed.as_raw(), dispute);
-    assert_eq!(parsed.v5().unwrap().page_hashes[0], [4; 32]);
+    assert_eq!(parsed.evidence().unwrap().page_hashes[0], [4; 32]);
+    assert_eq!(&bytes[192..224], &[3; 32]);
+    assert_eq!(&bytes[224..256], &[4; 32]);
+    assert_eq!(bytes[320], 1);
+    for version in [5, 6] {
+        let mut retired = bytes.clone();
+        retired[1] = version;
+        assert!(BundleVerificationDisputeV2::from_bytes(&retired).is_none());
+        assert!(BundleVerificationDisputeV2::from_bytes_mut(&mut retired).is_none());
+    }
+    for length in [327, 329] {
+        let mut malformed = bytes.clone();
+        malformed.resize(length, 0);
+        assert!(BundleVerificationDisputeV2::from_bytes(&malformed).is_none());
+        assert!(BundleVerificationDisputeV2::from_bytes_mut(&mut malformed).is_none());
+    }
     assert!(
         BundleVerificationDisputeV2::from_bytes(&bytes[..BundleVerificationDisputeV2::LEN])
             .is_none()
@@ -111,13 +128,13 @@ fn dispute_v5_preserves_the_historical_payload_and_checks_exact_layouts() {
         BundleVerificationDisputeV2::from_bytes(&bytes[..BundleVerificationDisputeV2::LEN])
             .unwrap();
     assert_eq!(*historical.as_raw(), dispute);
-    assert!(historical.v5().is_none());
+    assert!(historical.evidence().is_none());
 }
 
 #[test]
 fn dispute_manifest_has_a_distinct_fixed_signing_contract() {
-    use ambient_auction_api::BundleDisputeEvidenceV5Message;
-    let message = BundleDisputeEvidenceV5Message::new(
+    use ambient_auction_api::BundleDisputeEvidenceV4Message;
+    let message = BundleDisputeEvidenceV4Message::new(
         [1; 32],
         0x0807060504030201,
         0x1817161514131211,

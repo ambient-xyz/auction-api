@@ -4,7 +4,7 @@ use bytemuck::{Pod, Zeroable};
 
 #[derive(Clone, Debug)]
 #[repr(C)]
-pub struct ClaimSmallCreditsV5Accounts<'a, T> {
+pub struct ClaimSmallCreditsV4Accounts<'a, T> {
     pub bundle_escrow: &'a T,
     pub config_policy: &'a T,
     pub mint: &'a T,
@@ -12,7 +12,7 @@ pub struct ClaimSmallCreditsV5Accounts<'a, T> {
     pub token_program: &'a T,
 }
 
-impl<'a, T> TryFrom<&'a [T]> for ClaimSmallCreditsV5Accounts<'a, T> {
+impl<'a, T> TryFrom<&'a [T]> for ClaimSmallCreditsV4Accounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
@@ -30,7 +30,7 @@ impl<'a, T> TryFrom<&'a [T]> for ClaimSmallCreditsV5Accounts<'a, T> {
     }
 }
 
-impl<'a, T> InstructionAccounts<'a, T> for ClaimSmallCreditsV5Accounts<'a, T> {
+impl<'a, T> InstructionAccounts<'a, T> for ClaimSmallCreditsV4Accounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         [
             self.bundle_escrow,
@@ -46,4 +46,4 @@ impl<'a, T> InstructionAccounts<'a, T> for ClaimSmallCreditsV5Accounts<'a, T> {
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug, Pod)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[repr(C)]
-pub struct ClaimSmallCreditsV5Args {}
+pub struct ClaimSmallCreditsV4Args {}
