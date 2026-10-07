@@ -4,13 +4,13 @@ use bytemuck::{Pod, Zeroable};
 
 #[derive(Debug, Clone)]
 #[repr(C)]
-pub struct CloseBundleVerifierPageV5Accounts<'a, T> {
+pub struct CloseBundleVerifierPageV4Accounts<'a, T> {
     pub funder: &'a T,
     pub bundle_escrow: &'a T,
     pub bundle_verifier_page: &'a T,
 }
 
-impl<'a, T> TryFrom<&'a [T]> for CloseBundleVerifierPageV5Accounts<'a, T> {
+impl<'a, T> TryFrom<&'a [T]> for CloseBundleVerifierPageV4Accounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
@@ -26,7 +26,7 @@ impl<'a, T> TryFrom<&'a [T]> for CloseBundleVerifierPageV5Accounts<'a, T> {
     }
 }
 
-impl<'a, T> InstructionAccounts<'a, T> for CloseBundleVerifierPageV5Accounts<'a, T> {
+impl<'a, T> InstructionAccounts<'a, T> for CloseBundleVerifierPageV4Accounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         std::iter::once(self.funder)
             .chain(std::iter::once(self.bundle_escrow))
@@ -36,7 +36,7 @@ impl<'a, T> InstructionAccounts<'a, T> for CloseBundleVerifierPageV5Accounts<'a,
 
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
 #[repr(C)]
-pub struct CloseBundleVerifierPageV5Args {
+pub struct CloseBundleVerifierPageV4Args {
     pub page_index: u16,
     pub disputed: u8,
     pub _reserved: [u8; 5],

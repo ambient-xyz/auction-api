@@ -1,8 +1,8 @@
 use ambient_auction_api::{
-    AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, BundleEscrowV2,
-    BundleEscrowV2ReservedData, BundleEscrowV2Status, InvalidBundleEscrowV2Transition, Pubkey,
-    RequestTier, VERIFIERS_PER_AUCTION, VERIFIER_SELECTION_PHASE_INITIAL,
-    VERIFIER_SELECTION_PHASE_REPLACEMENT,
+    AccountDiscriminator, AccountHeaderV1, AccountLayoutVersion, BundleEscrowLifecycleV4Data,
+    BundleEscrowPricingV4Data, BundleEscrowV2, BundleEscrowV2ReservedData, BundleEscrowV2Status,
+    InvalidBundleEscrowV2Transition, Pubkey, RequestTier, VERIFIERS_PER_AUCTION,
+    VERIFIER_SELECTION_PHASE_INITIAL, VERIFIER_SELECTION_PHASE_REPLACEMENT,
 };
 use memoffset::offset_of;
 use std::mem::size_of;
@@ -183,6 +183,102 @@ fn bundle_escrow_v2_reserved_layout_is_typed_and_stable() {
         bytemuck::bytes_of(&BundleEscrowV2ReservedData::default()),
         &[0u8; 64]
     );
+}
+
+#[test]
+fn bundle_escrow_v4_combined_layout_is_stable() {
+    assert_eq!(size_of::<BundleEscrowLifecycleV4Data>(), 48);
+    assert_eq!(size_of::<BundleEscrowPricingV4Data>(), 40);
+    assert_eq!(
+        offset_of!(BundleEscrowPricingV4Data, pricing_posted_page_bitmap),
+        0
+    );
+    assert_eq!(offset_of!(BundleEscrowPricingV4Data, pricing_sealed), 1);
+    assert_eq!(offset_of!(BundleEscrowPricingV4Data, _reserved0), 2);
+    assert_eq!(offset_of!(BundleEscrowPricingV4Data, pricing_commitment), 8);
+    assert_eq!(BundleEscrowV2::LEN_V4, 656);
+    assert_eq!(
+        BundleEscrowV2::LEN_V4,
+        BundleEscrowV2::LEN_V2
+            + size_of::<BundleEscrowLifecycleV4Data>()
+            + size_of::<BundleEscrowPricingV4Data>()
+    );
+    assert_eq!(
+        BundleEscrowV2::account_len(AccountLayoutVersion::V4),
+        BundleEscrowV2::LEN_V4
+    );
+}
+
+#[test]
+fn bundle_escrow_v4_round_trips_lifecycle_and_pricing() {
+    let bundle = BundleEscrowV2 {
+        bundle_version: 17,
+        bundle_hash: [4; 32],
+        max_output_tokens: 1_000,
+        ..Default::default()
+    };
+    let mut bytes = vec![0xFF; BundleEscrowV2::LEN_V4];
+
+    assert!(bundle.write_bytes_with_layout(&mut bytes, AccountLayoutVersion::V4));
+    assert_eq!(bytes[1], 4);
+
+    // A fresh V4 account clears both metadata slices.
+    {
+        let state = BundleEscrowV2::from_bytes(&bytes).unwrap();
+        assert_eq!(state.layout().version, AccountLayoutVersion::V4);
+        assert_eq!(state.bundle_version, 17);
+        assert_eq!(state.bundle_hash, [4; 32]);
+        assert_eq!(state.max_output_tokens, 1_000);
+        assert_eq!(
+            state.reserved_v2().unwrap(),
+            &BundleEscrowV2ReservedData::default()
+        );
+        assert_eq!(
+            state.lifecycle().unwrap(),
+            &BundleEscrowLifecycleV4Data::default()
+        );
+        assert_eq!(
+            state.pricing().unwrap(),
+            &BundleEscrowPricingV4Data::default()
+        );
+    }
+
+    {
+        let mut state = BundleEscrowV2::from_bytes_mut(&mut bytes).unwrap();
+        state.reserved_v2_mut().unwrap().verifier_quorum = 2;
+        state.lifecycle_mut().unwrap().expected_page_count = 3;
+        state.lifecycle_mut().unwrap().allocated_page_bitmap = 0b0000_0111;
+        state.lifecycle_mut().unwrap().small_credit_mint = [5; 32].into();
+        state.lifecycle_mut().unwrap().small_credit_amount = 1234;
+        let pricing = state.pricing_mut().unwrap();
+        pricing.pricing_posted_page_bitmap = 0b0000_0101;
+        pricing.pricing_sealed = 1;
+        pricing.pricing_commitment = [9; 32];
+    }
+
+    let state = BundleEscrowV2::from_bytes(&bytes).unwrap();
+    assert_eq!(state.reserved_v2().unwrap().verifier_quorum, 2);
+    assert_eq!(state.lifecycle().unwrap().expected_page_count, 3);
+    assert_eq!(
+        state.lifecycle().unwrap().allocated_page_bitmap,
+        0b0000_0111
+    );
+    assert_eq!(state.lifecycle().unwrap().small_credit_mint, [5; 32]);
+    assert_eq!(state.lifecycle().unwrap().small_credit_amount, 1234);
+    assert_eq!(
+        state.pricing().unwrap().pricing_posted_page_bitmap,
+        0b0000_0101
+    );
+    assert_eq!(state.pricing().unwrap().pricing_sealed, 1);
+    assert_eq!(state.pricing().unwrap().pricing_commitment, [9; 32]);
+    assert_eq!(bytes[568], 3);
+    assert_eq!(bytes[569], 0b0000_0111);
+    assert_eq!(&bytes[576..608], &[5; 32]);
+    assert_eq!(&bytes[608..616], &1234_u64.to_le_bytes());
+    assert_eq!(&bytes[624..656], &[9; 32]);
+
+    assert_eq!(bytes[616], 0b0000_0101);
+    assert_eq!(bytes[617], 1);
 }
 
 #[test]

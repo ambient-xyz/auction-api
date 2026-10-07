@@ -53,3 +53,14 @@ pub struct PostBundleResultV2Args {
     pub _reserved: [u8; 4],
     pub page_entries: [BundleVerifierPageV2Entry; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
 }
+
+#[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug, Pod)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[repr(C)]
+pub struct PostBundleResultV3Args {
+    pub post: PostBundleResultV2Args,
+    pub input_tokens: [u64; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
+}
+
+/// Small V4 evidence uses the deployed input-token payload encoding.
+pub type PostBundleResultV4Args = PostBundleResultV3Args;

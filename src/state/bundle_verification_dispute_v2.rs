@@ -75,7 +75,7 @@ pub type BundleVerificationDisputeV2 = RawBundleVerificationDisputeV2Data;
 #[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
-pub struct BundleDisputeEvidenceV5Data {
+pub struct BundleDisputeEvidenceV4Data {
     pub verification_hash: [u8; 32],
     pub page_hashes: [[u8; 32]; MAX_BUNDLE_VERIFIER_PAGES as usize],
     pub authorized: u8,
@@ -86,19 +86,19 @@ pub struct BundleDisputeEvidenceV5Data {
 pub struct BundleVerificationDisputeV2Ref<'a> {
     header: &'a AccountHeaderV1,
     raw: &'a RawBundleVerificationDisputeV2Data,
-    v5: Option<&'a BundleDisputeEvidenceV5Data>,
+    evidence: Option<&'a BundleDisputeEvidenceV4Data>,
 }
 
 #[derive(Debug)]
 pub struct BundleVerificationDisputeV2Mut<'a> {
     header: &'a mut AccountHeaderV1,
     raw: &'a mut RawBundleVerificationDisputeV2Data,
-    v5: Option<&'a mut BundleDisputeEvidenceV5Data>,
+    evidence: Option<&'a mut BundleDisputeEvidenceV4Data>,
 }
 
 impl<'a> BundleVerificationDisputeV2Ref<'a> {
-    pub fn v5(&self) -> Option<&BundleDisputeEvidenceV5Data> {
-        self.v5
+    pub fn evidence(&self) -> Option<&BundleDisputeEvidenceV4Data> {
+        self.evidence
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -123,11 +123,11 @@ impl Deref for BundleVerificationDisputeV2Ref<'_> {
 }
 
 impl<'a> BundleVerificationDisputeV2Mut<'a> {
-    pub fn v5(&self) -> Option<&BundleDisputeEvidenceV5Data> {
-        self.v5.as_deref()
+    pub fn evidence(&self) -> Option<&BundleDisputeEvidenceV4Data> {
+        self.evidence.as_deref()
     }
-    pub fn v5_mut(&mut self) -> Option<&mut BundleDisputeEvidenceV5Data> {
-        self.v5.as_deref_mut()
+    pub fn evidence_mut(&mut self) -> Option<&mut BundleDisputeEvidenceV4Data> {
+        self.evidence.as_deref_mut()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -164,12 +164,12 @@ impl DerefMut for BundleVerificationDisputeV2Mut<'_> {
 impl RawBundleVerificationDisputeV2Data {
     pub const PAYLOAD_LEN: usize = std::mem::size_of::<RawBundleVerificationDisputeV2Data>();
     pub const LEN: usize = AccountHeaderV1::LEN + Self::PAYLOAD_LEN;
-    pub const LEN_V5: usize = Self::LEN + std::mem::size_of::<BundleDisputeEvidenceV5Data>();
+    pub const LEN_V4: usize = Self::LEN + std::mem::size_of::<BundleDisputeEvidenceV4Data>();
 
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {
             AccountLayoutVersion::V1 => Self::LEN,
-            AccountLayoutVersion::V5 => Self::LEN_V5,
+            AccountLayoutVersion::V4 => Self::LEN_V4,
             _ => 0,
         }
     }
@@ -190,12 +190,16 @@ impl RawBundleVerificationDisputeV2Data {
 
         let (raw_bytes, extension) = raw_bytes.split_at(Self::PAYLOAD_LEN);
         let raw = bytemuck::try_from_bytes::<RawBundleVerificationDisputeV2Data>(raw_bytes).ok()?;
-        let v5 = if layout.version == AccountLayoutVersion::V5 {
-            Some(bytemuck::try_from_bytes::<BundleDisputeEvidenceV5Data>(extension).ok()?)
+        let evidence = if layout.version == AccountLayoutVersion::V4 {
+            Some(bytemuck::try_from_bytes::<BundleDisputeEvidenceV4Data>(extension).ok()?)
         } else {
             None
         };
-        Some(BundleVerificationDisputeV2Ref { header, raw, v5 })
+        Some(BundleVerificationDisputeV2Ref {
+            header,
+            raw,
+            evidence,
+        })
     }
 
     pub fn from_bytes_mut(bytes: &mut [u8]) -> Option<BundleVerificationDisputeV2Mut<'_>> {
@@ -216,12 +220,16 @@ impl RawBundleVerificationDisputeV2Data {
         let (raw_bytes, extension) = raw_bytes.split_at_mut(Self::PAYLOAD_LEN);
         let raw =
             bytemuck::try_from_bytes_mut::<RawBundleVerificationDisputeV2Data>(raw_bytes).ok()?;
-        let v5 = if layout.version == AccountLayoutVersion::V5 {
-            Some(bytemuck::try_from_bytes_mut::<BundleDisputeEvidenceV5Data>(extension).ok()?)
+        let evidence = if layout.version == AccountLayoutVersion::V4 {
+            Some(bytemuck::try_from_bytes_mut::<BundleDisputeEvidenceV4Data>(extension).ok()?)
         } else {
             None
         };
-        Some(BundleVerificationDisputeV2Mut { header, raw, v5 })
+        Some(BundleVerificationDisputeV2Mut {
+            header,
+            raw,
+            evidence,
+        })
     }
 
     pub fn write_bytes(&self, bytes: &mut [u8]) -> bool {

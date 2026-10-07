@@ -5,14 +5,16 @@ use serde::{Deserialize, Serialize};
 use std::net;
 
 mod append_data;
-mod authorize_bundle_dispute_evidence_v5;
+mod authorize_bundle_dispute_evidence_v4;
 mod cancel_bundle;
+mod claim_small_credits_v4;
 mod claim_verifier_lstake_v2;
 mod claim_winner_lstake_v2;
 mod close_bid;
-mod close_bundle_verifier_page_v5;
+mod close_bundle_verifier_page_v4;
 mod close_request;
 mod commit_auction_settlement_v2;
+mod commit_auction_settlement_v3;
 mod dispute_bundle_verification_v2;
 mod end_auction;
 mod expire_bundle_escrow_v2;
@@ -23,24 +25,29 @@ mod init_config;
 mod init_config_policy_v2;
 mod open_bundle_escrow_v2;
 mod place_bid;
+mod post_bundle_pricing;
 mod post_bundle_result_v2;
 mod request_job;
 mod reveal_bid;
+mod seal_bundle_pricing;
 mod select_bundle_verifiers_v2;
 mod set_config_policy_v2;
+mod slash_small_credits;
 mod submit_job_output;
 mod submit_validation;
 
 use crate::macros::impl_instruction_data;
 pub use append_data::*;
-pub use authorize_bundle_dispute_evidence_v5::*;
+pub use authorize_bundle_dispute_evidence_v4::*;
 pub use cancel_bundle::*;
+pub use claim_small_credits_v4::*;
 pub use claim_verifier_lstake_v2::*;
 pub use claim_winner_lstake_v2::*;
 pub use close_bid::*;
-pub use close_bundle_verifier_page_v5::*;
+pub use close_bundle_verifier_page_v4::*;
 pub use close_request::*;
 pub use commit_auction_settlement_v2::*;
+pub use commit_auction_settlement_v3::*;
 pub use dispute_bundle_verification_v2::*;
 pub use end_auction::*;
 pub use expire_bundle_escrow_v2::*;
@@ -51,11 +58,14 @@ pub use init_config::*;
 pub use init_config_policy_v2::*;
 pub use open_bundle_escrow_v2::*;
 pub use place_bid::*;
+pub use post_bundle_pricing::*;
 pub use post_bundle_result_v2::*;
 pub use request_job::*;
 pub use reveal_bid::*;
+pub use seal_bundle_pricing::*;
 pub use select_bundle_verifiers_v2::*;
 pub use set_config_policy_v2::*;
+pub use slash_small_credits::*;
 pub use submit_job_output::*;
 pub use submit_validation::*;
 
@@ -86,10 +96,16 @@ pub enum AuctionInstruction {
     InitBundleVerifierPageV2 = 21,
     DisputeBundleVerificationV2 = 22,
     SelectBundleVerifiersV2 = 23,
+    SlashSmallCredits = 25,
     // 24 and 25 are reserved by the separate Small instruction family.
-    OpenBundleEscrowV5 = 26,
-    CloseBundleVerifierPageV5 = 27,
-    AuthorizeBundleDisputeEvidenceV5 = 28,
+    OpenBundleEscrowV4 = 26,
+    CloseBundleVerifierPageV4 = 27,
+    AuthorizeBundleDisputeEvidenceV4 = 28,
+    ClaimSmallCreditsV4 = 29,
+    OpenPricedBundleEscrowV4 = 30,
+    PostBundlePricing = 31,
+    SealBundlePricing = 32,
+    CommitAuctionSettlementV3 = 33,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -164,20 +180,29 @@ impl_instruction_data!(
     CloseRequestArgs => CloseRequest,
     AppendDataArgs => AppendData,
     OpenBundleEscrowV2Args => OpenBundleEscrowV2,
-    OpenBundleEscrowV5Args => OpenBundleEscrowV5,
-    CloseBundleVerifierPageV5Args => CloseBundleVerifierPageV5,
-    AuthorizeBundleDisputeEvidenceV5Args => AuthorizeBundleDisputeEvidenceV5,
+    OpenBundleEscrowV4Args => OpenBundleEscrowV4,
+    CloseBundleVerifierPageV4Args => CloseBundleVerifierPageV4,
+    AuthorizeBundleDisputeEvidenceV4Args => AuthorizeBundleDisputeEvidenceV4,
     CommitAuctionSettlementV2Args => CommitAuctionSettlementV2,
     PostBundleResultV2Args => PostBundleResultV2,
     FinalizeBundleVerificationV2Args => FinalizeBundleVerificationV2,
     ClaimWinnerLstakeV2Args => ClaimWinnerLstakeV2,
+    ClaimSmallCreditsV4Args => ClaimSmallCreditsV4,
     ClaimVerifierLstakeV2Args => ClaimVerifierLstakeV2,
     ExpireBundleEscrowV2Args => ExpireBundleEscrowV2,
     InitConfigPolicyV2Args => InitConfigPolicyV2,
     SetConfigPolicyV2Args => SetConfigPolicyV2,
+    SetConfigPolicySmallV3Args => SetConfigPolicyV2,
+    InitConfigPolicySmallV3Args => InitConfigPolicyV2,
     InitBundleVerifierPageV2Args => InitBundleVerifierPageV2,
     DisputeBundleVerificationV2Args => DisputeBundleVerificationV2,
     SelectBundleVerifiersV2Args => SelectBundleVerifiersV2,
+    PostBundleResultV3Args => PostBundleResultV2,
+    SlashSmallCreditsArgs => SlashSmallCredits,
+    OpenPricedBundleEscrowV4Args => OpenPricedBundleEscrowV4,
+    PostBundlePricingArgs => PostBundlePricing,
+    SealBundlePricingArgs => SealBundlePricing,
+    CommitAuctionSettlementV3Args => CommitAuctionSettlementV3,
 );
 
 impl_instruction_data!(InitConfigArgs => InitConfig);

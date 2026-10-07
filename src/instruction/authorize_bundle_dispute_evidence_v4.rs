@@ -2,14 +2,14 @@ use crate::{error::AuctionError, InstructionAccounts, MAX_BUNDLE_VERIFIER_PAGES}
 use bytemuck::{Pod, Zeroable};
 
 #[derive(Clone, Debug)]
-pub struct AuthorizeBundleDisputeEvidenceV5Accounts<'a, T> {
+pub struct AuthorizeBundleDisputeEvidenceV4Accounts<'a, T> {
     pub submitter: &'a T,
     pub bundle_escrow: &'a T,
     pub bundle_verification_dispute: &'a T,
     pub instructions_sysvar: &'a T,
 }
 
-impl<'a, T> TryFrom<&'a [T]> for AuthorizeBundleDisputeEvidenceV5Accounts<'a, T> {
+impl<'a, T> TryFrom<&'a [T]> for AuthorizeBundleDisputeEvidenceV4Accounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
@@ -27,7 +27,7 @@ impl<'a, T> TryFrom<&'a [T]> for AuthorizeBundleDisputeEvidenceV5Accounts<'a, T>
     }
 }
 
-impl<'a, T> InstructionAccounts<'a, T> for AuthorizeBundleDisputeEvidenceV5Accounts<'a, T> {
+impl<'a, T> InstructionAccounts<'a, T> for AuthorizeBundleDisputeEvidenceV4Accounts<'a, T> {
     fn iter(&'a self) -> impl Iterator<Item = &'a T> {
         [
             self.submitter,
@@ -41,7 +41,7 @@ impl<'a, T> InstructionAccounts<'a, T> for AuthorizeBundleDisputeEvidenceV5Accou
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Pod, Zeroable)]
 #[repr(C)]
-pub struct AuthorizeBundleDisputeEvidenceV5Args {
+pub struct AuthorizeBundleDisputeEvidenceV4Args {
     pub verification_hash: [u8; 32],
     pub page_hashes: [[u8; 32]; MAX_BUNDLE_VERIFIER_PAGES as usize],
     pub quorum_verifier_bitmap: u8,
@@ -51,7 +51,7 @@ pub struct AuthorizeBundleDisputeEvidenceV5Args {
 /// Signed separately from the unchanged 232-byte finalization message.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Pod, Zeroable)]
 #[repr(C)]
-pub struct BundleDisputeEvidenceV5Message {
+pub struct BundleDisputeEvidenceV4Message {
     pub domain: [u8; 32],
     pub bundle_escrow: [u8; 32],
     pub settlement_deadline_slot: u64,
@@ -62,7 +62,7 @@ pub struct BundleDisputeEvidenceV5Message {
     pub page_hashes: [[u8; 32]; MAX_BUNDLE_VERIFIER_PAGES as usize],
 }
 
-impl BundleDisputeEvidenceV5Message {
+impl BundleDisputeEvidenceV4Message {
     pub fn new(
         bundle_escrow: [u8; 32],
         settlement_deadline_slot: u64,
