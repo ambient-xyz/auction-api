@@ -64,20 +64,23 @@ fn config_policy_v2_round_trips_through_bytes() {
     assert_eq!(decoded, policy);
     assert_eq!(
         decoded.configured_v2_account_layout_version(),
-        Ok(AccountLayoutVersion::V5)
+        Ok(AccountLayoutVersion::V4)
     );
 }
 
 #[test]
-fn config_policy_v2_rejects_reserved_v6_and_keeps_the_v5_default() {
+fn config_policy_v2_rejects_unsupported_versions_and_keeps_the_v4_default() {
     let mut policy = ConfigPolicyV2::default();
     assert_eq!(
         policy.configured_v2_account_layout_version(),
-        Ok(AccountLayoutVersion::V5)
+        Ok(AccountLayoutVersion::V4)
     );
 
-    policy.v2_account_layout_version = 6;
-    assert_eq!(policy.configured_v2_account_layout_version(), Err(6));
+    assert_eq!(bytemuck::bytes_of(&policy)[1_544], 4);
+    for version in [5, 6] {
+        policy.v2_account_layout_version = version;
+        assert_eq!(policy.configured_v2_account_layout_version(), Err(version));
+    }
 
     policy.v2_account_layout_version = 3;
     assert_eq!(policy.configured_v2_account_layout_version(), Err(3));

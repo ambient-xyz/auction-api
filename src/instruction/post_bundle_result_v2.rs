@@ -62,5 +62,5 @@ pub struct PostBundleResultV3Args {
     pub input_tokens: [u64; MAX_BUNDLE_VERIFIER_PAGE_V2_ENTRIES],
 }
 
-/// Small V5 evidence uses the deployed input-token payload encoding.
-pub type PostBundleResultV5Args = PostBundleResultV3Args;
+/// Small V4 evidence uses the deployed input-token payload encoding.
+pub type PostBundleResultV4Args = PostBundleResultV3Args;

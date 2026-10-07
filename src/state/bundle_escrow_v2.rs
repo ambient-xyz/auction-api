@@ -110,7 +110,7 @@ impl InvalidBundleEscrowV2Transition {
 #[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
-pub struct BundleEscrowV5Data {
+pub struct BundleEscrowLifecycleV4Data {
     pub expected_page_count: u8,
     /// Bits 0..3 track canonical pages; bits 3..6 track dispute staging pages.
     pub allocated_page_bitmap: u8,
@@ -119,11 +119,11 @@ pub struct BundleEscrowV5Data {
     pub small_credit_amount: u64,
 }
 
-/// Pricing metadata in the combined V5 layout.
+/// Pricing metadata in the combined V4 layout.
 #[derive(Pod, Clone, Copy, Zeroable, Debug, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[repr(C)]
-pub struct BundleEscrowV6Data {
+pub struct BundleEscrowPricingV4Data {
     /// Bits 0..3 track which canonical pages had pricing information filled in
     pub pricing_posted_page_bitmap: u8,
     pub pricing_sealed: u8,
@@ -148,35 +148,27 @@ pub struct BundleEscrowV2Mut<'a> {
 }
 
 impl<'a> BundleEscrowV2Ref<'a> {
-    pub fn lifecycle(&self) -> Option<&BundleEscrowV5Data> {
-        if self.layout().version != AccountLayoutVersion::V5 {
+    pub fn lifecycle(&self) -> Option<&BundleEscrowLifecycleV4Data> {
+        if self.layout().version != AccountLayoutVersion::V4 {
             return None;
         }
         bytemuck::try_from_bytes(
             &self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
                 ..CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
-                    + std::mem::size_of::<BundleEscrowV5Data>()],
+                    + std::mem::size_of::<BundleEscrowLifecycleV4Data>()],
         )
         .ok()
     }
 
-    pub fn pricing(&self) -> Option<&BundleEscrowV6Data> {
-        if self.layout().version != AccountLayoutVersion::V5 {
+    pub fn pricing(&self) -> Option<&BundleEscrowPricingV4Data> {
+        if self.layout().version != AccountLayoutVersion::V4 {
             return None;
         }
         bytemuck::try_from_bytes(
             &self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
-                + std::mem::size_of::<BundleEscrowV5Data>()..],
+                + std::mem::size_of::<BundleEscrowLifecycleV4Data>()..],
         )
         .ok()
-    }
-
-    pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
-        self.lifecycle()
-    }
-
-    pub fn v6(&self) -> Option<&BundleEscrowV6Data> {
-        self.pricing()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -198,7 +190,7 @@ impl<'a> BundleEscrowV2Ref<'a> {
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
         if !matches!(
             self.layout().version,
-            AccountLayoutVersion::V2 | AccountLayoutVersion::V5
+            AccountLayoutVersion::V2 | AccountLayoutVersion::V4
         ) {
             return None;
         }
@@ -228,66 +220,50 @@ impl Deref for BundleEscrowV2Ref<'_> {
 }
 
 impl<'a> BundleEscrowV2Mut<'a> {
-    pub fn lifecycle(&self) -> Option<&BundleEscrowV5Data> {
-        if self.layout().version != AccountLayoutVersion::V5 {
+    pub fn lifecycle(&self) -> Option<&BundleEscrowLifecycleV4Data> {
+        if self.layout().version != AccountLayoutVersion::V4 {
             return None;
         }
         bytemuck::try_from_bytes(
             &self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
                 ..CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
-                    + std::mem::size_of::<BundleEscrowV5Data>()],
+                    + std::mem::size_of::<BundleEscrowLifecycleV4Data>()],
         )
         .ok()
     }
 
-    pub fn lifecycle_mut(&mut self) -> Option<&mut BundleEscrowV5Data> {
-        if self.layout().version != AccountLayoutVersion::V5 {
+    pub fn lifecycle_mut(&mut self) -> Option<&mut BundleEscrowLifecycleV4Data> {
+        if self.layout().version != AccountLayoutVersion::V4 {
             return None;
         }
         bytemuck::try_from_bytes_mut(
             &mut self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
                 ..CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
-                    + std::mem::size_of::<BundleEscrowV5Data>()],
+                    + std::mem::size_of::<BundleEscrowLifecycleV4Data>()],
         )
         .ok()
     }
 
-    pub fn pricing(&self) -> Option<&BundleEscrowV6Data> {
-        if self.layout().version != AccountLayoutVersion::V5 {
+    pub fn pricing(&self) -> Option<&BundleEscrowPricingV4Data> {
+        if self.layout().version != AccountLayoutVersion::V4 {
             return None;
         }
         bytemuck::try_from_bytes(
             &self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
-                + std::mem::size_of::<BundleEscrowV5Data>()..],
+                + std::mem::size_of::<BundleEscrowLifecycleV4Data>()..],
         )
         .ok()
     }
 
-    pub fn pricing_mut(&mut self) -> Option<&mut BundleEscrowV6Data> {
-        if self.layout().version != AccountLayoutVersion::V5 {
+    pub fn pricing_mut(&mut self) -> Option<&mut BundleEscrowPricingV4Data> {
+        if self.layout().version != AccountLayoutVersion::V4 {
             return None;
         }
         bytemuck::try_from_bytes_mut(
             &mut self.tail[CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES
-                + std::mem::size_of::<BundleEscrowV5Data>()..],
+                + std::mem::size_of::<BundleEscrowLifecycleV4Data>()..],
         )
         .ok()
-    }
-
-    pub fn v5(&self) -> Option<&BundleEscrowV5Data> {
-        self.lifecycle()
-    }
-
-    pub fn v5_mut(&mut self) -> Option<&mut BundleEscrowV5Data> {
-        self.lifecycle_mut()
-    }
-
-    pub fn v6(&self) -> Option<&BundleEscrowV6Data> {
-        self.pricing()
-    }
-
-    pub fn v6_mut(&mut self) -> Option<&mut BundleEscrowV6Data> {
-        self.pricing_mut()
     }
 
     pub fn header(&self) -> &AccountHeaderV1 {
@@ -313,7 +289,7 @@ impl<'a> BundleEscrowV2Mut<'a> {
     pub fn reserved_v2(&self) -> Option<&BundleEscrowV2ReservedData> {
         if !matches!(
             self.layout().version,
-            AccountLayoutVersion::V2 | AccountLayoutVersion::V5
+            AccountLayoutVersion::V2 | AccountLayoutVersion::V4
         ) {
             return None;
         }
@@ -323,7 +299,7 @@ impl<'a> BundleEscrowV2Mut<'a> {
     pub fn reserved_v2_mut(&mut self) -> Option<&mut BundleEscrowV2ReservedData> {
         if !matches!(
             self.layout().version,
-            AccountLayoutVersion::V2 | AccountLayoutVersion::V5
+            AccountLayoutVersion::V2 | AccountLayoutVersion::V4
         ) {
             return None;
         }
@@ -419,16 +395,16 @@ impl RawBundleEscrowV2Data {
 
     pub const LEN_V3: usize = Self::LEN_V1 + std::mem::size_of::<BundleEscrowV3SmallData>();
 
-    pub const LEN_V5: usize = Self::LEN_V2
-        + std::mem::size_of::<BundleEscrowV5Data>()
-        + std::mem::size_of::<BundleEscrowV6Data>();
+    pub const LEN_V4: usize = Self::LEN_V2
+        + std::mem::size_of::<BundleEscrowLifecycleV4Data>()
+        + std::mem::size_of::<BundleEscrowPricingV4Data>();
 
     pub const fn account_len(version: AccountLayoutVersion) -> usize {
         match version {
             AccountLayoutVersion::V1 => Self::LEN_V1,
             AccountLayoutVersion::V2 => Self::LEN_V2,
             AccountLayoutVersion::V3 => Self::LEN_V3,
-            AccountLayoutVersion::V5 => Self::LEN_V5,
+            AccountLayoutVersion::V4 => Self::LEN_V4,
             AccountLayoutVersion::LegacyV0 => 0,
         }
     }
