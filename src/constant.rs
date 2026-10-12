@@ -29,4 +29,5 @@ pub const MAX_VERIFIERS_PER_AUCTION: usize = 3;
 /// Compatibility alias for one release cycle. Prefer `MAX_VERIFIERS_PER_AUCTION`.
 pub const VERIFIERS_PER_AUCTION: usize = MAX_VERIFIERS_PER_AUCTION;
 
-pub const AUCTION_VERIFIERS_HISTORY_ID: [u8; PUBKEY_BYTES] = ambient_auction_verifiers::history::ID.to_bytes();
+pub const AUCTION_VERIFIERS_HISTORY_ID: [u8; PUBKEY_BYTES] =
+    five8_const::decode_32_const("FhVPJKzKCFcx4miARcLoLc84jPLGxL6e7FaLv2QCFbzh");
