@@ -37,7 +37,7 @@ fn config_policy_v2_layout_size_stays_stable() {
         offset_of!(ConfigPolicyV2, small_credit_slash_sequence),
         1_416
     );
-    assert_eq!(offset_of!(ConfigPolicyV2, reserved_words), 1_448);
+    assert_eq!(offset_of!(ConfigPolicyV2, replay), 1_448);
     assert_eq!(offset_of!(ConfigPolicyV2, v2_account_layout_version), 1_544);
     assert_eq!(
         offset_of!(ConfigPolicyV2, max_auction_credits_per_update),

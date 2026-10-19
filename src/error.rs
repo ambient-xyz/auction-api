@@ -165,6 +165,12 @@ pub enum AuctionError {
     VerificationDisputeWindowClosed = 78,
     /// Verifier selection is pending and blocks this instruction
     VerifierSelectionPending = 79,
+    /// The exact-replay policy is malformed or inconsistent with the rest of the policy
+    InvalidReplayPolicy = 80,
+    /// The replay anchor account or its arguments are invalid
+    InvalidReplayAnchor = 81,
+    /// A replay anchor must name a span after the latest anchored span
+    ReplayAnchorOutOfOrder = 82,
 }
 
 impl Display for AuctionError {
@@ -264,6 +270,9 @@ impl AuctionError {
             }
             Self::VerificationDisputeWindowClosed => "VerificationDisputeWindowClosed",
             Self::VerifierSelectionPending => "VerifierSelectionPending",
+            Self::InvalidReplayPolicy => "InvalidReplayPolicy",
+            Self::InvalidReplayAnchor => "InvalidReplayAnchor",
+            Self::ReplayAnchorOutOfOrder => "ReplayAnchorOutOfOrder",
         }
     }
 
@@ -365,6 +374,9 @@ impl AuctionError {
             }
             Self::VerificationDisputeWindowClosed => "Verification dispute window is not open",
             Self::VerifierSelectionPending => "Verifier selection is pending",
+            Self::InvalidReplayPolicy => "Exact-replay policy is invalid",
+            Self::InvalidReplayAnchor => "Replay anchor is invalid",
+            Self::ReplayAnchorOutOfOrder => "Replay anchor must follow the latest anchored span",
         }
     }
 
