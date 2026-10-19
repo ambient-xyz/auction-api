@@ -223,7 +223,7 @@ fn small_policy_json_names_credit_fields_and_retains_unused_storage() {
     });
     policy.set_small_credit_slash_authority(Pubkey::from([7; 32]));
     policy.set_small_credit_slash_sequence(0x0102_0304_0506_0708);
-    policy.reserved_words[2] = [9; 32];
+    policy.replay = bytemuck::pod_read_unaligned(&[[0u8; 32], [0; 32], [9; 32]].concat());
 
     let json = serde_json::to_value(&policy).unwrap();
     assert_eq!(
@@ -240,7 +240,11 @@ fn small_policy_json_names_credit_fields_and_retains_unused_storage() {
         0x0102_0304_0506_0708_u64
     );
     assert_eq!(
-        json["reserved_words"],
-        serde_json::to_value([[0_u8; 32], [0; 32], [9; 32]]).unwrap()
+        json["replay"]["forfeit_mask"],
+        serde_json::to_value(0x0909_u16).unwrap()
+    );
+    assert_eq!(
+        json["replay"]["suspension_hours"],
+        serde_json::to_value([0x0909_u16; 15]).unwrap()
     );
 }

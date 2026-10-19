@@ -35,11 +35,33 @@ Other signature domains stay unchanged. New evidence hashes include account head
 Their byte offsets remain 1320, 1352, 1384, and 1416.
 The `_reserved_small_credit_enabled` and `_reserved_small_credit_slash_sequence`
 fields preserve padding in the former 32-byte slots.
-Three unused `reserved_words` remain at offset 1448.
+The three former `reserved_words` at offset 1448 now hold `replay: ReplayPolicyV1` (see below).
 The layout byte remains at 1544, and the account remains 1,568 bytes.
 Existing policy bytes and helper signatures stay unchanged.
 New default policies change only the layout byte from 5 to 4.
 Consumers must adopt these V4 source names before deployment.
+
+## Exact replay (phase 6)
+
+These types support exact-replay verification. Existing accounts and instruction encodings stay unchanged.
+
+- **`ConfigPolicyV2.replay: ReplayPolicyV1`** (96 bytes at offset 1448, formerly three zero reserved words).
+  - Contents: the replay class id, the exact-replay tiers (`tier_mask`, bit `1 << tier`, never Small), the hold in
+    slots, the off-chain arbitration size, and penalty terms per `ReplayFaultKind` (a forfeit mask and suspension
+    hours).
+  - Version 0 means off, with every byte zero. Every deployed policy is therefore off until an admin sets it.
+  - Admins set it with `SetConfigPolicyV2` patch kind 8 (`REPLAY_SETTINGS`), carried only by the 104-byte
+    `SetConfigPolicyReplayV1Args`.
+- **`BundleEscrowLifecycleV4Data.exact_replay`** (escrow byte 570, formerly reserved). Set at open for a replay
+  tier. Such an escrow finalizes only with verifier signatures, never through the service bypass. Its provisional
+  window is at least the hold.
+- **`ReplayAnchorV1`** (discriminator 11, 480 bytes; PDA `[b"replay_anchor_v1", miner node, SHA-256(engine id)]`)
+  and **`AnchorReplaySpansV1`** (instruction 34).
+  - A miner's node key anchors the SHA-256 of an engine's latest span commit. Span ids must increase strictly.
+  - Commits chain by `prev_commit_sha256`, so the anchor fixes every earlier span.
+  - The account keeps the last eight anchors with their slots.
+- **Errors** 81 `InvalidReplayPolicy`, 82 `InvalidReplayAnchor` and 83 `ReplayAnchorOutOfOrder`. Code 80 is left for the
+  in-program verifier selection error (`InvalidVerifierSelectionAccounts`).
 
 ## Building
 

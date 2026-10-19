@@ -1,5 +1,7 @@
 use crate::error::AuctionError;
-use crate::{ConfigPolicyV2Flags, InstructionAccounts, Pubkey, RequestTierConfigV2};
+use crate::{
+    ConfigPolicyV2Flags, InstructionAccounts, Pubkey, ReplayPolicyV1, RequestTierConfigV2,
+};
 use bytemuck::{Pod, Zeroable};
 
 #[derive(Debug, Clone)]
@@ -43,6 +45,8 @@ impl ConfigPolicyV2PatchKind {
     pub const DISPUTE_SETTINGS: Self = Self(5);
     pub const SMALL_CREDIT_SLASH_AUTHORITY: Self = Self(6);
     pub const SMALL_CREDIT_SETTINGS: Self = Self(7);
+    /// Replaces `ConfigPolicyV2.replay`; carried only by [`SetConfigPolicyReplayV1Args`].
+    pub const REPLAY_SETTINGS: Self = Self(8);
 }
 
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -91,4 +95,13 @@ pub struct SetConfigPolicySmallV3Args {
     pub max_auction_credits_per_update: u64,
     pub authority: Pubkey,
     pub tier_config: RequestTierConfigV2,
+}
+
+/// 104-byte payload for [`ConfigPolicyV2PatchKind::REPLAY_SETTINGS`].
+#[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
+#[repr(C)]
+pub struct SetConfigPolicyReplayV1Args {
+    pub patch_kind: ConfigPolicyV2PatchKind,
+    pub _reserved0: [u8; 7],
+    pub replay: ReplayPolicyV1,
 }

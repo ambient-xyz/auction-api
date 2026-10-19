@@ -1,4 +1,4 @@
-use super::{AccountLayoutVersion, Pubkey, RequestTier};
+use super::{AccountLayoutVersion, Pubkey, ReplayPolicyV1, RequestTier};
 use crate::MAX_VERIFIERS_PER_AUCTION;
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
@@ -62,7 +62,6 @@ impl ConfigPolicyV2Flags {
 
 pub const CONFIG_POLICY_V2_BUNDLE_ESCROW_RESERVED_BYTES: usize = 64;
 pub const CONFIG_POLICY_V2_BUNDLE_VERIFIER_PAGE_RESERVED_BYTES: usize = 64;
-pub const CONFIG_POLICY_V2_TYPED_RESERVED_WORDS: usize = 3;
 pub const CONFIG_POLICY_V2_TYPED_RESERVED_LAYOUT_PADDING_BYTES: usize = 7;
 pub const CONFIG_POLICY_V2_TYPED_RESERVED_TAIL_BYTES: usize = 16;
 
@@ -176,7 +175,8 @@ pub struct ConfigPolicyV2 {
     pub small_credit_slash_authority: Pubkey,
     pub small_credit_slash_sequence: u64,
     pub _reserved_small_credit_slash_sequence: [u8; 24],
-    pub reserved_words: [[u8; 32]; CONFIG_POLICY_V2_TYPED_RESERVED_WORDS],
+    /// Exact-replay terms, in the three former reserved words. All zero (off) in existing policies.
+    pub replay: ReplayPolicyV1,
     pub v2_account_layout_version: u8,
     pub _reserved2: [u8; CONFIG_POLICY_V2_TYPED_RESERVED_LAYOUT_PADDING_BYTES],
     pub reserved_tail: [u8; CONFIG_POLICY_V2_TYPED_RESERVED_TAIL_BYTES],
@@ -219,7 +219,7 @@ impl ConfigPolicyV2 {
             small_credit_slash_authority: Pubkey::default(),
             small_credit_slash_sequence: 0,
             _reserved_small_credit_slash_sequence: [0; 24],
-            reserved_words: [[0; 32]; CONFIG_POLICY_V2_TYPED_RESERVED_WORDS],
+            replay: ReplayPolicyV1::default(),
             v2_account_layout_version: AccountLayoutVersion::V4 as u8,
             _reserved2: [0; CONFIG_POLICY_V2_TYPED_RESERVED_LAYOUT_PADDING_BYTES],
             reserved_tail: [0; CONFIG_POLICY_V2_TYPED_RESERVED_TAIL_BYTES],
@@ -292,6 +292,15 @@ impl ConfigPolicyV2 {
 
     pub fn set_small_credit_slash_authority(&mut self, authority: Pubkey) {
         self.small_credit_slash_authority = authority;
+    }
+
+    pub fn replay_policy(&self) -> &ReplayPolicyV1 {
+        &self.replay
+    }
+
+    /// Whether escrows of this tier open as exact-replay escrows.
+    pub fn is_replay_tier(&self, tier: RequestTier) -> bool {
+        self.replay.is_replay_tier(tier)
     }
 
     pub fn set_small_credit_slash_sequence(&mut self, sequence: u64) {
