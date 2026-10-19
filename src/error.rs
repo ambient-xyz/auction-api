@@ -165,12 +165,13 @@ pub enum AuctionError {
     VerificationDisputeWindowClosed = 78,
     /// Verifier selection is pending and blocks this instruction
     VerifierSelectionPending = 79,
+    // 80 is reserved for InvalidVerifierSelectionAccounts (in-program verifier selection).
     /// The exact-replay policy is malformed or inconsistent with the rest of the policy
-    InvalidReplayPolicy = 80,
+    InvalidReplayPolicy = 81,
     /// The replay anchor account or its arguments are invalid
-    InvalidReplayAnchor = 81,
+    InvalidReplayAnchor = 82,
     /// A replay anchor must name a span after the latest anchored span
-    ReplayAnchorOutOfOrder = 82,
+    ReplayAnchorOutOfOrder = 83,
 }
 
 impl Display for AuctionError {

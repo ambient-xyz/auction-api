@@ -176,12 +176,13 @@ fn replay_anchor_layout_and_ring() {
 }
 
 #[test]
-fn replay_errors_are_numbered_after_the_existing_ones() {
-    assert_eq!(error::AuctionError::InvalidReplayPolicy.code(), 80);
-    assert_eq!(error::AuctionError::InvalidReplayAnchor.code(), 81);
-    assert_eq!(error::AuctionError::ReplayAnchorOutOfOrder.code(), 82);
+fn replay_errors_follow_the_selection_error() {
+    assert!(error::AuctionError::try_from_code(80).is_err(), "80 is reserved for selection");
+    assert_eq!(error::AuctionError::InvalidReplayPolicy.code(), 81);
+    assert_eq!(error::AuctionError::InvalidReplayAnchor.code(), 82);
+    assert_eq!(error::AuctionError::ReplayAnchorOutOfOrder.code(), 83);
     assert_eq!(
-        error::AuctionError::try_from_code(82),
+        error::AuctionError::try_from_code(83),
         Ok(error::AuctionError::ReplayAnchorOutOfOrder)
     );
 }

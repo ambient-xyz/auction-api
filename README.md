@@ -60,7 +60,8 @@ These types support exact-replay verification. Existing accounts and instruction
   - A miner's node key anchors the SHA-256 of an engine's latest span commit. Span ids must increase strictly.
   - Commits chain by `prev_commit_sha256`, so the anchor fixes every earlier span.
   - The account keeps the last eight anchors with their slots.
-- **Errors** 80 `InvalidReplayPolicy`, 81 `InvalidReplayAnchor` and 82 `ReplayAnchorOutOfOrder`.
+- **Errors** 81 `InvalidReplayPolicy`, 82 `InvalidReplayAnchor` and 83 `ReplayAnchorOutOfOrder`. Code 80 is left for the
+  in-program verifier selection error (`InvalidVerifierSelectionAccounts`).
 
 ## Building
 
