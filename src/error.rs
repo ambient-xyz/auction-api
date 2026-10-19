@@ -173,6 +173,12 @@ pub enum AuctionError {
     InvalidReplayAnchor = 82,
     /// A replay anchor must name a span after the latest anchored span
     ReplayAnchorOutOfOrder = 83,
+    /// The replay class account, its class or the escrow's lane is invalid for this instruction
+    InvalidReplayClass = 84,
+    /// The node is already a member, or not a member, of the replay class
+    ReplayClassMembership = 85,
+    /// The replay class has no room for another member
+    ReplayClassFull = 86,
 }
 
 impl Display for AuctionError {
@@ -276,6 +282,9 @@ impl AuctionError {
             Self::InvalidReplayPolicy => "InvalidReplayPolicy",
             Self::InvalidReplayAnchor => "InvalidReplayAnchor",
             Self::ReplayAnchorOutOfOrder => "ReplayAnchorOutOfOrder",
+            Self::InvalidReplayClass => "InvalidReplayClass",
+            Self::ReplayClassMembership => "ReplayClassMembership",
+            Self::ReplayClassFull => "ReplayClassFull",
         }
     }
 
@@ -381,6 +390,9 @@ impl AuctionError {
             Self::InvalidReplayPolicy => "Exact-replay policy is invalid",
             Self::InvalidReplayAnchor => "Replay anchor is invalid",
             Self::ReplayAnchorOutOfOrder => "Replay anchor must follow the latest anchored span",
+            Self::InvalidReplayClass => "Replay class is invalid",
+            Self::ReplayClassMembership => "Replay class membership is invalid",
+            Self::ReplayClassFull => "Replay class is full",
         }
     }
 

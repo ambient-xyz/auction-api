@@ -28,6 +28,7 @@ mod open_bundle_escrow_v2;
 mod place_bid;
 mod post_bundle_pricing;
 mod post_bundle_result_v2;
+mod replay_class_v1;
 mod request_job;
 mod reveal_bid;
 mod seal_bundle_pricing;
@@ -62,6 +63,7 @@ pub use open_bundle_escrow_v2::*;
 pub use place_bid::*;
 pub use post_bundle_pricing::*;
 pub use post_bundle_result_v2::*;
+pub use replay_class_v1::*;
 pub use request_job::*;
 pub use reveal_bid::*;
 pub use seal_bundle_pricing::*;
@@ -109,6 +111,10 @@ pub enum AuctionInstruction {
     SealBundlePricing = 32,
     CommitAuctionSettlementV3 = 33,
     AnchorReplaySpansV1 = 34,
+    JoinReplayClassV1 = 35,
+    LeaveReplayClassV1 = 36,
+    RemoveReplayClassMemberV1 = 37,
+    SelectReplayVerifiersV1 = 38,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -208,6 +214,10 @@ impl_instruction_data!(
     CommitAuctionSettlementV3Args => CommitAuctionSettlementV3,
     AnchorReplaySpansV1Args => AnchorReplaySpansV1,
     SetConfigPolicyReplayV1Args => SetConfigPolicyV2,
+    JoinReplayClassV1Args => JoinReplayClassV1,
+    LeaveReplayClassV1Args => LeaveReplayClassV1,
+    RemoveReplayClassMemberV1Args => RemoveReplayClassMemberV1,
+    SelectReplayVerifiersV1Args => SelectReplayVerifiersV1,
 );
 
 impl_instruction_data!(InitConfigArgs => InitConfig);
