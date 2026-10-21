@@ -12,6 +12,7 @@ mod claim_small_credits_v4;
 mod claim_verifier_lstake_v2;
 mod claim_winner_lstake_v2;
 mod close_bid;
+mod close_bundle_escrow_v4;
 mod close_bundle_verifier_page_v4;
 mod close_request;
 mod commit_auction_settlement_v2;
@@ -46,6 +47,7 @@ pub use claim_small_credits_v4::*;
 pub use claim_verifier_lstake_v2::*;
 pub use claim_winner_lstake_v2::*;
 pub use close_bid::*;
+pub use close_bundle_escrow_v4::*;
 pub use close_bundle_verifier_page_v4::*;
 pub use close_request::*;
 pub use commit_auction_settlement_v2::*;
@@ -109,6 +111,8 @@ pub enum AuctionInstruction {
     SealBundlePricing = 32,
     CommitAuctionSettlementV3 = 33,
     AnchorReplaySpansV1 = 34,
+    // 35..=38 are taken by the replay-class instructions (ENG-256).
+    CloseBundleEscrowV4 = 39,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -207,6 +211,7 @@ impl_instruction_data!(
     SealBundlePricingArgs => SealBundlePricing,
     CommitAuctionSettlementV3Args => CommitAuctionSettlementV3,
     AnchorReplaySpansV1Args => AnchorReplaySpansV1,
+    CloseBundleEscrowV4Args => CloseBundleEscrowV4,
     SetConfigPolicyReplayV1Args => SetConfigPolicyV2,
 );
 

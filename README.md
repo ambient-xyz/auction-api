@@ -63,6 +63,19 @@ These types support exact-replay verification. Existing accounts and instruction
 - **Errors** 81 `InvalidReplayPolicy`, 82 `InvalidReplayAnchor` and 83 `ReplayAnchorOutOfOrder`. Code 80 is left for the
   in-program verifier selection error (`InvalidVerifierSelectionAccounts`).
 
+## Closing a settled escrow (ENG-352)
+
+- **`CloseBundleEscrowV4`** (instruction 39, empty payload; accounts: `payer` signer and writable, `bundle_escrow`
+  writable) returns a V4 escrow's rent to the account that paid for it.
+  - The payer is the account the escrow PDA `[b"bundle_escrow_v2", payer, bundle_hash, bundle_version]` was derived
+    from. It must sign.
+  - The escrow must be terminal (`FinalizedVerified`, `FinalizedRejected` or `Expired`), past its claim deadline,
+    and have no verifier pages left (`allocated_page_bitmap == 0`; close them with `CloseBundleVerifierPageV4` first).
+  - It must hold no lamports beyond its rent-exempt minimum (error 6 `NonZeroBalance`), so unsettled funds are never
+    paid to the payer.
+- Number 39 is free on every open branch: `main` uses 34 and 35 for the Small escrow instructions, ENG-255 uses 34
+  and ENG-256 uses 35 to 38. No new account layout or error code.
+
 ## Building
 
 This crate is largely intended to be a library. However, there is a debugging utiltity
