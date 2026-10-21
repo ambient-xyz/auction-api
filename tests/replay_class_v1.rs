@@ -14,10 +14,10 @@ fn replay_class_layout() {
     assert_eq!(ReplayClassV1::LEN, 8 + 40 + 32 * REPLAY_CLASS_V1_CAPACITY);
     assert_eq!(AccountDiscriminator::ReplayClassV1 as u8, 12);
     for (instruction, tag) in [
-        (AuctionInstruction::JoinReplayClassV1, 35),
-        (AuctionInstruction::LeaveReplayClassV1, 36),
-        (AuctionInstruction::RemoveReplayClassMemberV1, 37),
-        (AuctionInstruction::SelectReplayVerifiersV1, 38),
+        (AuctionInstruction::JoinReplayClassV1, 37),
+        (AuctionInstruction::LeaveReplayClassV1, 38),
+        (AuctionInstruction::RemoveReplayClassMemberV1, 39),
+        (AuctionInstruction::SelectReplayVerifiersV1, 40),
     ] {
         assert_eq!(instruction as u8, tag);
     }

@@ -111,10 +111,10 @@ pub enum AuctionInstruction {
     SealBundlePricing = 32,
     CommitAuctionSettlementV3 = 33,
     AnchorReplaySpansV1 = 34,
-    JoinReplayClassV1 = 35,
-    LeaveReplayClassV1 = 36,
-    RemoveReplayClassMemberV1 = 37,
-    SelectReplayVerifiersV1 = 38,
+    JoinReplayClassV1 = 37,
+    LeaveReplayClassV1 = 38,
+    RemoveReplayClassMemberV1 = 39,
+    SelectReplayVerifiersV1 = 40,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
