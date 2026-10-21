@@ -108,7 +108,8 @@ pub enum AuctionInstruction {
     PostBundlePricing = 31,
     SealBundlePricing = 32,
     CommitAuctionSettlementV3 = 33,
-    AnchorReplaySpansV1 = 34,
+    // 34 and 35 are main's Small winner instructions.
+    AnchorReplaySpansV1 = 36,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
