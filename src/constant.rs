@@ -17,6 +17,10 @@ pub const BUNDLE_ESCROW_V2_SEED: &[u8] = b"bundle_escrow_v2";
 pub const BUNDLE_VERIFIER_PAGE_V2_SEED: &[u8] = b"bundle_verifier_page_v2";
 pub const BUNDLE_DISPUTE_VERIFIER_PAGE_V2_SEED: &[u8] = b"bundle_dispute_verifier_page_v2";
 pub const BUNDLE_VERIFICATION_DISPUTE_V2_SEED: &[u8] = b"bundle_verification_dispute_v2";
+/// Seeds: `[REPLAY_ANCHOR_V1_SEED, miner node pubkey, SHA-256 of the engine id]`.
+pub const REPLAY_ANCHOR_V1_SEED: &[u8] = b"replay_anchor_v1";
+/// Seeds: `[REPLAY_CLASS_V1_SEED, class id]`.
+pub const REPLAY_CLASS_V1_SEED: &[u8] = b"replay_class_v1";
 /// Auction Program ID
 pub const ID: [u8; PUBKEY_BYTES] =
     five8_const::decode_32_const("Auction111111111111111111111111111111111111");

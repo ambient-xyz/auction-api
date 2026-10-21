@@ -3,7 +3,7 @@ use std::io::{self, Read as _};
 
 use ambient_auction_api::{
     instruction::SubmitJobOutputArgs, Auction, Bid, BundleEscrowV2, JobRequest,
-    JobVerificationState, RequestBundle, VerificationState,
+    JobVerificationState, ReplayAnchorV1, RequestBundle, VerificationState,
 };
 use base64::Engine as _;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -115,6 +115,22 @@ fn display_bundle_escrow_v2(buffer: Vec<u8>) -> Result<(), String> {
     Ok(())
 }
 
+fn display_replay_anchor_v1(buffer: Vec<u8>) -> Result<(), String> {
+    eprintln!("Expected len: {}", ReplayAnchorV1::LEN);
+    let data = ReplayAnchorV1::from_bytes(&buffer).ok_or_else(|| {
+        "To decode ReplayAnchorV1 from account bytes. Is it the right account type?".to_string()
+    })?;
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&serde_json::json!({
+            "state": *data,
+            "latest": data.latest(),
+        }))
+        .unwrap()
+    );
+    Ok(())
+}
+
 fn display_generic<T: bytemuck::Pod + Serialize>(buffer: Vec<u8>) -> Result<(), String> {
     let data = bytemuck::try_pod_read_unaligned::<T>(&buffer)
         .map_err(|e| format!("To decode from transaction bytes. Is it the right data type? {e}"))?;
@@ -151,6 +167,8 @@ enum Commands {
     Bid,
     Bundle,
     BundleEscrowV2,
+    /// Decode an exact-replay span anchor account
+    ReplayAnchorV1,
 }
 
 fn parse_string(buf: Vec<u8>) -> Result<String, String> {
@@ -199,5 +217,6 @@ fn main() -> Result<(), String> {
         Commands::Bid => display_generic::<Bid>(buffer),
         Commands::Bundle => display_generic::<RequestBundle>(buffer),
         Commands::BundleEscrowV2 => display_bundle_escrow_v2(buffer),
+        Commands::ReplayAnchorV1 => display_replay_anchor_v1(buffer),
     }
 }

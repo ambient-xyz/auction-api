@@ -4,6 +4,7 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 use serde::{Deserialize, Serialize};
 use std::net;
 
+mod anchor_replay_spans_v1;
 mod append_data;
 mod authorize_bundle_dispute_evidence_v4;
 mod cancel_bundle;
@@ -15,6 +16,7 @@ mod close_bundle_verifier_page_v4;
 mod close_request;
 mod commit_auction_settlement_v2;
 mod commit_auction_settlement_v3;
+mod commit_small_auction_settlement_v4;
 mod dispute_bundle_verification_v2;
 mod end_auction;
 mod expire_bundle_escrow_v2;
@@ -27,6 +29,7 @@ mod open_bundle_escrow_v2;
 mod place_bid;
 mod post_bundle_pricing;
 mod post_bundle_result_v2;
+mod replay_class_v1;
 mod request_job;
 mod reveal_bid;
 mod seal_bundle_pricing;
@@ -37,6 +40,7 @@ mod submit_job_output;
 mod submit_validation;
 
 use crate::macros::impl_instruction_data;
+pub use anchor_replay_spans_v1::*;
 pub use append_data::*;
 pub use authorize_bundle_dispute_evidence_v4::*;
 pub use cancel_bundle::*;
@@ -48,6 +52,7 @@ pub use close_bundle_verifier_page_v4::*;
 pub use close_request::*;
 pub use commit_auction_settlement_v2::*;
 pub use commit_auction_settlement_v3::*;
+pub use commit_small_auction_settlement_v4::*;
 pub use dispute_bundle_verification_v2::*;
 pub use end_auction::*;
 pub use expire_bundle_escrow_v2::*;
@@ -60,6 +65,7 @@ pub use open_bundle_escrow_v2::*;
 pub use place_bid::*;
 pub use post_bundle_pricing::*;
 pub use post_bundle_result_v2::*;
+pub use replay_class_v1::*;
 pub use request_job::*;
 pub use reveal_bid::*;
 pub use seal_bundle_pricing::*;
@@ -106,6 +112,13 @@ pub enum AuctionInstruction {
     PostBundlePricing = 31,
     SealBundlePricing = 32,
     CommitAuctionSettlementV3 = 33,
+    OpenSmallBundleEscrowV4 = 34,
+    CommitSmallAuctionSettlementV4 = 35,
+    AnchorReplaySpansV1 = 36,
+    JoinReplayClassV1 = 37,
+    LeaveReplayClassV1 = 38,
+    RemoveReplayClassMemberV1 = 39,
+    SelectReplayVerifiersV1 = 40,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -203,6 +216,14 @@ impl_instruction_data!(
     PostBundlePricingArgs => PostBundlePricing,
     SealBundlePricingArgs => SealBundlePricing,
     CommitAuctionSettlementV3Args => CommitAuctionSettlementV3,
+    OpenSmallBundleEscrowV4Args => OpenSmallBundleEscrowV4,
+    CommitSmallAuctionSettlementV4Args => CommitSmallAuctionSettlementV4,
+    AnchorReplaySpansV1Args => AnchorReplaySpansV1,
+    SetConfigPolicyReplayV1Args => SetConfigPolicyV2,
+    JoinReplayClassV1Args => JoinReplayClassV1,
+    LeaveReplayClassV1Args => LeaveReplayClassV1,
+    RemoveReplayClassMemberV1Args => RemoveReplayClassMemberV1,
+    SelectReplayVerifiersV1Args => SelectReplayVerifiersV1,
 );
 
 impl_instruction_data!(InitConfigArgs => InitConfig);

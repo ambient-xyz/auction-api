@@ -13,6 +13,9 @@ pub use auction::*;
 pub use bid::*;
 pub mod job_request;
 pub mod metadata;
+pub mod replay_anchor_v1;
+pub mod replay_class_v1;
+pub mod replay_policy_v1;
 pub mod request_tier;
 mod verification;
 
@@ -27,6 +30,9 @@ pub use config_policy_v2::*;
 pub use job_request::*;
 pub use layout::*;
 pub use metadata::*;
+pub use replay_anchor_v1::*;
+pub use replay_class_v1::*;
+pub use replay_policy_v1::*;
 pub use request_tier::*;
 pub use verification::*;
 
