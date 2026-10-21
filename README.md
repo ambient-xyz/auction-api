@@ -56,7 +56,7 @@ These types support exact-replay verification. Existing accounts and instruction
   tier. Such an escrow finalizes only with verifier signatures, never through the service bypass. Its provisional
   window is at least the hold.
 - **`ReplayAnchorV1`** (discriminator 11, 480 bytes; PDA `[b"replay_anchor_v1", miner node, SHA-256(engine id)]`)
-  and **`AnchorReplaySpansV1`** (instruction 34).
+  and **`AnchorReplaySpansV1`** (instruction 36; 34 and 35 are the Small winner instructions).
   - A miner's node key anchors the SHA-256 of an engine's latest span commit. Span ids must increase strictly.
   - Commits chain by `prev_commit_sha256`, so the anchor fixes every earlier span.
   - The account keeps the last eight anchors with their slots.

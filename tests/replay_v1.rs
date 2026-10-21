@@ -127,7 +127,7 @@ fn replay_anchor_layout_and_ring() {
     assert_eq!(offset_of!(RawReplayAnchorV1Data, bump), 80);
     assert_eq!(offset_of!(RawReplayAnchorV1Data, recent), 88);
     assert_eq!(std::mem::size_of::<ReplayAnchorEntryV1>(), 48);
-    assert_eq!(AuctionInstruction::AnchorReplaySpansV1 as u8, 34);
+    assert_eq!(AuctionInstruction::AnchorReplaySpansV1 as u8, 36);
     assert_eq!(std::mem::size_of::<AnchorReplaySpansV1Args>(), 72);
 
     let mut state = ReplayAnchorV1 {
