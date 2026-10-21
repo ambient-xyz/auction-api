@@ -75,8 +75,8 @@ fn v2_account_bytes_remain_stable() {
     let mut service_authorities = [Pubkey::default(); 16];
     service_authorities[0] = key(55);
     service_authorities[15] = key(56);
-    let mut reserved_words = [[0; 32]; 3];
-    reserved_words[2] = [59; 32];
+    // The replay policy occupies the former reserved words: the same bytes give the same hash.
+    let replay = bytemuck::pod_read_unaligned(&[[0u8; 32], [0; 32], [59; 32]].concat());
     let policy = ConfigPolicyV2 {
         bump: 51,
         v2_account_layout_version: 2,
@@ -91,7 +91,7 @@ fn v2_account_bytes_remain_stable() {
         dispute_verification_window_slots: u64::from_le_bytes([58; 8]),
         paid_verification_dispute_window_slots: u64::from_le_bytes([58; 8]),
         paid_verification_dispute_bond_lamports: u64::from_le_bytes([58; 8]),
-        reserved_words,
+        replay,
         _reserved2: [60; 7],
         reserved_tail: [61; 16],
         ..ConfigPolicyV2::production_default()
