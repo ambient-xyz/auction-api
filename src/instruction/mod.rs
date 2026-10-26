@@ -15,6 +15,7 @@ mod close_bundle_verifier_page_v4;
 mod close_request;
 mod commit_auction_settlement_v2;
 mod commit_auction_settlement_v3;
+mod commit_small_auction_settlement_v4;
 mod dispute_bundle_verification_v2;
 mod end_auction;
 mod expire_bundle_escrow_v2;
@@ -48,6 +49,7 @@ pub use close_bundle_verifier_page_v4::*;
 pub use close_request::*;
 pub use commit_auction_settlement_v2::*;
 pub use commit_auction_settlement_v3::*;
+pub use commit_small_auction_settlement_v4::*;
 pub use dispute_bundle_verification_v2::*;
 pub use end_auction::*;
 pub use expire_bundle_escrow_v2::*;
@@ -106,6 +108,8 @@ pub enum AuctionInstruction {
     PostBundlePricing = 31,
     SealBundlePricing = 32,
     CommitAuctionSettlementV3 = 33,
+    OpenSmallBundleEscrowV4 = 34,
+    CommitSmallAuctionSettlementV4 = 35,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -203,6 +207,8 @@ impl_instruction_data!(
     PostBundlePricingArgs => PostBundlePricing,
     SealBundlePricingArgs => SealBundlePricing,
     CommitAuctionSettlementV3Args => CommitAuctionSettlementV3,
+    OpenSmallBundleEscrowV4Args => OpenSmallBundleEscrowV4,
+    CommitSmallAuctionSettlementV4Args => CommitSmallAuctionSettlementV4,
 );
 
 impl_instruction_data!(InitConfigArgs => InitConfig);
