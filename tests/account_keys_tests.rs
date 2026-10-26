@@ -87,9 +87,13 @@ fn open_bundle_escrow_v2_account_keys_round_trip_and_order() {
 #[test]
 fn select_bundle_verifiers_v2_accounts_preserve_optional_dispute_order() {
     let bundle_escrow = 1_u8;
-    let bundle_verification_dispute = 3_u8;
+    let auction_verifiers = 2_u8;
+    let slot_hashes = 3_u8;
+    let bundle_verification_dispute = 4_u8;
     let initial = SelectBundleVerifiersV2Accounts {
         bundle_escrow: &bundle_escrow,
+        auction_verifiers: &auction_verifiers,
+        slot_hashes: &slot_hashes,
         bundle_verification_dispute: None,
     };
     let replacement = SelectBundleVerifiersV2Accounts {
@@ -97,18 +101,42 @@ fn select_bundle_verifiers_v2_accounts_preserve_optional_dispute_order() {
         ..initial.clone()
     };
 
-    assert_eq!(initial.iter_owned().collect::<Vec<_>>(), vec![1]);
-    assert_eq!(replacement.iter_owned().collect::<Vec<_>>(), vec![1, 3]);
+    assert_eq!(initial.iter_owned().collect::<Vec<_>>(), vec![1, 2, 3]);
     assert_eq!(
-        SelectBundleVerifiersV2Accounts::try_from(&[1_u8, 3][..])
+        replacement.iter_owned().collect::<Vec<_>>(),
+        vec![1, 2, 3, 4]
+    );
+    assert_eq!(
+        SelectBundleVerifiersV2Accounts::try_from(&[1_u8, 2, 3, 4][..])
             .unwrap()
             .iter_owned()
             .collect::<Vec<_>>(),
-        vec![1, 3]
+        vec![1, 2, 3, 4]
     );
     assert_eq!(
         SelectBundleVerifiersV2Args {}.to_bytes(),
         vec![AuctionInstruction::SelectBundleVerifiersV2 as u8]
+    );
+}
+
+#[test]
+fn verifier_selection_rejects_missing_sysvars_and_surplus_optional_accounts() {
+    use ambient_auction_api::error::AuctionError;
+
+    let accounts = [1_u8, 2, 3, 4, 5];
+    for len in 0..3 {
+        assert_eq!(
+            SelectBundleVerifiersV2Accounts::try_from(&accounts[..len]).unwrap_err(),
+            AuctionError::NotEnoughAccounts,
+        );
+    }
+    assert!(SelectBundleVerifiersV2Accounts::try_from(&accounts[..3])
+        .unwrap()
+        .bundle_verification_dispute
+        .is_none());
+    assert_eq!(
+        SelectBundleVerifiersV2Accounts::try_from(accounts.as_slice()).unwrap_err(),
+        AuctionError::InvalidVerifierSelectionAccounts,
     );
 }
 
