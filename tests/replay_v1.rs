@@ -177,7 +177,10 @@ fn replay_anchor_layout_and_ring() {
 
 #[test]
 fn replay_errors_follow_the_selection_error() {
-    assert!(error::AuctionError::try_from_code(80).is_err(), "80 is reserved for selection");
+    assert_eq!(
+        error::AuctionError::try_from_code(80).unwrap(),
+        error::AuctionError::InvalidVerifierSelectionAccounts
+    );
     assert_eq!(error::AuctionError::InvalidReplayPolicy.code(), 81);
     assert_eq!(error::AuctionError::InvalidReplayAnchor.code(), 82);
     assert_eq!(error::AuctionError::ReplayAnchorOutOfOrder.code(), 83);
