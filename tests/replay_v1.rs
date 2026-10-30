@@ -178,8 +178,8 @@ fn replay_anchor_layout_and_ring() {
 #[test]
 fn replay_errors_follow_the_selection_error() {
     assert_eq!(
-        error::AuctionError::try_from_code(80).unwrap(),
-        error::AuctionError::InvalidVerifierSelectionAccounts
+        error::AuctionError::try_from_code(80),
+        Ok(error::AuctionError::InvalidVerifierSelectionAccounts)
     );
     assert_eq!(error::AuctionError::InvalidReplayPolicy.code(), 81);
     assert_eq!(error::AuctionError::InvalidReplayAnchor.code(), 82);
