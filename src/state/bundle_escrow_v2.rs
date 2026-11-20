@@ -710,6 +710,7 @@ impl BundleEscrowV2Status {
     pub const ProvisionalVerified: Self = Self(6);
     pub const ProvisionalRejected: Self = Self(7);
     pub const Disputed: Self = Self(8);
+    pub const InsufficientEligibleVerifiers: Self = Self(9);
 
     pub const fn into_u64(self) -> u64 {
         self.0
@@ -718,7 +719,10 @@ impl BundleEscrowV2Status {
     pub const fn is_terminal(self) -> bool {
         matches!(
             self,
-            Self::FinalizedVerified | Self::FinalizedRejected | Self::Expired
+            Self::FinalizedVerified
+                | Self::FinalizedRejected
+                | Self::Expired
+                | Self::InsufficientEligibleVerifiers
         )
     }
 }
@@ -749,6 +753,7 @@ impl TryFrom<u64> for BundleEscrowV2Status {
             6 => Ok(Self::ProvisionalVerified),
             7 => Ok(Self::ProvisionalRejected),
             8 => Ok(Self::Disputed),
+            9 => Ok(Self::InsufficientEligibleVerifiers),
             _ => Err(value),
         }
     }

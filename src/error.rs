@@ -167,6 +167,8 @@ pub enum AuctionError {
     VerifierSelectionPending = 79,
     /// Invalid verifier selection account list was provided
     InvalidVerifierSelectionAccounts = 80,
+    /// Too few eligible verifiers remain for the full committee.
+    InsufficientEligibleVerifiers = 81,
 }
 
 impl Display for AuctionError {
@@ -267,6 +269,7 @@ impl AuctionError {
             Self::VerificationDisputeWindowClosed => "VerificationDisputeWindowClosed",
             Self::VerifierSelectionPending => "VerifierSelectionPending",
             Self::InvalidVerifierSelectionAccounts => "InvalidVerifierSelectionAccounts",
+            Self::InsufficientEligibleVerifiers => "InsufficientEligibleVerifiers",
         }
     }
 
@@ -369,6 +372,7 @@ impl AuctionError {
             Self::VerificationDisputeWindowClosed => "Verification dispute window is not open",
             Self::VerifierSelectionPending => "Verifier selection is pending",
             Self::InvalidVerifierSelectionAccounts => "Verifier selection account list is invalid",
+            Self::InsufficientEligibleVerifiers => "Insufficient eligible verifiers",
         }
     }
 
