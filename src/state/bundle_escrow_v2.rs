@@ -387,6 +387,25 @@ impl DerefMut for BundleEscrowV2Mut<'_> {
 }
 
 impl RawBundleEscrowV2Data {
+    /// Escrows opened before the rate was introduced have a zero rate.
+    pub fn paid_dispute_bond_bps(&self) -> u16 {
+        u16::from_le_bytes([self._reserved1[0], self._reserved1[1]])
+    }
+
+    pub fn set_paid_dispute_bond_bps(&mut self, bps: u16) {
+        self._reserved1[..2].copy_from_slice(&bps.to_le_bytes());
+    }
+
+    /// Use the saved provisional payout. One basis point is one ten-thousandth.
+    pub fn paid_dispute_bond_lamports(&self, minimum: u64) -> Option<u64> {
+        let bps = self.paid_dispute_bond_bps();
+        if bps > 10_000 {
+            return None;
+        }
+        let amount = (u128::from(self.winner_payout_lamports) * u128::from(bps)).div_ceil(10_000);
+        Some(minimum.max(amount as u64))
+    }
+
     pub const PAYLOAD_LEN: usize = std::mem::size_of::<RawBundleEscrowV2Data>();
     pub const LEN: usize = Self::LEN_V1;
     pub const LEN_V1: usize = AccountHeaderV1::LEN + Self::PAYLOAD_LEN;

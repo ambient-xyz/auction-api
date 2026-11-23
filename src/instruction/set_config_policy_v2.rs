@@ -43,6 +43,7 @@ impl ConfigPolicyV2PatchKind {
     pub const DISPUTE_SETTINGS: Self = Self(5);
     pub const SMALL_CREDIT_SLASH_AUTHORITY: Self = Self(6);
     pub const SMALL_CREDIT_SETTINGS: Self = Self(7);
+    pub const PAID_DISPUTE_BOND_RATE: Self = Self(8);
 }
 
 #[derive(Pod, Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -73,6 +74,16 @@ pub struct SetConfigPolicyV2Args {
     pub paid_verification_dispute_bond_lamports: u64,
     pub authority: Pubkey,
     pub tier_config: RequestTierConfigV2,
+}
+
+impl SetConfigPolicyV2Args {
+    pub fn paid_dispute_bond_bps(&self) -> u16 {
+        u16::from_le_bytes([self._reserved0[1], self._reserved0[2]])
+    }
+
+    pub fn set_paid_dispute_bond_bps(&mut self, bps: u16) {
+        self._reserved0[1..].copy_from_slice(&bps.to_le_bytes());
+    }
 }
 
 /// 160-byte configuration payload used by SmallV3 program revision `4f7756b`.

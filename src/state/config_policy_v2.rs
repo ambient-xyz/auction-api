@@ -189,6 +189,14 @@ impl Default for ConfigPolicyV2 {
 }
 
 impl ConfigPolicyV2 {
+    pub fn paid_dispute_bond_bps(&self) -> u16 {
+        u16::from_le_bytes([self._reserved1[0], self._reserved1[1]])
+    }
+
+    pub fn set_paid_dispute_bond_bps(&mut self, bps: u16) {
+        self._reserved1[..2].copy_from_slice(&bps.to_le_bytes());
+    }
+
     pub const LEN: usize = std::mem::size_of::<ConfigPolicyV2>();
 
     pub fn production_default() -> Self {
