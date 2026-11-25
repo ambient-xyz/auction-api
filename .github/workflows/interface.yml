@@ -1,0 +1,39 @@
+name: Interface compatibility
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  interface:
+    name: Interface compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: api
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: ambient-xyz/auction-interface
+          ref: main
+          path: interface
+          persist-credentials: false
+      - run: rustup toolchain install 1.98.1 --profile minimal
+      - name: Test the proposed API with the interface
+        working-directory: interface
+        shell: bash
+        run: |
+          test -f tests/instructions.rs
+          api_patch="patch.\"https://github.com/ambient-xyz/auction-api\".ambient-auction-api.path=\"$GITHUB_WORKSPACE/api\""
+          cargo +1.98.1 metadata --format-version 1 --config "$api_patch" > "$RUNNER_TEMP/interface-metadata.json"
+          jq -e --arg manifest "$GITHUB_WORKSPACE/api/Cargo.toml" '
+            [.packages[] | select(.name == "ambient-auction-api")]
+            | length == 1 and (.[0].source == null) and (.[0].manifest_path == $manifest)
+          ' "$RUNNER_TEMP/interface-metadata.json"
+          cargo +1.98.1 test --locked --all-targets --all-features --config "$api_patch"
