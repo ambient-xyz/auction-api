@@ -11,13 +11,14 @@ pub struct DisputeBundleVerificationV2Accounts<'a, T> {
     pub bond_refund_recipient: &'a T,
     pub config_policy: &'a T,
     pub system_program: &'a T,
+    pub auction_verifiers: Option<&'a T>,
 }
 
 impl<'a, T> TryFrom<&'a [T]> for DisputeBundleVerificationV2Accounts<'a, T> {
     type Error = AuctionError;
 
     fn try_from(accounts: &'a [T]) -> Result<Self, Self::Error> {
-        let [dispute_payer, bundle_escrow, bundle_verification_dispute, bond_refund_recipient, config_policy, system_program, ..] =
+        let [dispute_payer, bundle_escrow, bundle_verification_dispute, bond_refund_recipient, config_policy, system_program, remaining @ ..] =
             accounts
         else {
             return Err(AuctionError::NotEnoughAccounts);
@@ -30,6 +31,7 @@ impl<'a, T> TryFrom<&'a [T]> for DisputeBundleVerificationV2Accounts<'a, T> {
             bond_refund_recipient,
             config_policy,
             system_program,
+            auction_verifiers: remaining.first(),
         })
     }
 }
@@ -42,6 +44,7 @@ impl<'a, T> InstructionAccounts<'a, T> for DisputeBundleVerificationV2Accounts<'
             .chain(std::iter::once(self.bond_refund_recipient))
             .chain(std::iter::once(self.config_policy))
             .chain(std::iter::once(self.system_program))
+            .chain(self.auction_verifiers)
     }
 }
 
