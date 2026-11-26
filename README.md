@@ -43,6 +43,13 @@ Consumers must adopt these V4 source names before deployment.
 
 ## Building
 
+The optional `parser` feature exposes `parser::parse_instruction` for RPC clients.
+It accepts instruction bytes and 32-byte account addresses in instruction order.
+It returns the instruction name and JSON fields. It preserves the JSON format
+from Agave's auction transaction parser, including historical instruction formats.
+It does not validate whether the program accepts or authorizes the instruction.
+The feature adds no Solana SDK or command-line dependencies and stays disabled by default.
+
 This crate is largely intended to be a library. However, there is a debugging utiltity
 called `decode-account` that allows for decoding raw or base64/base58/hex encoded
 accounts and displaying their most relevant information as text.
