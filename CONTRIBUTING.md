@@ -14,3 +14,8 @@ It also makes sure that Cargo uses this API checkout rather than the pinned depe
 The interface test match must name each API instruction explicitly.
 A new variant without an interface case fails compilation.
 For new argument formats under an existing instruction number, add cases for each accepted format.
+
+The `Transaction parser` workflow builds the optional `parser` feature on every API pull request.
+Its instruction match names every variant. A new variant without a parser case fails compilation.
+When instruction fields or accepted formats change, update the parser and its expected JSON tests in the same pull request.
+Keep cases for historical formats that RPC clients still read.
