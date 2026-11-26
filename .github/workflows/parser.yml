@@ -18,5 +18,6 @@ jobs:
       - run: rustfmt +1.98.1 --check --config skip_children=true src/lib.rs src/parser.rs tests/parser.rs
       - run: cargo +1.98.1 test --locked
       - run: cargo +1.98.1 test --locked --features parser
+      - run: cargo +1.98.1 test --locked --features decoder
       - run: cargo +1.98.1 clippy --locked --all-targets --features parser
       - run: cargo +1.98.1 doc --locked --no-deps --features parser

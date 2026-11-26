@@ -56,6 +56,7 @@ accounts and displaying their most relevant information as text.
 
 The binary is `cfg`-ed out by default and requires the `decoder` feature to be enabled
 in order to build.
+The `decoder` feature includes the shared parser and the command-line dependencies.
 
 To build the binary:
 
