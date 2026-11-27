@@ -18,6 +18,11 @@ use {
     serde_json::{json, Value},
 };
 
+use ambient_auction_api::{
+    JoinReplayClassV1Args, LeaveReplayClassV1Args, RemoveReplayClassMemberV1Args,
+    SelectReplayVerifiersV1Args,
+};
+
 const HASH: &str = "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=";
 const ZERO_HASH: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
@@ -501,7 +506,7 @@ fn historical_and_extended_results_with_optional_accounts() {
 
 #[test]
 fn unsupported_instructions_return_errors() {
-    for data in [vec![24, 1, 2], vec![37], vec![255]] {
+    for data in [vec![24, 1, 2], vec![41], vec![255]] {
         assert_eq!(
             parse_instruction(&data, &[[7; 32]]),
             Err(ParseInstructionError::InstructionKeyMismatch)
@@ -585,5 +590,64 @@ fn replay_anchor_and_replay_policy_patch() {
             "replay": {"class_id": FIVES, "version": 1, "tier_mask": 2, "arbiters": 3,
                 "hold_slots": 900, "forfeit_mask": 6, "suspension_hours": suspension_hours},
         }}),
+    );
+}
+
+#[test]
+fn replay_class_membership_and_selection() {
+    assert_parsed(
+        JoinReplayClassV1Args { class_id: [5; 32] }.to_bytes(),
+        5,
+        &[1, 2, 3, 4, 0],
+        json!({"type": "join_replay_class_v1", "info": {
+            "node": key(1), "payer": key(2), "replay_class": key(3), "config_policy": key(4),
+            "system_program": key(0), "class_id": FIVES,
+        }}),
+    );
+    assert_parsed(
+        LeaveReplayClassV1Args { class_id: [5; 32] }.to_bytes(),
+        2,
+        &[1, 3],
+        json!({"type": "leave_replay_class_v1", "info": {
+            "node": key(1), "replay_class": key(3), "class_id": FIVES,
+        }}),
+    );
+    assert_parsed(
+        RemoveReplayClassMemberV1Args {
+            class_id: [5; 32],
+            member: [7; 32].into(),
+        }
+        .to_bytes(),
+        3,
+        &[2, 3, 4],
+        json!({"type": "remove_replay_class_member_v1", "info": {
+            "admin": key(2), "replay_class": key(3), "config_policy": key(4), "class_id": FIVES,
+            "member": key(7),
+        }}),
+    );
+    let select = SelectReplayVerifiersV1Args {}.to_bytes();
+    let accounts: Vec<_> = [1u8, 2, 3, 4, 5, 6]
+        .iter()
+        .map(|index| [*index; 32])
+        .collect();
+    assert_eq!(
+        serde_json::to_value(parse_instruction(&select, &accounts).unwrap()).unwrap(),
+        json!({"type": "select_replay_verifiers_v1", "info": {
+            "bundle_escrow": key(1), "auction_verifiers": key(2), "slot_hashes": key(3), "replay_class": key(4),
+            "config_policy": key(5), "bundle_verification_dispute": key(6),
+        }}),
+    );
+    assert_eq!(
+        serde_json::to_value(parse_instruction(&select, &accounts[..5]).unwrap()).unwrap()["info"]
+            ["bundle_verification_dispute"],
+        Value::Null,
+    );
+    assert_eq!(
+        parse_instruction(&select, &accounts[..4]),
+        Err(ParseInstructionError::InstructionKeyMismatch)
+    );
+    assert_eq!(
+        parse_instruction(&[select.clone(), vec![0]].concat(), &accounts),
+        Err(ParseInstructionError::InstructionNotParsable)
     );
 }

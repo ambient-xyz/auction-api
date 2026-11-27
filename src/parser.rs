@@ -27,6 +27,10 @@ use {
     std::mem::size_of,
 };
 
+use crate::instruction::{
+    JoinReplayClassV1Args, LeaveReplayClassV1Args, RemoveReplayClassMemberV1Args,
+};
+
 /// An auction instruction formatted for JSON output.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ParsedInstruction {
@@ -87,6 +91,64 @@ pub fn parse_instruction(
                     "engine": BASE64_STANDARD.encode(anchor.engine),
                     "span_id": anchor.span_id,
                     "commit_sha256": BASE64_STANDARD.encode(anchor.commit_sha256),
+                }),
+            })
+        }
+        AuctionInstruction::JoinReplayClassV1 => {
+            check_num_auction_accounts(accounts, 5)?;
+            let join = read_auction_instruction::<JoinReplayClassV1Args>(&data[1..])?;
+            Ok(ParsedInstruction {
+                instruction_type: "join_replay_class_v1".to_string(),
+                info: json!({
+                    "node": pubkey(&accounts[0]),
+                    "payer": pubkey(&accounts[1]),
+                    "replay_class": pubkey(&accounts[2]),
+                    "config_policy": pubkey(&accounts[3]),
+                    "system_program": pubkey(&accounts[4]),
+                    "class_id": BASE64_STANDARD.encode(join.class_id),
+                }),
+            })
+        }
+        AuctionInstruction::LeaveReplayClassV1 => {
+            check_num_auction_accounts(accounts, 2)?;
+            let leave = read_auction_instruction::<LeaveReplayClassV1Args>(&data[1..])?;
+            Ok(ParsedInstruction {
+                instruction_type: "leave_replay_class_v1".to_string(),
+                info: json!({
+                    "node": pubkey(&accounts[0]),
+                    "replay_class": pubkey(&accounts[1]),
+                    "class_id": BASE64_STANDARD.encode(leave.class_id),
+                }),
+            })
+        }
+        AuctionInstruction::RemoveReplayClassMemberV1 => {
+            check_num_auction_accounts(accounts, 3)?;
+            let remove = read_auction_instruction::<RemoveReplayClassMemberV1Args>(&data[1..])?;
+            Ok(ParsedInstruction {
+                instruction_type: "remove_replay_class_member_v1".to_string(),
+                info: json!({
+                    "admin": pubkey(&accounts[0]),
+                    "replay_class": pubkey(&accounts[1]),
+                    "config_policy": pubkey(&accounts[2]),
+                    "class_id": BASE64_STANDARD.encode(remove.class_id),
+                    "member": auction_pubkey(remove.member),
+                }),
+            })
+        }
+        AuctionInstruction::SelectReplayVerifiersV1 => {
+            check_num_auction_accounts(accounts, 5)?;
+            if data.len() != 1 {
+                return Err(ParseInstructionError::InstructionNotParsable);
+            }
+            Ok(ParsedInstruction {
+                instruction_type: "select_replay_verifiers_v1".to_string(),
+                info: json!({
+                    "bundle_escrow": pubkey(&accounts[0]),
+                    "auction_verifiers": pubkey(&accounts[1]),
+                    "slot_hashes": pubkey(&accounts[2]),
+                    "replay_class": pubkey(&accounts[3]),
+                    "config_policy": pubkey(&accounts[4]),
+                    "bundle_verification_dispute": accounts.get(5).map(pubkey),
                 }),
             })
         }

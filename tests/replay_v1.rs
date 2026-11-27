@@ -178,8 +178,8 @@ fn replay_anchor_layout_and_ring() {
 #[test]
 fn replay_errors_follow_the_verifier_shortage_error() {
     assert_eq!(
-        error::AuctionError::try_from_code(81).unwrap(),
-        error::AuctionError::InsufficientEligibleVerifiers
+        error::AuctionError::try_from_code(81),
+        Ok(error::AuctionError::InsufficientEligibleVerifiers)
     );
     assert_eq!(error::AuctionError::InvalidReplayPolicy.code(), 82);
     assert_eq!(error::AuctionError::InvalidReplayAnchor.code(), 83);
