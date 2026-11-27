@@ -29,6 +29,7 @@ memoffset = "0.9.1"
 serde_json = "1.0"
 
 [features]
-decoder = ["dep:base64", "dep:clap", "dep:hex", "dep:serde_json", "serde"]
+parser = ["dep:base64", "dep:serde_json", "serde"]
+decoder = ["parser", "dep:clap", "dep:hex"]
 serde = ["dep:bs58", "dep:serde", "dep:borsh"]
 default = []
