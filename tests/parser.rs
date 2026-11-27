@@ -3,15 +3,16 @@
 use {
     ambient_auction_api::{
         parser::{parse_instruction, ParseInstructionError},
-        AuthorizeBundleDisputeEvidenceV4Args, BundleJobPricingV4, BundleVerificationDisputeV2Kind,
-        BundleVerifierPageV2Entry, ClaimSmallCreditsV4Args, CloseBundleVerifierPageV4Args,
-        CommitAuctionSettlementV3Args, CommitSmallAuctionSettlementV4Args, ConfigPolicyV2Flags,
-        ConfigPolicyV2PatchKind, DisputeBundleVerificationV2Args, InitConfigPolicySmallV3Args,
-        InitConfigPolicyV2Args, InstructionBytes, OpenBundleEscrowV4Args,
-        OpenPricedBundleEscrowV4Args, OpenSmallBundleEscrowV4Args, PostBundlePricingArgs,
-        PostBundleResultV2Args, PostBundleResultV3Args, RequestTierConfigV2, SealBundlePricingArgs,
-        SelectBundleVerifiersV2Args, SetConfigPolicySmallV3Args, SetConfigPolicyV2Args,
-        SlashSmallCreditsArgs, VerificationVerdictV2,
+        AnchorReplaySpansV1Args, AuthorizeBundleDisputeEvidenceV4Args, BundleJobPricingV4,
+        BundleVerificationDisputeV2Kind, BundleVerifierPageV2Entry, ClaimSmallCreditsV4Args,
+        CloseBundleVerifierPageV4Args, CommitAuctionSettlementV3Args,
+        CommitSmallAuctionSettlementV4Args, ConfigPolicyV2Flags, ConfigPolicyV2PatchKind,
+        DisputeBundleVerificationV2Args, InitConfigPolicySmallV3Args, InitConfigPolicyV2Args,
+        InstructionBytes, OpenBundleEscrowV4Args, OpenPricedBundleEscrowV4Args,
+        OpenSmallBundleEscrowV4Args, PostBundlePricingArgs, PostBundleResultV2Args,
+        PostBundleResultV3Args, ReplayPolicyV1, RequestTierConfigV2, SealBundlePricingArgs,
+        SelectBundleVerifiersV2Args, SetConfigPolicyReplayV1Args, SetConfigPolicySmallV3Args,
+        SetConfigPolicyV2Args, SlashSmallCreditsArgs, VerificationVerdictV2,
     },
     bytemuck::Zeroable,
     serde_json::{json, Value},
@@ -500,7 +501,7 @@ fn historical_and_extended_results_with_optional_accounts() {
 
 #[test]
 fn unsupported_instructions_return_errors() {
-    for data in [vec![24, 1, 2], vec![36], vec![255]] {
+    for data in [vec![24, 1, 2], vec![37], vec![255]] {
         assert_eq!(
             parse_instruction(&data, &[[7; 32]]),
             Err(ParseInstructionError::InstructionKeyMismatch)
@@ -534,5 +535,55 @@ fn append_data_names_and_requires_all_three_accounts() {
     assert_eq!(
         parse_instruction(&[10], &accounts[..2]),
         Err(ParseInstructionError::InstructionKeyMismatch)
+    );
+}
+
+const THREES: &str = "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwM=";
+const FOURS: &str = "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ=";
+const FIVES: &str = "BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU=";
+
+#[test]
+fn replay_anchor_and_replay_policy_patch() {
+    let anchor = AnchorReplaySpansV1Args {
+        engine: [3; 32],
+        span_id: 42,
+        commit_sha256: [4; 32],
+    };
+    assert_parsed(
+        anchor.to_bytes(),
+        4,
+        &[1, 2, 3, 4],
+        json!({"type": "anchor_replay_spans_v1", "info": {
+            "miner_node": key(1), "payer": key(2), "replay_anchor": key(3), "system_program": key(4),
+            "engine": THREES, "span_id": 42, "commit_sha256": FOURS,
+        }}),
+    );
+    let mut replay = ReplayPolicyV1 {
+        class_id: [5; 32],
+        version: 1,
+        tier_mask: 2,
+        arbiters: 3,
+        hold_slots: 900,
+        forfeit_mask: 6,
+        ..ReplayPolicyV1::default()
+    };
+    replay.suspension_hours[0] = 24;
+    let set = SetConfigPolicyReplayV1Args {
+        patch_kind: ConfigPolicyV2PatchKind::REPLAY_SETTINGS,
+        _reserved0: [0; 7],
+        replay,
+    };
+    let mut suspension_hours = vec![0; replay.suspension_hours.len()];
+    suspension_hours[0] = 24;
+    assert_parsed(
+        set.to_bytes(),
+        2,
+        &[3, 1],
+        json!({"type": "set_config_policy_v2", "info": {
+            "authority": key(3), "config_policy": key(1),
+            "patch_kind": {"name": "replay_settings", "value": 8},
+            "replay": {"class_id": FIVES, "version": 1, "tier_mask": 2, "arbiters": 3,
+                "hold_slots": 900, "forfeit_mask": 6, "suspension_hours": suspension_hours},
+        }}),
     );
 }

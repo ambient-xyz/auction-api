@@ -114,7 +114,10 @@ pub struct BundleEscrowLifecycleV4Data {
     pub expected_page_count: u8,
     /// Bits 0..3 track canonical pages; bits 3..6 track dispute staging pages.
     pub allocated_page_bitmap: u8,
-    pub _reserved: [u8; 6],
+    /// 1 when the escrow opened in an exact-replay tier: it finalizes only with verifier signatures, and its
+    /// provisional window is at least the replay hold. Snapshotted at open from `ConfigPolicyV2.replay`.
+    pub exact_replay: u8,
+    pub _reserved: [u8; 5],
     pub small_credit_mint: Pubkey,
     pub small_credit_amount: u64,
 }

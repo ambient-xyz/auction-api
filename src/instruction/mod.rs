@@ -4,6 +4,7 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 use serde::{Deserialize, Serialize};
 use std::net;
 
+mod anchor_replay_spans_v1;
 mod append_data;
 mod authorize_bundle_dispute_evidence_v4;
 mod cancel_bundle;
@@ -38,6 +39,7 @@ mod submit_job_output;
 mod submit_validation;
 
 use crate::macros::impl_instruction_data;
+pub use anchor_replay_spans_v1::*;
 pub use append_data::*;
 pub use authorize_bundle_dispute_evidence_v4::*;
 pub use cancel_bundle::*;
@@ -110,6 +112,7 @@ pub enum AuctionInstruction {
     CommitAuctionSettlementV3 = 33,
     OpenSmallBundleEscrowV4 = 34,
     CommitSmallAuctionSettlementV4 = 35,
+    AnchorReplaySpansV1 = 36,
 }
 
 #[derive(Clone, Copy, Zeroable, PartialEq, Eq, Debug)]
@@ -209,6 +212,8 @@ impl_instruction_data!(
     CommitAuctionSettlementV3Args => CommitAuctionSettlementV3,
     OpenSmallBundleEscrowV4Args => OpenSmallBundleEscrowV4,
     CommitSmallAuctionSettlementV4Args => CommitSmallAuctionSettlementV4,
+    AnchorReplaySpansV1Args => AnchorReplaySpansV1,
+    SetConfigPolicyReplayV1Args => SetConfigPolicyV2,
 );
 
 impl_instruction_data!(InitConfigArgs => InitConfig);

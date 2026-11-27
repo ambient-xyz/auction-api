@@ -23,6 +23,7 @@ pub enum AccountDiscriminator {
     BundleEscrowV2 = 8,
     BundleVerifierPageV2 = 9,
     BundleVerificationDisputeV2 = 10,
+    ReplayAnchorV1 = 11,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive, IntoPrimitive, Zeroable)]

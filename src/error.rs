@@ -169,6 +169,12 @@ pub enum AuctionError {
     InvalidVerifierSelectionAccounts = 80,
     /// Too few eligible verifiers remain for the full committee.
     InsufficientEligibleVerifiers = 81,
+    /// The exact-replay policy is malformed or inconsistent with the rest of the policy
+    InvalidReplayPolicy = 82,
+    /// The replay anchor account or its arguments are invalid
+    InvalidReplayAnchor = 83,
+    /// A replay anchor must name a span after the latest anchored span
+    ReplayAnchorOutOfOrder = 84,
 }
 
 impl Display for AuctionError {
@@ -270,6 +276,9 @@ impl AuctionError {
             Self::VerifierSelectionPending => "VerifierSelectionPending",
             Self::InvalidVerifierSelectionAccounts => "InvalidVerifierSelectionAccounts",
             Self::InsufficientEligibleVerifiers => "InsufficientEligibleVerifiers",
+            Self::InvalidReplayPolicy => "InvalidReplayPolicy",
+            Self::InvalidReplayAnchor => "InvalidReplayAnchor",
+            Self::ReplayAnchorOutOfOrder => "ReplayAnchorOutOfOrder",
         }
     }
 
@@ -373,6 +382,9 @@ impl AuctionError {
             Self::VerifierSelectionPending => "Verifier selection is pending",
             Self::InvalidVerifierSelectionAccounts => "Verifier selection account list is invalid",
             Self::InsufficientEligibleVerifiers => "Insufficient eligible verifiers",
+            Self::InvalidReplayPolicy => "Exact-replay policy is invalid",
+            Self::InvalidReplayAnchor => "Replay anchor is invalid",
+            Self::ReplayAnchorOutOfOrder => "Replay anchor must follow the latest anchored span",
         }
     }
 

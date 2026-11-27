@@ -2,22 +2,23 @@
 
 use {
     crate::instruction::{
-        AuctionInstruction, AuthorizeBundleDisputeEvidenceV4Args, ClaimSmallCreditsV4Args,
-        ClaimVerifierLstakeV2Args, ClaimWinnerLstakeV2Args, CloseBundleVerifierPageV4Args,
-        CommitAuctionSettlementV2Args, CommitAuctionSettlementV3Args,
-        CommitSmallAuctionSettlementV4Args, DisputeBundleVerificationV2Args,
-        ExpireBundleEscrowV2Args, FinalizeBundleVerificationV2Args, InitBundleVerifierPageV2Args,
+        AnchorReplaySpansV1Args, AuctionInstruction, AuthorizeBundleDisputeEvidenceV4Args,
+        ClaimSmallCreditsV4Args, ClaimVerifierLstakeV2Args, ClaimWinnerLstakeV2Args,
+        CloseBundleVerifierPageV4Args, CommitAuctionSettlementV2Args,
+        CommitAuctionSettlementV3Args, CommitSmallAuctionSettlementV4Args,
+        DisputeBundleVerificationV2Args, ExpireBundleEscrowV2Args,
+        FinalizeBundleVerificationV2Args, InitBundleVerifierPageV2Args,
         InitConfigPolicySmallV3Args, InitConfigPolicyV2Args, OpenBundleEscrowV2Args,
         OpenBundleEscrowV4Args, OpenPricedBundleEscrowV4Args, OpenSmallBundleEscrowV4Args,
         PlaceBidArgs, PostBundlePricingArgs, PostBundleResultV2Args, PostBundleResultV3Args,
         RequestJobArgs, RevealBidArgs, SealBundlePricingArgs, SelectBundleVerifiersV2Args,
-        SetConfigPolicySmallV3Args, SetConfigPolicyV2Args, SlashSmallCreditsArgs,
-        SubmitJobOutputArgs, SubmitValidationArgs,
+        SetConfigPolicyReplayV1Args, SetConfigPolicySmallV3Args, SetConfigPolicyV2Args,
+        SlashSmallCreditsArgs, SubmitJobOutputArgs, SubmitValidationArgs,
     },
     crate::{
         BundleVerificationDisputeV2Kind, ConfigPolicyV2AuthorityKind, ConfigPolicyV2Flag,
-        ConfigPolicyV2Flags, ConfigPolicyV2PatchKind, RequestTier, RequestTierConfigV2,
-        VerificationVerdictV2,
+        ConfigPolicyV2Flags, ConfigPolicyV2PatchKind, ReplayPolicyV1, RequestTier,
+        RequestTierConfigV2, VerificationVerdictV2,
     },
     base64::{prelude::BASE64_STANDARD, Engine as _},
     bytemuck::{try_pod_read_unaligned, Zeroable},
@@ -73,6 +74,22 @@ pub fn parse_instruction(
         }
     };
     match auction_instruction {
+        AuctionInstruction::AnchorReplaySpansV1 => {
+            check_num_auction_accounts(accounts, 4)?;
+            let anchor = read_auction_instruction::<AnchorReplaySpansV1Args>(&data[1..])?;
+            Ok(ParsedInstruction {
+                instruction_type: "anchor_replay_spans_v1".to_string(),
+                info: json!({
+                    "miner_node": pubkey(&accounts[0]),
+                    "payer": pubkey(&accounts[1]),
+                    "replay_anchor": pubkey(&accounts[2]),
+                    "system_program": pubkey(&accounts[3]),
+                    "engine": BASE64_STANDARD.encode(anchor.engine),
+                    "span_id": anchor.span_id,
+                    "commit_sha256": BASE64_STANDARD.encode(anchor.commit_sha256),
+                }),
+            })
+        }
         AuctionInstruction::RequestJob => {
             check_num_auction_accounts(accounts, 7)?;
             let Ok(request_job) = try_pod_read_unaligned::<RequestJobArgs>(&data[1..]) else {
@@ -456,6 +473,18 @@ pub fn parse_instruction(
         AuctionInstruction::SetConfigPolicyV2 => {
             check_num_auction_accounts(accounts, 2)?;
             let data = &data[1..];
+            if data.len() == size_of::<SetConfigPolicyReplayV1Args>() {
+                let set = read_auction_instruction::<SetConfigPolicyReplayV1Args>(data)?;
+                return Ok(ParsedInstruction {
+                    instruction_type: "set_config_policy_v2".to_string(),
+                    info: json!({
+                        "authority": pubkey(&accounts[0]),
+                        "config_policy": pubkey(&accounts[1]),
+                        "patch_kind": config_policy_patch_kind(set.patch_kind),
+                        "replay": replay_policy(&set.replay),
+                    }),
+                });
+            }
             let (set, small_credit_enabled) =
                 if data.len() == size_of::<SetConfigPolicySmallV3Args>() {
                     let old = read_auction_instruction::<SetConfigPolicySmallV3Args>(data)?;
@@ -888,12 +917,26 @@ fn config_policy_patch_kind(kind: ConfigPolicyV2PatchKind) -> Value {
         "small_credit_slash_authority"
     } else if kind == ConfigPolicyV2PatchKind::SMALL_CREDIT_SETTINGS {
         "small_credit_settings"
+    } else if kind == ConfigPolicyV2PatchKind::REPLAY_SETTINGS {
+        "replay_settings"
     } else {
         "unknown"
     };
     json!({
         "name": name,
         "value": kind.0,
+    })
+}
+
+fn replay_policy(policy: &ReplayPolicyV1) -> Value {
+    json!({
+        "class_id": BASE64_STANDARD.encode(policy.class_id),
+        "version": policy.version,
+        "tier_mask": policy.tier_mask,
+        "arbiters": policy.arbiters,
+        "hold_slots": policy.hold_slots,
+        "forfeit_mask": policy.forfeit_mask,
+        "suspension_hours": policy.suspension_hours.to_vec(),
     })
 }
 
